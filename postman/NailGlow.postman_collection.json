@@ -1,0 +1,191 @@
+{
+  "info": {
+    "name": "NailGlow Booking API",
+    "description": "ระบบจองคิวร้านเสริมสวยและวิเคราะห์สีเล็บอัจฉริยะ — ทดสอบ REST API ของ backend (FastAPI). ตั้งค่า collection variable `base_url` (default http://localhost:8000/api) ก่อนใช้งาน. รัน 'Admin Login' ก่อนเพื่อเซ็ต `admin_token` อัตโนมัติให้ endpoint กลุ่ม Admin",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000/api" },
+    { "key": "admin_token", "value": "" },
+    { "key": "booking_code", "value": "" },
+    { "key": "customer_phone", "value": "0812345678" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        { "name": "Health check", "request": { "method": "GET", "url": "{{base_url}}/health" } }
+      ]
+    },
+    {
+      "name": "Public - Catalog",
+      "item": [
+        { "name": "List service categories", "request": { "method": "GET", "url": "{{base_url}}/service-categories" } },
+        { "name": "List services", "request": { "method": "GET", "url": "{{base_url}}/services?category_id=nail" } },
+        { "name": "List nail designs", "request": { "method": "GET", "url": "{{base_url}}/nail-designs" } },
+        { "name": "Shop settings", "request": { "method": "GET", "url": "{{base_url}}/shop-settings" } },
+        { "name": "Availability", "request": { "method": "GET", "url": "{{base_url}}/availability?date=2026-08-10&duration_minutes=60" } }
+      ]
+    },
+    {
+      "name": "Public - Bookings",
+      "item": [
+        {
+          "name": "Create booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.booking_code) { pm.collectionVariables.set('booking_code', data.booking_code); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/bookings",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category_id\": \"nail\",\n  \"service_id\": \"<PASTE-A-SERVICE-ID-FROM-/services>\",\n  \"booking_date\": \"2026-08-10\",\n  \"booking_time\": \"14:00\",\n  \"customer_name\": \"สมหญิง ใจดี\",\n  \"customer_phone\": \"{{customer_phone}}\",\n  \"line_id\": \"somying_j\"\n}"
+            }
+          }
+        },
+        { "name": "Check booking status", "request": { "method": "GET", "url": "{{base_url}}/bookings/status?booking_code={{booking_code}}&phone={{customer_phone}}" } },
+        { "name": "Customer history", "request": { "method": "GET", "url": "{{base_url}}/bookings/history?phone={{customer_phone}}" } }
+      ]
+    },
+    {
+      "name": "Public - Reviews",
+      "item": [
+        { "name": "List reviews", "request": { "method": "GET", "url": "{{base_url}}/reviews?limit=10" } },
+        {
+          "name": "Create review",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/reviews",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking_code\": \"{{booking_code}}\",\n  \"customer_phone\": \"{{customer_phone}}\",\n  \"rating\": 5,\n  \"comment\": \"บริการดีมากค่ะ\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public - AI",
+      "item": [
+        {
+          "name": "AI recommend (XGBoost)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/ai/recommend",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"skin_tone\": \"warm\",\n  \"nail_shape\": \"almond\",\n  \"nail_length\": \"long\",\n  \"style_preference\": \"bold\",\n  \"occasion\": \"party\"\n}"
+            }
+          }
+        },
+        {
+          "name": "AI analyze reference style",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/ai/analyze-style",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"image_base64\": \"<BASE64-IMAGE-STRING>\"\n}" }
+          }
+        },
+        {
+          "name": "AI segment nails",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/ai/segment",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"image_base64\": \"<BASE64-IMAGE-STRING-OF-A-HAND-PHOTO>\"\n}" }
+          }
+        },
+        {
+          "name": "AI virtual try-on",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/ai/tryon",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"image_base64\": \"<BASE64-IMAGE-STRING-OF-A-HAND-PHOTO>\",\n  \"color_hex\": \"#C0392B\",\n  \"pattern\": \"solid\",\n  \"nail_shape\": \"round\",\n  \"save\": false\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.access_token) { pm.collectionVariables.set('admin_token', data.access_token); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/admin/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"owner\",\n  \"password\": \"changeme123\"\n}" }
+          }
+        },
+        {
+          "name": "Admin - Me",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/admin/me",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }]
+          }
+        },
+        {
+          "name": "Admin - List bookings",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/admin/bookings",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }]
+          }
+        },
+        {
+          "name": "Admin - Dashboard summary",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/admin/dashboard/summary",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }]
+          }
+        },
+        {
+          "name": "Admin - Search customers",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/admin/customers?q={{customer_phone}}",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }]
+          }
+        },
+        {
+          "name": "Admin - List services (raw, incl inactive)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/admin/services",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }]
+          }
+        }
+      ]
+    }
+  ]
+}

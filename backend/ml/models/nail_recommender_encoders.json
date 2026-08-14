@@ -1,0 +1,52 @@
+{
+  "feature_columns": [
+    "skin_tone",
+    "nail_shape",
+    "nail_length",
+    "style_preference",
+    "occasion"
+  ],
+  "feature_categories": {
+    "skin_tone": [
+      "cool",
+      "neutral",
+      "warm"
+    ],
+    "nail_shape": [
+      "almond",
+      "coffin",
+      "oval",
+      "round",
+      "square",
+      "squoval",
+      "stiletto"
+    ],
+    "nail_length": [
+      "long",
+      "medium",
+      "short"
+    ],
+    "style_preference": [
+      "bold",
+      "classic",
+      "minimal"
+    ],
+    "occasion": [
+      "daily",
+      "date",
+      "party",
+      "wedding",
+      "work"
+    ]
+  },
+  "label_classes": [
+    "Berry Jelly",
+    "Cat Eye",
+    "French Classic",
+    "Glitter Gold",
+    "Korean Pink",
+    "Marble",
+    "Minimal Nude",
+    "Terracotta Swirl"
+  ]
+}

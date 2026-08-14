@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Prompt', sans-serif;
+  background-color: #FFF6F8;
+}
+
+h1, h2, h3, .font-display {
+  font-family: 'Baloo 2', sans-serif;
+}
