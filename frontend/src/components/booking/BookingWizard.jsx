@@ -37,10 +37,13 @@ export default function BookingWizard() {
 
   const [categories, setCategories] = useState([])
   const [servicesByCategory, setServicesByCategory] = useState({})
+  const [servicesLoaded, setServicesLoaded] = useState(false)
   const [closedWeekdays, setClosedWeekdays] = useState(null)
 
   // โหลดหมวดหมู่/บริการ/เวลาทำการจริงจาก backend (ถ้าเรียกไม่สำเร็จ ตัวคอมโพเนนต์ลูกจะ fallback
   // ไปใช้ src/data/bookingData.js เอง — เว็บยังใช้งานได้แม้ backend ยังไม่พร้อม)
+  // servicesLoaded กันไม่ให้เลือกบริการจากข้อมูลสำรอง (id ไม่ตรงกับฐานข้อมูลจริง เช่น "wash-blow")
+  // ก่อนที่ผลจริงจาก backend จะโหลดเสร็จ ซึ่งจะทำให้จองไม่สำเร็จตอนส่งข้อมูลจริง
   useEffect(() => {
     getServiceCategories()
       .then(setCategories)
@@ -55,6 +58,7 @@ export default function BookingWizard() {
         setServicesByCategory(grouped)
       })
       .catch(() => {})
+      .finally(() => setServicesLoaded(true))
     getShopSettings()
       .then((s) => setClosedWeekdays(s.closed_weekdays))
       .catch(() => {})
@@ -251,14 +255,18 @@ export default function BookingWizard() {
         <StepIndicator steps={steps} currentStep={step} />
 
         {currentStepName === 'เลือกบริการ' && (
-          <ServiceSelector
-            category={category}
-            setCategory={handleCategoryChange}
-            service={service}
-            setService={handleServiceChange}
-            categories={categories}
-            servicesByCategory={servicesByCategory}
-          />
+          servicesLoaded ? (
+            <ServiceSelector
+              category={category}
+              setCategory={handleCategoryChange}
+              service={service}
+              setService={handleServiceChange}
+              categories={categories}
+              servicesByCategory={servicesByCategory}
+            />
+          ) : (
+            <p className="text-center text-gray-400 text-sm py-12">กำลังโหลดข้อมูลบริการ...</p>
+          )
         )}
 
         {currentStepName === 'รายละเอียดเพิ่มเติม' && (
