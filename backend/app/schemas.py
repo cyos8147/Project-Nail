@@ -1,7 +1,21 @@
 from datetime import date, datetime
-from typing import Optional
+from typing import Annotated, Optional
+from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, BeforeValidator, Field
+
+
+def _uuid_to_str(value):
+    # Supabase (Postgres) เก็บคอลัมน์ id เป็น native UUID type แล้ว psycopg2/SQLAlchemy
+    # จะคืนค่าเป็น uuid.UUID object ตรงๆ (ต่างจาก SQLite ที่ได้ string อยู่แล้ว) ทำให้ Pydantic
+    # response validation พังถ้า field ประกาศเป็น str เฉยๆ — แปลงเป็น string ให้ตรงนี้ที่เดียว
+    if value is None:
+        return value
+    return str(value) if isinstance(value, UUID) else value
+
+
+UUIDStr = Annotated[str, BeforeValidator(_uuid_to_str)]
+OptionalUUIDStr = Annotated[Optional[str], BeforeValidator(_uuid_to_str)]
 
 
 # ---------------------------------------------------------------------------
@@ -18,7 +32,7 @@ class ServiceCategoryOut(BaseModel):
 
 
 class ServiceOut(BaseModel):
-    id: str
+    id: UUIDStr
     category_id: str
     name: str
     description: str
@@ -43,7 +57,7 @@ class ServiceIn(BaseModel):
 
 
 class NailDesignOut(BaseModel):
-    id: str
+    id: UUIDStr
     name: str
     price: float
     duration_minutes: int
@@ -95,7 +109,7 @@ class ShopSettingsIn(BaseModel):
 
 
 class HolidayOut(BaseModel):
-    id: str
+    id: UUIDStr
     holiday_date: date
     note: str
 
@@ -128,15 +142,15 @@ class BookingCreate(BaseModel):
 
 
 class BookingOut(BaseModel):
-    id: str
+    id: UUIDStr
     booking_code: str
     category_id: str
-    service_id: Optional[str]
+    service_id: OptionalUUIDStr
     service_name: str
     price: float
     shade_id: Optional[str]
     shade_name: Optional[str]
-    nail_design_id: Optional[str]
+    nail_design_id: OptionalUUIDStr
     reference_image_url: Optional[str]
     ai_style_tag: Optional[str]
     ai_extra_minutes: int
@@ -177,8 +191,8 @@ class ReviewCreate(BaseModel):
 
 
 class ReviewOut(BaseModel):
-    id: str
-    booking_id: str
+    id: UUIDStr
+    booking_id: UUIDStr
     rating: int
     comment: str
     photo_url: Optional[str]
@@ -253,7 +267,7 @@ class TryOnResponse(BaseModel):
     skin_tone: str
     nails_detected: int
     engine: str
-    history_id: Optional[str] = None
+    history_id: OptionalUUIDStr = None
 
 
 class RecommendRequest(BaseModel):
@@ -273,7 +287,7 @@ class RecommendItem(BaseModel):
 class RecommendResponse(BaseModel):
     model_config = {"protected_namespaces": ()}
 
-    log_id: str
+    log_id: UUIDStr
     recommendations: list[RecommendItem]
     model_metrics: dict
 
@@ -301,7 +315,7 @@ class ExpenseIn(BaseModel):
 
 
 class ExpenseOut(ExpenseIn):
-    id: str
+    id: UUIDStr
 
     class Config:
         from_attributes = True
