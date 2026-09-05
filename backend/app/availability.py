@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
@@ -8,8 +8,12 @@ from .models import Booking, ShopHoliday, ShopSettings
 ACTIVE_STATUSES = ("pending", "confirmed")
 
 
-def _time_to_minutes(hhmm: str) -> int:
-    h, m = hhmm.split(":")
+def _time_to_minutes(value) -> int:
+    # Postgres (Supabase) ส่ง Time column กลับมาเป็น datetime.time ส่วน SQLite (dev)
+    # มักได้เป็น string "HH:MM" ตรงๆ รองรับทั้งสองแบบ
+    if isinstance(value, time):
+        return value.hour * 60 + value.minute
+    h, m = value.split(":")
     return int(h) * 60 + int(m)
 
 
