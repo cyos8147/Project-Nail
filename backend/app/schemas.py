@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from datetime import time as time_type
 from typing import Annotated, Optional
 from uuid import UUID
 
@@ -14,8 +15,17 @@ def _uuid_to_str(value):
     return str(value) if isinstance(value, UUID) else value
 
 
+def _time_to_str(value):
+    # เหตุผลเดียวกับ _uuid_to_str — คอลัมน์ TIME ใน Postgres คืนค่าเป็น datetime.time object
+    # ตรงๆ (SQLite คืนเป็น string "HH:MM" อยู่แล้ว) ต้องแปลงเป็น string ก่อนส่งกลับ frontend
+    if value is None:
+        return value
+    return value.strftime("%H:%M") if isinstance(value, time_type) else value
+
+
 UUIDStr = Annotated[str, BeforeValidator(_uuid_to_str)]
 OptionalUUIDStr = Annotated[Optional[str], BeforeValidator(_uuid_to_str)]
+TimeStr = Annotated[str, BeforeValidator(_time_to_str)]
 
 
 # ---------------------------------------------------------------------------
@@ -91,8 +101,8 @@ class ShopSettingsOut(BaseModel):
     phone: str
     address: str
     line_oa_basic_id: str
-    opening_time: str
-    closing_time: str
+    opening_time: TimeStr
+    closing_time: TimeStr
     slot_interval_minutes: int
     closed_weekdays: list[int]
 
@@ -156,7 +166,7 @@ class BookingOut(BaseModel):
     ai_extra_minutes: int
     estimated_duration_minutes: int
     booking_date: date
-    booking_time: str
+    booking_time: TimeStr
     customer_name: str
     customer_phone: str
     line_id: str
