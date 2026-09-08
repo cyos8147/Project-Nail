@@ -61,9 +61,6 @@ export default function AdminLoginPage() {
           </button>
           {error && <p className="text-sm text-red-500 text-center">{error}</p>}
         </form>
-        <p className="text-[11px] text-gray-400 text-center mt-5">
-          บัญชีเริ่มต้น: owner / changeme123 (ตั้งค่าได้ใน backend/.env — ดู docs/01_SETUP.md)
-        </p>
       </div>
     </div>
   )
