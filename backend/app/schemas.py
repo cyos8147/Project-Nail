@@ -7,17 +7,12 @@ from pydantic import BaseModel, BeforeValidator, Field
 
 
 def _uuid_to_str(value):
-    # Supabase (Postgres) เก็บคอลัมน์ id เป็น native UUID type แล้ว psycopg2/SQLAlchemy
-    # จะคืนค่าเป็น uuid.UUID object ตรงๆ (ต่างจาก SQLite ที่ได้ string อยู่แล้ว) ทำให้ Pydantic
-    # response validation พังถ้า field ประกาศเป็น str เฉยๆ — แปลงเป็น string ให้ตรงนี้ที่เดียว
     if value is None:
         return value
     return str(value) if isinstance(value, UUID) else value
 
 
 def _time_to_str(value):
-    # เหตุผลเดียวกับ _uuid_to_str — คอลัมน์ TIME ใน Postgres คืนค่าเป็น datetime.time object
-    # ตรงๆ (SQLite คืนเป็น string "HH:MM" อยู่แล้ว) ต้องแปลงเป็น string ก่อนส่งกลับ frontend
     if value is None:
         return value
     return value.strftime("%H:%M") if isinstance(value, time_type) else value
@@ -28,9 +23,6 @@ OptionalUUIDStr = Annotated[Optional[str], BeforeValidator(_uuid_to_str)]
 TimeStr = Annotated[str, BeforeValidator(_time_to_str)]
 
 
-# ---------------------------------------------------------------------------
-# Shared / meta
-# ---------------------------------------------------------------------------
 class ServiceCategoryOut(BaseModel):
     id: str
     name: str
@@ -132,16 +124,13 @@ class HolidayIn(BaseModel):
     note: str = ""
 
 
-# ---------------------------------------------------------------------------
-# Bookings
-# ---------------------------------------------------------------------------
 class BookingCreate(BaseModel):
     category_id: str
     service_id: str
     shade_id: Optional[str] = None
     shade_name: Optional[str] = None
     nail_design_id: Optional[str] = None
-    reference_image_base64: Optional[str] = None  # data URL หรือ raw base64
+    reference_image_base64: Optional[str] = None
     ai_style_tag: Optional[str] = None
     ai_extra_minutes: int = 0
     booking_date: date
@@ -186,12 +175,9 @@ class BookingStatusUpdate(BaseModel):
 class AvailabilityOut(BaseModel):
     date: date
     is_open: bool
-    slots: list[dict]  # [{time: "10:00", available: true}, ...]
+    slots: list[dict]
 
 
-# ---------------------------------------------------------------------------
-# Reviews
-# ---------------------------------------------------------------------------
 class ReviewCreate(BaseModel):
     booking_code: str
     customer_phone: str
@@ -214,9 +200,6 @@ class ReviewOut(BaseModel):
         from_attributes = True
 
 
-# ---------------------------------------------------------------------------
-# Customers / history
-# ---------------------------------------------------------------------------
 class CustomerHistoryOut(BaseModel):
     customer: dict
     bookings: list[BookingOut]
@@ -224,9 +207,6 @@ class CustomerHistoryOut(BaseModel):
     tryon_history: list[dict]
 
 
-# ---------------------------------------------------------------------------
-# Admin auth
-# ---------------------------------------------------------------------------
 class AdminLoginIn(BaseModel):
     username: str
     password: str
@@ -239,9 +219,11 @@ class AdminLoginOut(BaseModel):
     role: str
 
 
-# ---------------------------------------------------------------------------
-# AI
-# ---------------------------------------------------------------------------
+class AdminChangePasswordIn(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=8)
+
+
 class SegmentRequest(BaseModel):
     image_base64: str
 
@@ -266,7 +248,7 @@ class SegmentResponse(BaseModel):
 class TryOnRequest(BaseModel):
     image_base64: str
     color_hex: str = "#B5793A"
-    pattern: str = "solid"  # solid | french | glitter
+    pattern: str = "solid"
     nail_shape: str = "round"
     save: bool = False
     customer_phone: Optional[str] = None
@@ -281,11 +263,11 @@ class TryOnResponse(BaseModel):
 
 
 class RecommendRequest(BaseModel):
-    skin_tone: str  # warm | cool | neutral
-    nail_shape: str  # round | oval | square | squoval | almond | coffin | stiletto
-    nail_length: str  # short | medium | long
-    style_preference: str  # minimal | classic | bold
-    occasion: str  # daily | work | wedding | party | date
+    skin_tone: str
+    nail_shape: str
+    nail_length: str
+    style_preference: str
+    occasion: str
     customer_phone: Optional[str] = None
 
 
@@ -314,9 +296,6 @@ class ReferenceStyleResponse(BaseModel):
     similar_designs: list[NailDesignOut]
 
 
-# ---------------------------------------------------------------------------
-# Dashboard
-# ---------------------------------------------------------------------------
 class ExpenseIn(BaseModel):
     expense_date: date
     category: str = "อื่นๆ"
@@ -339,7 +318,7 @@ class DashboardSummary(BaseModel):
     top_services: list[dict]
     expenses_month: float
     net_profit_month: float
-    revenue_trend: list[dict]  # [{date, revenue}]
+    revenue_trend: list[dict]
     popular_services_report: list[dict]
     average_rating: float
     review_count: int
