@@ -91,6 +91,12 @@ export const aiRecommendAccept = (logId) => request(`/ai/recommend/${logId}/acce
 export const adminLogin = (username, password) =>
   request('/admin/login', { method: 'POST', body: { username, password } })
 export const adminMe = () => request('/admin/me', { auth: true })
+export const adminChangePassword = (currentPassword, newPassword) =>
+  request('/admin/password', {
+    method: 'PUT',
+    auth: true,
+    body: { current_password: currentPassword, new_password: newPassword },
+  })
 
 // --- Admin bookings -----------------------------------------------------
 export const adminListBookings = (params) => request('/admin/bookings', { auth: true, params })
@@ -130,7 +136,7 @@ export const adminDeleteExpense = (id) => request(`/admin/expenses/${id}`, { met
 export function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.onload = () => resolve(reader.result) // data:image/...;base64,xxxx
+    reader.onload = () => resolve(reader.result)
     reader.onerror = reject
     reader.readAsDataURL(file)
   })
