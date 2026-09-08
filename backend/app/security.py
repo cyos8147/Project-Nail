@@ -27,7 +27,9 @@ def verify_password(raw: str, hashed: str) -> bool:
 
 def create_access_token(subject: str) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_expire_minutes)
-    payload = {"sub": subject, "exp": expire}
+    # subject มักเป็น admin.id ที่ Postgres คืนมาเป็น uuid.UUID object ตรงๆ (ปัญหาเดียวกับที่เจอ
+    # ใน schemas.py) ต้องแปลงเป็น string ก่อน ไม่งั้น jwt.encode ภายในจะ json.dumps ไม่ผ่าน
+    payload = {"sub": str(subject), "exp": expire}
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 
