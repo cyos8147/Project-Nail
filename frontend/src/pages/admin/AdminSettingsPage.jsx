@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react'
-import { adminAddHoliday, adminDeleteHoliday, adminListHolidays, adminUpdateShopSettings, getShopSettings } from '../../api/client.js'
+import {
+  adminAddHoliday,
+  adminChangePassword,
+  adminDeleteHoliday,
+  adminListHolidays,
+  adminUpdateShopSettings,
+  getShopSettings,
+} from '../../api/client.js'
 
 const WEEKDAYS = [
   { id: 0, label: 'อาทิตย์' }, { id: 1, label: 'จันทร์' }, { id: 2, label: 'อังคาร' }, { id: 3, label: 'พุธ' },
@@ -12,6 +19,10 @@ export default function AdminSettingsPage() {
   const [newHoliday, setNewHoliday] = useState({ holiday_date: '', note: '' })
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState(null)
+
+  const [pwForm, setPwForm] = useState({ current_password: '', new_password: '', confirm_password: '' })
+  const [pwSaved, setPwSaved] = useState(false)
+  const [pwError, setPwError] = useState(null)
 
   function load() {
     getShopSettings().then(setForm)
@@ -52,6 +63,27 @@ export default function AdminSettingsPage() {
     load()
   }
 
+  async function handleChangePassword(e) {
+    e.preventDefault()
+    setPwError(null)
+    if (pwForm.new_password.length < 8) {
+      setPwError('รหัสผ่านใหม่ต้องมีอย่างน้อย 8 ตัวอักษร')
+      return
+    }
+    if (pwForm.new_password !== pwForm.confirm_password) {
+      setPwError('รหัสผ่านใหม่ทั้งสองช่องไม่ตรงกัน')
+      return
+    }
+    try {
+      await adminChangePassword(pwForm.current_password, pwForm.new_password)
+      setPwForm({ current_password: '', new_password: '', confirm_password: '' })
+      setPwSaved(true)
+      setTimeout(() => setPwSaved(false), 2500)
+    } catch (err) {
+      setPwError(err.message)
+    }
+  }
+
   if (!form) return <p className="text-gray-400">กำลังโหลด...</p>
 
   return (
@@ -59,6 +91,49 @@ export default function AdminSettingsPage() {
       <div>
         <h1 className="font-display text-2xl font-bold text-gray-800">ตั้งค่าร้าน</h1>
         <p className="text-gray-500 text-sm mt-1">เวลาทำการ วันหยุดประจำสัปดาห์ และข้อมูลติดต่อ</p>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-card p-6">
+        <p className="font-medium text-gray-700 mb-3">เปลี่ยนรหัสผ่านแอดมิน</p>
+        <form onSubmit={handleChangePassword} className="grid sm:grid-cols-3 gap-3">
+          <div>
+            <label className="text-xs text-gray-500 block mb-1">รหัสผ่านเดิม</label>
+            <input
+              type="password"
+              value={pwForm.current_password}
+              onChange={(e) => setPwForm({ ...pwForm, current_password: e.target.value })}
+              className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm"
+              required
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 block mb-1">รหัสผ่านใหม่ (8 ตัวขึ้นไป)</label>
+            <input
+              type="password"
+              value={pwForm.new_password}
+              onChange={(e) => setPwForm({ ...pwForm, new_password: e.target.value })}
+              className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm"
+              required
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 block mb-1">ยืนยันรหัสผ่านใหม่</label>
+            <input
+              type="password"
+              value={pwForm.confirm_password}
+              onChange={(e) => setPwForm({ ...pwForm, confirm_password: e.target.value })}
+              className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm"
+              required
+            />
+          </div>
+          <div className="sm:col-span-3 flex items-center gap-3">
+            <button type="submit" className="bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-6 py-2.5 rounded-xl">
+              เปลี่ยนรหัสผ่าน
+            </button>
+            {pwSaved && <span className="text-sm text-green-600">✅ เปลี่ยนรหัสผ่านแล้ว</span>}
+            {pwError && <span className="text-sm text-red-500">{pwError}</span>}
+          </div>
+        </form>
       </div>
 
       <form onSubmit={handleSave} className="bg-white rounded-2xl shadow-card p-6 space-y-4">
