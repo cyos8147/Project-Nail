@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import Header from '../components/Header.jsx'
 import Footer from '../components/Footer.jsx'
 import { createReview, fileToBase64, getCustomerHistory, getSavedPhone, savePhone } from '../api/client.js'
@@ -139,6 +140,15 @@ export default function CustomerHistoryPage() {
                     </p>
                     {b.reference_image_url && (
                       <img src={b.reference_image_url} alt="รูปที่แนบ" className="mt-2 w-16 h-16 rounded-lg object-cover" />
+                    )}
+
+                    {['pending', 'confirmed'].includes(b.status) && (
+                      <Link
+                        to={`/booking/edit?code=${encodeURIComponent(b.booking_code)}&phone=${encodeURIComponent(phone.trim())}`}
+                        className="mt-3 inline-block text-xs font-semibold text-rose-600 hover:underline"
+                      >
+                        ✏️ แก้ไขวันเวลา
+                      </Link>
                     )}
 
                     {b.status === 'completed' && !reviewedBookingIds.has(b.id) && (
