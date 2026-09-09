@@ -64,8 +64,10 @@ export const getServiceCategories = () => request('/service-categories')
 export const getServices = (categoryId) => request('/services', { params: { category_id: categoryId } })
 export const getNailDesigns = (styleTag) => request('/nail-designs', { params: { style_tag: styleTag } })
 export const getShopSettings = () => request('/shop-settings')
-export const getAvailability = (date, durationMinutes) =>
-  request('/availability', { params: { date, duration_minutes: durationMinutes } })
+export const getAvailability = (date, durationMinutes, excludeBookingId) =>
+  request('/availability', {
+    params: { date, duration_minutes: durationMinutes, exclude_booking_id: excludeBookingId },
+  })
 
 // --- Bookings -----------------------------------------------------------
 export const createBooking = (payload) => request('/bookings', { method: 'POST', body: payload })
@@ -74,6 +76,11 @@ export const getBookingStatus = (bookingCode, phone) =>
 export const getCustomerHistory = (phone) => request('/bookings/history', { params: { phone } })
 export const cancelBooking = (bookingId, phone) =>
   request(`/bookings/${bookingId}/cancel`, { method: 'PATCH', params: { phone } })
+export const rescheduleBooking = (bookingId, phone, bookingDate, bookingTime) =>
+  request(`/bookings/${bookingId}/reschedule`, {
+    method: 'PATCH',
+    body: { phone, booking_date: bookingDate, booking_time: bookingTime },
+  })
 
 // --- Reviews --------------------------------------------------------------
 export const getReviews = (limit = 20) => request('/reviews', { params: { limit } })
