@@ -172,6 +172,12 @@ class BookingStatusUpdate(BaseModel):
     admin_note: Optional[str] = None
 
 
+class BookingReschedule(BaseModel):
+    phone: str
+    booking_date: date
+    booking_time: str
+
+
 class AvailabilityOut(BaseModel):
     date: date
     is_open: bool
