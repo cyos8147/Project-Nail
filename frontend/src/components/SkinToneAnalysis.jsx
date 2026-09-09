@@ -231,7 +231,7 @@ export default function SkinToneAnalysis({ onAnalyzed, onReset, onTryOn }) {
                   ดูลายทั้งหมดที่เหมาะกับฉัน
                 </a>
                 <a
-                  href="/#booking"
+                  href="/booking"
                   className="bg-white hover:bg-blush-100 text-rose-600 text-sm font-semibold px-6 py-2.5 rounded-full border border-blush-200 transition-colors"
                 >
                   จองคิวทำเล็บเลย
