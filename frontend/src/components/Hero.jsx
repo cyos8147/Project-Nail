@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 const swatches = [
   { color: '#EC4C82', label: 'Rose', top: '14%', left: '18%', delay: '0s' },
   { color: '#E8C39E', label: 'Nude', top: '58%', left: '10%', delay: '0.4s' },
@@ -29,12 +31,12 @@ export default function Hero() {
             เลือกลายเล็บที่ใช่ จองคิวได้ในไม่กี่ขั้นตอน พร้อมทีมช่างมืออาชีพดูแลคุณทุกรายละเอียด
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
-            <a
-              href="#booking"
+            <Link
+              to="/booking"
               className="bg-rose-500 hover:bg-rose-600 text-white font-semibold px-7 py-3 rounded-full shadow-card transition-colors"
             >
               จองคิวออนไลน์
-            </a>
+            </Link>
             <a
               href="#popular"
               className="bg-white hover:bg-blush-100 text-rose-600 font-semibold px-7 py-3 rounded-full border border-blush-200 transition-colors"
