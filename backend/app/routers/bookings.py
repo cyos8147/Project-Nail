@@ -129,6 +129,34 @@ def customer_history(phone: str, db: Session = Depends(get_db)):
     }
 
 
+@router.patch("/{booking_id}/reschedule", response_model=schemas.BookingOut)
+def reschedule_booking(booking_id: str, payload: schemas.BookingReschedule, db: Session = Depends(get_db)):
+    booking = db.get(models.Booking, booking_id)
+    if booking is None or booking.customer_phone != payload.phone:
+        raise HTTPException(404, "ไม่พบข้อมูลการจอง")
+    if booking.status not in ("pending", "confirmed"):
+        raise HTTPException(400, "ไม่สามารถแก้ไขคิวนี้ได้แล้ว")
+    if not is_shop_open(db, payload.booking_date):
+        raise HTTPException(400, "ร้านปิดในวันที่เลือก กรุณาเลือกวันอื่น")
+
+    slots = compute_available_slots(
+        db, payload.booking_date, booking.estimated_duration_minutes, exclude_booking_id=booking_id
+    )
+    chosen = next((s for s in slots if s["time"] == payload.booking_time), None)
+    if chosen is None or not chosen["available"]:
+        raise HTTPException(409, "ช่วงเวลานี้ถูกจองไปแล้วหรือไม่เปิดให้จอง กรุณาเลือกเวลาอื่น")
+
+    booking.booking_date = payload.booking_date
+    booking.booking_time = payload.booking_time
+    # ให้ทางร้านยืนยันเวลาที่แก้ไขใหม่อีกครั้งเสมอ แม้คิวเดิมจะเคย "ยืนยันแล้ว" ก็ตาม
+    booking.status = "pending"
+    db.commit()
+    db.refresh(booking)
+    customer = db.get(models.Customer, booking.customer_id)
+    line_notify.notify_status_changed(booking, customer.line_user_id if customer else None)
+    return booking
+
+
 @router.patch("/{booking_id}/cancel", response_model=schemas.BookingOut)
 def cancel_booking(booking_id: str, phone: str, db: Session = Depends(get_db)):
     booking = db.get(models.Booking, booking_id)
