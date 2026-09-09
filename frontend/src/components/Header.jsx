@@ -5,16 +5,16 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
 
   const links = [
-    { label: 'บริการ', href: '#services' },
-    { label: 'ลายเล็บยอดนิยม', href: '#popular' },
-    { label: 'โปรโมชั่น', href: '#promotions' },
-    { label: 'รีวิว', href: '#reviews' },
+    { label: 'บริการ', href: '/#services' },
+    { label: 'ลายเล็บยอดนิยม', href: '/#popular' },
+    { label: 'โปรโมชั่น', href: '/#promotions' },
+    { label: 'รีวิว', href: '/#reviews' },
   ]
 
   return (
     <header className="sticky top-0 z-50 bg-blush-50/90 backdrop-blur border-b border-blush-200">
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
-        <a href="#home" className="font-display text-2xl font-bold text-rose-600 whitespace-nowrap">
+        <a href="/#home" className="font-display text-2xl font-bold text-rose-600 whitespace-nowrap">
           Nail<span className="text-gray-800">Glow</span>
         </a>
 
