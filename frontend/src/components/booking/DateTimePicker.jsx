@@ -25,6 +25,7 @@ export default function DateTimePicker({
   setSelectedTime,
   serviceDurationMinutes = 60,
   closedWeekdays,
+  excludeBookingId,
 }) {
   const today = startOfToday()
   const [viewYear, setViewYear] = useState(today.getFullYear())
@@ -75,7 +76,7 @@ export default function DateTimePicker({
     let cancelled = false
     setLoadingSlots(true)
     setSlotsError(null)
-    getAvailability(selectedDate, serviceDurationMinutes)
+    getAvailability(selectedDate, serviceDurationMinutes, excludeBookingId)
       .then((res) => {
         if (!cancelled) setSlots(res.slots || [])
       })
@@ -88,7 +89,7 @@ export default function DateTimePicker({
     return () => {
       cancelled = true
     }
-  }, [selectedDate, serviceDurationMinutes])
+  }, [selectedDate, serviceDurationMinutes, excludeBookingId])
 
   return (
     <div>
