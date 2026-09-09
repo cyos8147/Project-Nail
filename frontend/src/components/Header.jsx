@@ -35,12 +35,12 @@ export default function Header() {
           >
             ✨ AI วิเคราะห์ลายเล็บ
           </Link>
-          <a
-            href="#booking"
+          <Link
+            to="/booking"
             className="bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-5 py-2.5 rounded-full shadow-card transition-colors whitespace-nowrap"
           >
             จองคิวเลย
-          </a>
+          </Link>
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
