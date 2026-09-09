@@ -41,7 +41,9 @@ def is_shop_open(db: Session, target_date: date) -> bool:
     return holiday is None
 
 
-def compute_available_slots(db: Session, target_date: date, duration_minutes: int) -> list[dict]:
+def compute_available_slots(
+    db: Session, target_date: date, duration_minutes: int, exclude_booking_id: str | None = None
+) -> list[dict]:
     settings = get_shop_settings(db)
     if not is_shop_open(db, target_date) or duration_minutes <= 0:
         return []
@@ -50,16 +52,17 @@ def compute_available_slots(db: Session, target_date: date, duration_minutes: in
     close_min = _time_to_minutes(settings.closing_time)
     step = settings.slot_interval_minutes or 60
 
-    existing = (
-        db.query(Booking)
-        .filter(
-            and_(
-                Booking.booking_date == target_date,
-                Booking.status.in_(ACTIVE_STATUSES),
-            )
+    existing_query = db.query(Booking).filter(
+        and_(
+            Booking.booking_date == target_date,
+            Booking.status.in_(ACTIVE_STATUSES),
         )
-        .all()
     )
+    # ตอนแก้ไขวันเวลาการจองเดิม ต้องไม่นับคิวเดิมของตัวเองเป็นช่วงเวลาที่ถูกจองไปแล้ว
+    # ไม่งั้นลูกค้าจะไม่เห็นแม้แต่เวลาเดิมของตัวเองเป็นตัวเลือกว่าง
+    if exclude_booking_id:
+        existing_query = existing_query.filter(Booking.id != exclude_booking_id)
+    existing = existing_query.all()
     busy_ranges = []
     for b in existing:
         start = _time_to_minutes(b.booking_time)
