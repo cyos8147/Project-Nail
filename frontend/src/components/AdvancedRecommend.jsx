@@ -83,7 +83,7 @@ export default function AdvancedRecommend() {
       'nailglow_carry_design',
       JSON.stringify({ nail_design_id: design.id, nail_design_name: design.name, color_hex: design.color_hex })
     )
-    window.location.href = '/#booking'
+    window.location.href = '/booking'
   }
 
   const usingModel = result && !result.model_metrics?.note
