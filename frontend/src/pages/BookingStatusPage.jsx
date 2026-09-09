@@ -106,13 +106,21 @@ export default function BookingStatusPage() {
               )}
             </div>
             {['pending', 'confirmed'].includes(booking.status) && (
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="w-full mt-6 bg-white hover:bg-red-50 text-red-500 font-semibold py-3 rounded-full border border-red-200 transition-colors"
-              >
-                ยกเลิกคิวนี้
-              </button>
+              <div className="mt-6 space-y-3">
+                <Link
+                  to={`/booking/edit?code=${encodeURIComponent(booking.booking_code)}&phone=${encodeURIComponent(phone.trim())}`}
+                  className="block w-full text-center bg-white hover:bg-blush-100 text-rose-600 font-semibold py-3 rounded-full border border-blush-200 transition-colors"
+                >
+                  แก้ไขวันเวลา
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="w-full bg-white hover:bg-red-50 text-red-500 font-semibold py-3 rounded-full border border-red-200 transition-colors"
+                >
+                  ยกเลิกคิวนี้
+                </button>
+              </div>
             )}
           </div>
         )}
