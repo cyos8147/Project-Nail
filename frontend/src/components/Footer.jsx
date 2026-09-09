@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom'
-
 export default function Footer() {
   return (
     <footer className="relative bg-white border-t border-blush-200 py-8">
@@ -12,9 +10,6 @@ export default function Footer() {
         <div className="flex items-center gap-4">
           <span>Line: @nailglow</span>
           <span>โทร: 02-123-4567</span>
-          <Link to="/admin/login" className="text-gray-300 hover:text-rose-500 transition-colors">
-            สำหรับเจ้าของร้าน
-          </Link>
         </div>
       </div>
     </footer>
