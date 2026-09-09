@@ -170,7 +170,7 @@ export default function ReferenceImageAnalysis() {
                 </div>
 
                 <a
-                  href="/#booking"
+                  href="/booking"
                   className="inline-block mt-5 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-6 py-2.5 rounded-full shadow-card transition-colors"
                 >
                   จองคิวทำลายนี้
