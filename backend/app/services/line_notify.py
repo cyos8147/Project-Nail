@@ -91,3 +91,50 @@ def notify_appointment_reminder(booking, line_user_id: str | None) -> bool:
     if not line_user_id:
         return False
     return push_text_message(line_user_id, build_reminder_text(booking))
+
+
+def build_shop_new_booking_text(booking) -> str:
+    return (
+        f"🔔 มีการจองใหม่เข้ามา!\n"
+        f"ลูกค้า: {booking.customer_name} ({booking.customer_phone})\n"
+        f"บริการ: {booking.service_name}\n"
+        f"วันที่: {booking.booking_date}  เวลา: {booking.booking_time} น.\n"
+        f"รหัสคิว: {booking.booking_code}\n"
+        f"เข้าไปยืนยันได้ที่หน้าแอดมิน"
+    )
+
+
+def build_shop_cancelled_text(booking) -> str:
+    return (
+        f"❌ ลูกค้ายกเลิกคิว\n"
+        f"ลูกค้า: {booking.customer_name} ({booking.customer_phone})\n"
+        f"บริการ: {booking.service_name}\n"
+        f"วันที่เดิม: {booking.booking_date}  เวลา: {booking.booking_time} น.\n"
+        f"รหัสคิว: {booking.booking_code}"
+    )
+
+
+def build_shop_rescheduled_text(booking) -> str:
+    return (
+        f"🔄 ลูกค้าแก้ไขวันเวลาการจอง\n"
+        f"ลูกค้า: {booking.customer_name} ({booking.customer_phone})\n"
+        f"บริการ: {booking.service_name}\n"
+        f"วันเวลาใหม่: {booking.booking_date}  เวลา: {booking.booking_time} น.\n"
+        f"รหัสคิว: {booking.booking_code}\n"
+        f"สถานะกลับเป็น \"รอยืนยัน\" กรุณายืนยันเวลาใหม่อีกครั้ง"
+    )
+
+
+def notify_shop_new_booking(booking, owner_line_user_id: str | None) -> None:
+    if owner_line_user_id:
+        push_text_message(owner_line_user_id, build_shop_new_booking_text(booking))
+
+
+def notify_shop_booking_cancelled(booking, owner_line_user_id: str | None) -> None:
+    if owner_line_user_id:
+        push_text_message(owner_line_user_id, build_shop_cancelled_text(booking))
+
+
+def notify_shop_booking_rescheduled(booking, owner_line_user_id: str | None) -> None:
+    if owner_line_user_id:
+        push_text_message(owner_line_user_id, build_shop_rescheduled_text(booking))
