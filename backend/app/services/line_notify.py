@@ -125,16 +125,29 @@ def build_shop_rescheduled_text(booking) -> str:
     )
 
 
-def notify_shop_new_booking(booking, owner_line_user_id: str | None) -> None:
-    if owner_line_user_id:
-        push_text_message(owner_line_user_id, build_shop_new_booking_text(booking))
+def _as_recipient_list(recipients) -> list[str]:
+    """เผื่อช่วงเปลี่ยนผ่านตอนแปะไฟล์ทีละไฟล์ผ่าน GitHub — ถ้าไฟล์ที่เรียกยังไม่ได้อัปเดตเป็นแบบ list
+    (ยังส่ง str ตัวเดียวหรือ None มาแบบระบบเก่า) ก็ยังทำงานถูกต้องได้เหมือนเดิม ไม่ error"""
+    if not recipients:
+        return []
+    if isinstance(recipients, str):
+        return [recipients]
+    return list(recipients)
 
 
-def notify_shop_booking_cancelled(booking, owner_line_user_id: str | None) -> None:
-    if owner_line_user_id:
-        push_text_message(owner_line_user_id, build_shop_cancelled_text(booking))
+def notify_shop_new_booking(booking, owner_line_user_ids) -> None:
+    text = build_shop_new_booking_text(booking)
+    for uid in _as_recipient_list(owner_line_user_ids):
+        push_text_message(uid, text)
 
 
-def notify_shop_booking_rescheduled(booking, owner_line_user_id: str | None) -> None:
-    if owner_line_user_id:
-        push_text_message(owner_line_user_id, build_shop_rescheduled_text(booking))
+def notify_shop_booking_cancelled(booking, owner_line_user_ids) -> None:
+    text = build_shop_cancelled_text(booking)
+    for uid in _as_recipient_list(owner_line_user_ids):
+        push_text_message(uid, text)
+
+
+def notify_shop_booking_rescheduled(booking, owner_line_user_ids) -> None:
+    text = build_shop_rescheduled_text(booking)
+    for uid in _as_recipient_list(owner_line_user_ids):
+        push_text_message(uid, text)
