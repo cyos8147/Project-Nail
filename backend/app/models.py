@@ -44,8 +44,22 @@ class ShopSettings(Base):
     closing_time: Mapped[str] = mapped_column(String(8), default="19:00")
     slot_interval_minutes: Mapped[int] = mapped_column(Integer, default=60)
     closed_weekdays: Mapped[list] = mapped_column(JSON, default=list)
+    # เก็บไว้เผื่อข้อมูลเก่า — ของจริงย้ายไปตาราง ShopLineRecipient ด้านล่างแล้ว (รองรับผูกได้หลายคน)
     owner_line_user_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class ShopLineRecipient(Base):
+    """คนที่ผูกไลน์ไว้รับแจ้งเตือนของร้าน (จองใหม่/ยกเลิก/แก้ไขคิว) — ผูกได้หลายคน
+    ใครก็ตามที่รู้วลีลับ (SHOP_OWNER_LINK_PHRASE) ทักแชท OA จะถูกเพิ่มเข้ามาในตารางนี้อัตโนมัติ
+    ถ้าต้องการลบคนที่ผูกผิดหรือคนที่ลาออก ให้เข้าไปลบแถวในตารางนี้ผ่าน Supabase Table editor
+    """
+
+    __tablename__ = "shop_line_recipients"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    line_user_id: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
 class ShopHoliday(Base):
