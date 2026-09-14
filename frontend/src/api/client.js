@@ -109,6 +109,7 @@ export const adminChangePassword = (currentPassword, newPassword) =>
 export const adminListBookings = (params) => request('/admin/bookings', { auth: true, params })
 export const adminUpdateBooking = (id, payload) =>
   request(`/admin/bookings/${id}`, { method: 'PATCH', auth: true, body: payload })
+export const adminDeleteBooking = (id) => request(`/admin/bookings/${id}`, { method: 'DELETE', auth: true })
 
 // --- Admin customers ------------------------------------------------------
 export const adminSearchCustomers = (q) => request('/admin/customers', { auth: true, params: { q } })
