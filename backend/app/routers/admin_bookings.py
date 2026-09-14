@@ -37,7 +37,7 @@ def list_bookings(
                 models.Booking.booking_code.ilike(like),
             )
         )
-    return q.order_by(models.Booking.booking_date.desc(), models.Booking.booking_time.desc()).all()
+    return q.order_by(models.Booking.created_at.desc()).all()
 
 
 @router.get("/{booking_id}", response_model=schemas.BookingOut)
@@ -75,3 +75,24 @@ def update_booking_status(
     customer = db.get(models.Customer, booking.customer_id)
     line_notify.notify_status_changed(booking, customer.line_user_id if customer else None)
     return booking
+
+
+@router.delete("/{booking_id}", status_code=204)
+def delete_booking(
+    booking_id: str, db: Session = Depends(get_db), admin: models.AdminUser = Depends(get_current_admin)
+):
+    booking = db.get(models.Booking, booking_id)
+    if booking is None:
+        raise HTTPException(404, "ไม่พบข้อมูลการจอง")
+
+    # ลบ/ตัดการอ้างอิงถึงคิวนี้ก่อน ไม่งั้นจะติด foreign key constraint ตอนลบ
+    # (รีวิวที่ผูกกับคิวนี้ลบไปด้วยเลย ส่วนประวัติ AI/ไลน์ที่เคยอ้างอิงคิวนี้ยังเก็บไว้ แค่ตัดการเชื่อมโยง)
+    db.query(models.Review).filter(models.Review.booking_id == booking_id).delete()
+    db.query(models.AiTryonHistory).filter(models.AiTryonHistory.booking_id == booking_id).update(
+        {models.AiTryonHistory.booking_id: None}
+    )
+    db.query(models.LineNotifyLog).filter(models.LineNotifyLog.booking_id == booking_id).update(
+        {models.LineNotifyLog.booking_id: None}
+    )
+    db.delete(booking)
+    db.commit()
