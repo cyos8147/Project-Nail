@@ -76,6 +76,8 @@ def create_booking(payload: schemas.BookingCreate, db: Session = Depends(get_db)
     db.refresh(booking)
 
     line_notify.notify_booking_created(booking, customer.line_user_id)
+    shop_settings = db.get(models.ShopSettings, 1)
+    line_notify.notify_shop_new_booking(booking, shop_settings.owner_line_user_id if shop_settings else None)
     return booking
 
 
@@ -154,6 +156,8 @@ def reschedule_booking(booking_id: str, payload: schemas.BookingReschedule, db: 
     db.refresh(booking)
     customer = db.get(models.Customer, booking.customer_id)
     line_notify.notify_status_changed(booking, customer.line_user_id if customer else None)
+    shop_settings = db.get(models.ShopSettings, 1)
+    line_notify.notify_shop_booking_rescheduled(booking, shop_settings.owner_line_user_id if shop_settings else None)
     return booking
 
 
@@ -169,4 +173,6 @@ def cancel_booking(booking_id: str, phone: str, db: Session = Depends(get_db)):
     db.refresh(booking)
     customer = db.get(models.Customer, booking.customer_id)
     line_notify.notify_status_changed(booking, customer.line_user_id if customer else None)
+    shop_settings = db.get(models.ShopSettings, 1)
+    line_notify.notify_shop_booking_cancelled(booking, shop_settings.owner_line_user_id if shop_settings else None)
     return booking
