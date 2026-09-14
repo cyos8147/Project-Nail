@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import get_settings
 from .database import Base, SessionLocal, engine
+from .scheduler import start_scheduler
 from .routers import (
     admin_auth,
     admin_bookings,
@@ -56,6 +57,14 @@ def on_startup():
         run_seed(db)
     finally:
         db.close()
+    app.state.scheduler = start_scheduler()
+
+
+@app.on_event("shutdown")
+def on_shutdown():
+    scheduler = getattr(app.state, "scheduler", None)
+    if scheduler:
+        scheduler.shutdown(wait=False)
 
 
 @app.get("/api/health")
