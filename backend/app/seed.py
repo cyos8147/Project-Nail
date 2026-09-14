@@ -5,7 +5,7 @@
 
 from sqlalchemy.orm import Session
 
-from .models import AdminUser, NailDesign, Service, ServiceCategory, ShopSettings
+from .models import AdminUser, NailDesign, Service, ServiceCategory, ShopLineRecipient, ShopSettings
 from .security import hash_password
 from .config import get_settings
 
@@ -64,6 +64,18 @@ def run_seed(db: Session) -> None:
 
     if db.query(ShopSettings).count() == 0:
         db.add(ShopSettings(id=1, closed_weekdays=[2]))  # ร้านหยุดทุกวันอังคาร
+        db.flush()
+
+    # ย้ายบัญชีที่เคยผูกไว้แบบคนเดียว (ระบบเก่า) เข้าตารางผู้รับแจ้งเตือนแบบหลายคน — รันครั้งเดียวพอ (เช็คซ้ำก่อนเพิ่มทุกครั้ง)
+    shop_settings = db.get(ShopSettings, 1)
+    if shop_settings and shop_settings.owner_line_user_id:
+        already_migrated = (
+            db.query(ShopLineRecipient)
+            .filter(ShopLineRecipient.line_user_id == shop_settings.owner_line_user_id)
+            .first()
+        )
+        if not already_migrated:
+            db.add(ShopLineRecipient(line_user_id=shop_settings.owner_line_user_id))
 
     if db.query(AdminUser).count() == 0:
         db.add(
