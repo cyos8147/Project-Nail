@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { adminListBookings, adminUpdateBooking } from '../../api/client.js'
+import { adminDeleteBooking, adminListBookings, adminUpdateBooking } from '../../api/client.js'
 
 const STATUS_OPTIONS = ['pending', 'confirmed', 'completed', 'cancelled', 'no_show']
 const STATUS_LABEL = {
@@ -30,6 +30,12 @@ export default function AdminBookingsPage() {
     const admin_note = noteDraft[booking.id] ?? booking.admin_note
     const updated = await adminUpdateBooking(booking.id, { status: booking.status, admin_note })
     setBookings((prev) => prev.map((b) => (b.id === booking.id ? updated : b)))
+  }
+
+  async function handleDelete(booking) {
+    if (!window.confirm(`ลบคิว ${booking.booking_code} (${booking.customer_name}) ถาวรเลยหรือไม่? กู้คืนไม่ได้`)) return
+    await adminDeleteBooking(booking.id)
+    setBookings((prev) => prev.filter((b) => b.id !== booking.id))
   }
 
   return (
@@ -74,13 +80,23 @@ export default function AdminBookingsPage() {
                 {b.shade_name && <p className="text-xs text-gray-400">โทนสี: {b.shade_name}</p>}
                 {b.ai_style_tag && <p className="text-xs text-gray-400">AI style: {b.ai_style_tag} (+{b.ai_extra_minutes} นาที)</p>}
               </div>
-              <select
-                value={b.status}
-                onChange={(e) => handleStatusChange(b, e.target.value)}
-                className="rounded-full border border-blush-200 px-3 py-1.5 text-xs font-semibold"
-              >
-                {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
-              </select>
+              <div className="flex items-center gap-2">
+                <select
+                  value={b.status}
+                  onChange={(e) => handleStatusChange(b, e.target.value)}
+                  className="rounded-full border border-blush-200 px-3 py-1.5 text-xs font-semibold"
+                >
+                  {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(b)}
+                  title="ลบคิวนี้ถาวร"
+                  className="text-gray-300 hover:text-red-500 text-lg leading-none px-1.5 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             {b.reference_image_url && (
