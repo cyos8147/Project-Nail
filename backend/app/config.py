@@ -36,6 +36,11 @@ class Settings(BaseSettings):
     # --- LINE Messaging API ---
     line_channel_access_token: str = ""
     line_channel_secret: str = ""
+    # วลีลับสำหรับผูกบัญชีไลน์รับแจ้งเตือนของร้าน (พิมพ์วลีนี้ทักแชท OA) — ผูกได้หลายคน ไม่จำกัดจำนวน
+    # ใครรู้วลีนี้ก็เพิ่มตัวเองเป็นผู้รับแจ้งเตือนได้ทันที (แจ้งเตือนมีชื่อ+เบอร์ลูกค้าด้วย) จึงควรบอกเฉพาะคนในร้านเท่านั้น
+    # ควรตั้งเป็นค่าเฉพาะของตัวเองผ่าน environment variable บน Render ไม่ควรใช้ค่า default นี้ตรงๆ
+    # เพราะโค้ดนี้อยู่ใน public repo ใครก็อ่านเห็นได้
+    shop_owner_link_phrase: str = "ผูกไลน์เจ้าของร้าน"
 
     # --- AI ---
     yolo_nail_seg_weights: str = "ml/models/yolov8_nail_seg.pt"
