@@ -75,3 +75,19 @@ def notify_status_changed(booking, line_user_id: str | None) -> None:
             f"🌟 ขอบคุณที่ใช้บริการนะคะ! ช่วยให้คะแนนรีวิวร้านของเราได้ที่หน้าเว็บ "
             f"ด้วยรหัสคิว {booking.booking_code} ค่ะ",
         )
+
+
+def build_reminder_text(booking) -> str:
+    return (
+        f"⏰ แจ้งเตือนคิวพรุ่งนี้!\n"
+        f"รหัสคิว: {booking.booking_code}\n"
+        f"บริการ: {booking.service_name}\n"
+        f"วันที่: {booking.booking_date}  เวลา: {booking.booking_time} น.\n"
+        f"อย่าลืมมาตามนัดนะคะ 🌸 หากไม่สะดวกกรุณาแจ้งยกเลิก/เลื่อนคิวล่วงหน้าที่หน้าเว็บได้เลยค่ะ"
+    )
+
+
+def notify_appointment_reminder(booking, line_user_id: str | None) -> bool:
+    if not line_user_id:
+        return False
+    return push_text_message(line_user_id, build_reminder_text(booking))
