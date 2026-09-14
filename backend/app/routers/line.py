@@ -15,25 +15,28 @@ from sqlalchemy.orm import Session
 
 from ..config import get_settings
 from ..database import SessionLocal
-from ..models import Booking, Customer, ShopSettings
+from ..models import Booking, Customer, ShopLineRecipient
 
 router = APIRouter(prefix="/line", tags=["line"])
 settings = get_settings()
 
 BOOKING_CODE_RE = re.compile(r"^NG-\d{8}-\d{4}$")
 PHONE_RE = re.compile(r"^0\d{8,9}$")
-OWNER_LINK_PHRASE = "ผูกไลน์เจ้าของร้าน"
 
 
-def _link_shop_owner(db: Session, user_id: str, text: str) -> bool:
-    if text.strip() != OWNER_LINK_PHRASE:
-        return False
-    shop_settings = db.get(ShopSettings, 1)
-    if shop_settings is None:
-        return False
-    shop_settings.owner_line_user_id = user_id
+def _link_shop_owner(db: Session, user_id: str, text: str) -> str | None:
+    """คืนค่า "new" ถ้าผูกสำเร็จใหม่, "already" ถ้าผูกไว้แล้ว, None ถ้าข้อความไม่ใช่วลีลับ
+    รองรับผูกได้หลายคน — ใครก็ตามที่พิมพ์วลีลับถูกต้องจะถูกเพิ่มเป็นผู้รับแจ้งเตือนเพิ่ม (ไม่จำกัดจำนวน)
+    ดังนั้นวลีลับนี้ควรบอกเฉพาะคนในร้านที่ควรรับแจ้งเตือนจริงๆ เท่านั้น (ดู config.py)
+    """
+    if text.strip() != settings.shop_owner_link_phrase:
+        return None
+    existing = db.query(ShopLineRecipient).filter(ShopLineRecipient.line_user_id == user_id).first()
+    if existing:
+        return "already"
+    db.add(ShopLineRecipient(line_user_id=user_id))
     db.commit()
-    return True
+    return "new"
 
 
 def _link_customer(db: Session, user_id: str, text: str) -> str | None:
@@ -90,8 +93,13 @@ async def line_webhook(request: Request, x_line_signature: str = Header(default=
                     api.reply_message(ReplyMessageRequest(reply_token=event.reply_token, messages=[TextMessage(text=reply)]))
 
                 elif isinstance(event, MessageEvent) and isinstance(event.message, TextMessageContent):
-                    if _link_shop_owner(db, user_id, event.message.text):
-                        reply = "✅ ผูกบัญชีไลน์เจ้าของร้านสำเร็จแล้วค่ะ ระบบจะส่งแจ้งเตือนคิวใหม่/ยกเลิก/แก้ไขคิว มาที่นี่อัตโนมัติ"
+                    owner_link_result = _link_shop_owner(db, user_id, event.message.text)
+                    if owner_link_result == "new":
+                        reply = "✅ ผูกบัญชีไลน์สำเร็จแล้วค่ะ ระบบจะส่งแจ้งเตือนคิวใหม่/ยกเลิก/แก้ไขคิว มาที่นี่อัตโนมัติ"
+                        api.reply_message(ReplyMessageRequest(reply_token=event.reply_token, messages=[TextMessage(text=reply)]))
+                        continue
+                    elif owner_link_result == "already":
+                        reply = "บัญชีนี้ผูกรับแจ้งเตือนของร้านไว้อยู่แล้วค่ะ"
                         api.reply_message(ReplyMessageRequest(reply_token=event.reply_token, messages=[TextMessage(text=reply)]))
                         continue
 
