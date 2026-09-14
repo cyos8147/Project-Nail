@@ -44,6 +44,7 @@ class ShopSettings(Base):
     closing_time: Mapped[str] = mapped_column(String(8), default="19:00")
     slot_interval_minutes: Mapped[int] = mapped_column(Integer, default=60)
     closed_weekdays: Mapped[list] = mapped_column(JSON, default=list)
+    owner_line_user_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
