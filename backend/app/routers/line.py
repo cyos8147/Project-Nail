@@ -3,8 +3,10 @@
 ทำไมต้องมี webhook: LINE Messaging API ส่ง push message หา "ผู้ใช้คนไหน" ได้ด้วย LINE userId
 เท่านั้น (ไม่ใช่ชื่อ LINE ID ที่ลูกค้าพิมพ์ตอนจองคิว) ต้องได้ userId มาจาก event ที่ LINE ส่งเข้า webhook
 นี้ก่อนเท่านั้น (ตอนลูกค้าเพิ่มเพื่อน หรือทักแชทมา) ระบบนี้จึงใช้วิธี "ผูกบัญชี": ให้ลูกค้าเพิ่มเพื่อน OA
-ของร้าน แล้วพิมพ์ "เบอร์โทรศัพท์" หรือ "รหัสคิว" ที่ใช้ตอนจองส่งมาในแชท -> ระบบจะจับคู่ userId เข้ากับ
-ลูกค้าคนนั้นในฐานข้อมูลอัตโนมัติ ตั้งแต่นั้นระบบจะส่งแจ้งเตือนสถานะคิวผ่าน LINE ให้อัตโนมัติ
+ของร้าน แล้วพิมพ์ "รหัสคิว" ที่ได้ตอนจองส่งมาในแชท -> ระบบจะจับคู่ userId เข้ากับลูกค้าคนนั้นในฐานข้อมูล
+อัตโนมัติ ตั้งแต่นั้นระบบจะส่งแจ้งเตือนสถานะคิวผ่าน LINE ให้อัตโนมัติ
+(จงใจไม่รับเบอร์โทรศัพท์เป็นตัวผูกบัญชี เพราะเบอร์โทรไม่ใช่ความลับ คนอื่นที่รู้เบอร์ลูกค้าคนหนึ่งจะขโมย
+การแจ้งเตือนของคนนั้นไปได้ — ดู _link_customer ด้านล่าง)
 (ดูขั้นตอนตั้งค่า channel ทั้งหมดใน docs/05_LINE_INTEGRATION.md)
 """
 
@@ -21,7 +23,6 @@ router = APIRouter(prefix="/line", tags=["line"])
 settings = get_settings()
 
 BOOKING_CODE_RE = re.compile(r"^NG-\d{8}-\d{4}$")
-PHONE_RE = re.compile(r"^0\d{8,9}$")
 
 
 def _link_shop_owner(db: Session, user_id: str, text: str) -> str | None:
@@ -40,11 +41,12 @@ def _link_shop_owner(db: Session, user_id: str, text: str) -> str | None:
 
 
 def _link_customer(db: Session, user_id: str, text: str) -> str | None:
+    # จงใจไม่รับ "เบอร์โทรศัพท์" เป็นตัวผูกบัญชี เพราะเบอร์โทรไม่ใช่ความลับ — คนอื่นที่รู้/เดา
+    # เบอร์ของลูกค้าคนหนึ่งได้ จะพิมพ์แล้วขโมยการแจ้งเตือนคิวของคนนั้นไปได้ทันทีโดยไม่ต้องพิสูจน์ตัวตน
+    # รหัสคิวปลอดภัยกว่าเพราะเป็นรหัสเฉพาะของการจองแต่ละครั้ง คนอื่นเดาไม่ได้
     text = text.strip()
     customer = None
-    if PHONE_RE.match(text):
-        customer = db.query(Customer).filter(Customer.phone == text).first()
-    elif BOOKING_CODE_RE.match(text.upper()):
+    if BOOKING_CODE_RE.match(text.upper()):
         booking = db.query(Booking).filter(Booking.booking_code == text.upper()).first()
         if booking:
             customer = db.get(Customer, booking.customer_id)
@@ -87,7 +89,7 @@ async def line_webhook(request: Request, x_line_signature: str = Header(default=
                 if isinstance(event, FollowEvent):
                     reply = (
                         "🌸 ยินดีต้อนรับสู่ NailGlow!\n"
-                        "พิมพ์ \"เบอร์โทรศัพท์\" หรือ \"รหัสคิว\" ที่ใช้ตอนจองคิว เพื่อผูกบัญชีไลน์ "
+                        "พิมพ์ \"รหัสคิว\" ที่ได้ตอนจองคิว (เช่น NG-20260807-0001) เพื่อผูกบัญชีไลน์ "
                         "ระบบจะได้ส่งแจ้งเตือนสถานะคิวให้อัตโนมัติค่ะ"
                     )
                     api.reply_message(ReplyMessageRequest(reply_token=event.reply_token, messages=[TextMessage(text=reply)]))
@@ -107,7 +109,7 @@ async def line_webhook(request: Request, x_line_signature: str = Header(default=
                     if linked_name:
                         reply = f"✅ ผูกบัญชีไลน์กับข้อมูลคุณ {linked_name} สำเร็จแล้วค่ะ จะแจ้งเตือนสถานะคิวให้ทางนี้นะคะ"
                     else:
-                        reply = "พิมพ์เบอร์โทรศัพท์ (เช่น 0812345678) หรือรหัสคิว (เช่น NG-20260807-0001) เพื่อผูกบัญชีนะคะ"
+                        reply = "พิมพ์รหัสคิว (เช่น NG-20260807-0001) ที่ได้ตอนจองคิว เพื่อผูกบัญชีนะคะ"
                     api.reply_message(ReplyMessageRequest(reply_token=event.reply_token, messages=[TextMessage(text=reply)]))
     finally:
         db.close()
