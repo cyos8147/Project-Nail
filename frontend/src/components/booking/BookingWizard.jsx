@@ -232,8 +232,8 @@ export default function BookingWizard() {
             เพื่อรับแจ้งเตือนอัตโนมัติทุกครั้งที่ร้านยืนยัน/แก้ไขคิว
           </p>
           <div className="flex flex-wrap justify-center gap-3 mt-6">
-            <a href="/status" className="bg-white hover:bg-blush-100 text-rose-600 text-sm font-semibold px-6 py-3 rounded-full border border-blush-200 transition-colors">
-              ตรวจสอบสถานะคิว
+            <a href="/history" className="bg-white hover:bg-blush-100 text-rose-600 text-sm font-semibold px-6 py-3 rounded-full border border-blush-200 transition-colors">
+              ดูประวัติของฉัน
             </a>
             <button
               onClick={handleReset}
