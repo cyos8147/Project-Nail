@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Node / frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Env files (secrets live in Render/Vercel env vars, never committed)
+.env
+.env.*
+!.env.example
+
+# Editor/OS
+.DS_Store
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
