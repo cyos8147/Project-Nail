@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const { pathname } = useLocation()
 
   const links = [
     { label: 'บริการ', href: '/#services' },
@@ -10,6 +11,11 @@ export default function Header() {
     { label: 'โปรโมชั่น', href: '/#promotions' },
     { label: 'รีวิว', href: '/#reviews' },
   ]
+
+  // ไฮไลต์เมนูสีชมพูเฉพาะหน้าที่มีเส้นทางของตัวเอง (ตรวจสอบคิว/ประวัติของฉัน) — ไม่รวมลิงก์แบบ
+  // เลื่อนไปหมวดในหน้าแรก (บริการ/ลายเล็บ/โปรโมชั่น/รีวิว) เพราะไม่มี "หน้าปัจจุบัน" แบบเดียวกัน
+  const navLinkClass = (path) =>
+    pathname === path ? 'text-rose-600 font-semibold' : 'hover:text-rose-600 transition-colors'
 
   return (
     <header className="sticky top-0 z-50 bg-blush-50/90 backdrop-blur border-b border-blush-200">
@@ -24,8 +30,8 @@ export default function Header() {
               {link.label}
             </a>
           ))}
-          <Link to="/status" className="hover:text-rose-600 transition-colors">ตรวจสอบคิว</Link>
-          <Link to="/history" className="hover:text-rose-600 transition-colors">ประวัติของฉัน</Link>
+          <Link to="/status" className={navLinkClass('/status')}>ตรวจสอบคิว</Link>
+          <Link to="/history" className={navLinkClass('/history')}>ประวัติของฉัน</Link>
         </nav>
 
         <div className="flex items-center gap-3">
@@ -67,10 +73,10 @@ export default function Header() {
               {link.label}
             </a>
           ))}
-          <Link to="/status" onClick={() => setMenuOpen(false)} className="py-2.5 hover:text-rose-600 transition-colors">
+          <Link to="/status" onClick={() => setMenuOpen(false)} className={`py-2.5 ${navLinkClass('/status')}`}>
             ตรวจสอบคิว
           </Link>
-          <Link to="/history" onClick={() => setMenuOpen(false)} className="py-2.5 hover:text-rose-600 transition-colors">
+          <Link to="/history" onClick={() => setMenuOpen(false)} className={`py-2.5 ${navLinkClass('/history')}`}>
             ประวัติของฉัน
           </Link>
           <Link to="/ai" onClick={() => setMenuOpen(false)} className="py-2.5 hover:text-rose-600 transition-colors sm:hidden">
