@@ -2,7 +2,15 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header.jsx'
 import Footer from '../components/Footer.jsx'
-import { createReview, fileToBase64, getCustomerHistory, getSavedPhone, savePhone } from '../api/client.js'
+import {
+  createReview,
+  fileToBase64,
+  getCustomerHistory,
+  getSavedBookingCode,
+  getSavedPhone,
+  saveBookingCode,
+  savePhone,
+} from '../api/client.js'
 
 const STATUS_LABEL = {
   pending: 'รอยืนยัน', confirmed: 'ยืนยันแล้ว', completed: 'เสร็จสิ้น', cancelled: 'ยกเลิกแล้ว', no_show: 'ไม่มาตามนัด',
@@ -68,7 +76,7 @@ function ReviewForm({ booking, phone, onSubmitted }) {
 
 export default function CustomerHistoryPage() {
   const [phone, setPhone] = useState(getSavedPhone())
-  const [bookingCode, setBookingCode] = useState('')
+  const [bookingCode, setBookingCode] = useState(getSavedBookingCode())
   const [data, setData] = useState(null)
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState(null)
@@ -81,6 +89,7 @@ export default function CustomerHistoryPage() {
       const res = await getCustomerHistory(p, code)
       setData(res)
       savePhone(p)
+      saveBookingCode(code)
       setStatus('done')
     } catch (err) {
       setError(err.message || 'ค้นหาไม่สำเร็จ')
