@@ -24,6 +24,13 @@ function formatDateKey(dateKey) {
   return `${d} ${THAI_MONTHS_SHORT[m - 1]} ${y + 543}`
 }
 
+// เปิดแชท LINE OA ของร้านพร้อมกรอกข้อความล่วงหน้า (ต้องเป็นรหัสคิวล้วนๆ ไม่มีคำอื่นปน
+// เพราะฝั่ง webhook เช็คด้วย regex ที่ต้องตรงกับรูปแบบรหัสคิวทั้งข้อความเป๊ะๆ ดู backend/app/routers/line.py)
+function buildLineAddLink(basicId, message) {
+  const id = basicId.startsWith('@') ? basicId : `@${basicId}`
+  return `https://line.me/R/oaMessage/${id}/?${encodeURIComponent(message)}`
+}
+
 const initialContact = { name: '', phone: '', lineId: '' }
 const CARRY_DESIGN_KEY = 'nailglow_carry_design'
 
@@ -50,6 +57,7 @@ export default function BookingWizard() {
   const [servicesByCategory, setServicesByCategory] = useState({})
   const [servicesLoaded, setServicesLoaded] = useState(false)
   const [closedWeekdays, setClosedWeekdays] = useState(null)
+  const [shopLineId, setShopLineId] = useState('')
 
   // โหลดหมวดหมู่/บริการ/เวลาทำการจริงจาก backend (ถ้าเรียกไม่สำเร็จ ตัวคอมโพเนนต์ลูกจะ fallback
   // ไปใช้ src/data/bookingData.js เอง — เว็บยังใช้งานได้แม้ backend ยังไม่พร้อม)
@@ -71,7 +79,10 @@ export default function BookingWizard() {
       .catch(() => {})
       .finally(() => setServicesLoaded(true))
     getShopSettings()
-      .then((s) => setClosedWeekdays(s.closed_weekdays))
+      .then((s) => {
+        setClosedWeekdays(s.closed_weekdays)
+        setShopLineId(s.line_oa_basic_id || '')
+      })
       .catch(() => {})
 
     // ลายที่ถูก "จองลายนี้" มาจากหน้า AI Studio (AdvancedRecommend / ServerTryOn)
@@ -252,12 +263,30 @@ export default function BookingWizard() {
             )}
           </div>
 
-          <div className="mt-4 max-w-xs mx-auto bg-white border border-blush-200 rounded-2xl p-4 flex gap-3 text-left">
-            <span className="text-lg leading-none">💡</span>
-            <p className="text-xs text-gray-500 leading-relaxed">
-              เพิ่มเพื่อน LINE ของร้าน (ดูไอดีได้ที่ท้ายเว็บไซต์) แล้วพิมพ์รหัสคิวส่งในแชท
-              เพื่อรับแจ้งเตือนอัตโนมัติเมื่อร้านยืนยันหรือแก้ไขคิว
-            </p>
+          <div className="mt-4 max-w-xs mx-auto">
+            {shopLineId && bookingResult?.booking_code ? (
+              <>
+                <a
+                  href={buildLineAddLink(shopLineId, bookingResult.booking_code)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 bg-[#06C755] hover:brightness-95 text-white text-sm font-semibold py-3 rounded-full transition-all"
+                >
+                  💬 ผูก LINE รับแจ้งเตือนคิวอัตโนมัติ
+                </a>
+                <p className="text-[11px] text-gray-400 mt-2">
+                  เปิดแชท LINE ร้านพร้อมกรอกรหัสคิวให้แล้ว กดส่งได้เลย
+                </p>
+              </>
+            ) : (
+              <div className="bg-white border border-blush-200 rounded-2xl p-4 flex gap-3 text-left">
+                <span className="text-lg leading-none">💡</span>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  เพิ่มเพื่อน LINE ของร้าน (ดูไอดีได้ที่ท้ายเว็บไซต์) แล้วพิมพ์รหัสคิวส่งในแชท
+                  เพื่อรับแจ้งเตือนอัตโนมัติเมื่อร้านยืนยันหรือแก้ไขคิว
+                </p>
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap justify-center gap-3 mt-6">
             <a href="/history" className="bg-white hover:bg-blush-100 text-rose-600 text-sm font-semibold px-6 py-3 rounded-full border border-blush-200 transition-colors">
