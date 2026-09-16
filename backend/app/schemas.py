@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from datetime import time as time_type
-from typing import Annotated, Optional
+from typing import Annotated, Literal, Optional, Union
 from uuid import UUID
 
 from pydantic import BaseModel, BeforeValidator, Field
@@ -206,11 +206,32 @@ class ReviewOut(BaseModel):
         from_attributes = True
 
 
+class BookingHistorySummary(BaseModel):
+    """คิวแบบย่อ ไม่มี id/รหัสคิว/เวลา/ราคา/รูปภาพ -- ใช้ตอนยังไม่ยืนยันด้วยรหัสคิว (ดู customer_history
+    ใน routers/bookings.py) กันไม่ให้คนที่รู้แค่เบอร์โทรเอาข้อมูลไปยกเลิก/เลื่อนคิวหรือเห็นของอ่อนไหว"""
+
+    service_name: str
+    booking_date: date
+    status: str
+
+
+class CustomerHistorySummaryOut(BaseModel):
+    customer: dict
+    bookings: list[BookingHistorySummary]
+    reviews: list = []
+    tryon_history: list = []
+    verified: Literal[False] = False
+
+
 class CustomerHistoryOut(BaseModel):
     customer: dict
     bookings: list[BookingOut]
     reviews: list[ReviewOut]
     tryon_history: list[dict]
+    verified: Literal[True] = True
+
+
+CustomerHistoryResult = Union[CustomerHistoryOut, CustomerHistorySummaryOut]
 
 
 class AdminLoginIn(BaseModel):
