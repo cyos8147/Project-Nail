@@ -97,7 +97,18 @@ def check_status(booking_code: str, phone: str, db: Session = Depends(get_db)):
 
 
 @router.get("/history", response_model=schemas.CustomerHistoryOut)
-def customer_history(phone: str, db: Session = Depends(get_db)):
+def customer_history(phone: str, booking_code: str, db: Session = Depends(get_db)):
+    # ต้องยืนยันด้วยรหัสคิวคู่กับเบอร์โทรเสมอ (เหมือน check_status) ไม่รับแค่เบอร์โทรอย่างเดียว
+    # เพราะเบอร์โทรไม่ใช่ความลับ — ถ้ารับแค่เบอร์ ใครก็เปิดดูประวัติการจอง/รีวิว/รูป AI ของคนอื่นได้
+    # แค่รู้เบอร์เขา โดยไม่ต้องพิสูจน์ว่าเป็นเจ้าของเบอร์จริง
+    verified = (
+        db.query(models.Booking)
+        .filter(models.Booking.customer_phone == phone, models.Booking.booking_code == booking_code)
+        .first()
+    )
+    if verified is None:
+        raise HTTPException(404, "ไม่พบข้อมูล กรุณาตรวจสอบเบอร์โทรและรหัสคิวอีกครั้ง")
+
     customer = db.query(models.Customer).filter(models.Customer.phone == phone).first()
     if customer is None:
         return {"customer": {"phone": phone, "name": ""}, "bookings": [], "reviews": [], "tryon_history": []}
