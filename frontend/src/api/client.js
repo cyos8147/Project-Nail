@@ -73,7 +73,8 @@ export const getAvailability = (date, durationMinutes, excludeBookingId) =>
 export const createBooking = (payload) => request('/bookings', { method: 'POST', body: payload })
 export const getBookingStatus = (bookingCode, phone) =>
   request('/bookings/status', { params: { booking_code: bookingCode, phone } })
-export const getCustomerHistory = (phone) => request('/bookings/history', { params: { phone } })
+export const getCustomerHistory = (phone, bookingCode) =>
+  request('/bookings/history', { params: { phone, booking_code: bookingCode } })
 export const cancelBooking = (bookingId, phone) =>
   request(`/bookings/${bookingId}/cancel`, { method: 'PATCH', params: { phone } })
 export const rescheduleBooking = (bookingId, phone, bookingDate, bookingTime) =>
