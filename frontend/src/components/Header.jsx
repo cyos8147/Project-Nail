@@ -12,7 +12,7 @@ export default function Header() {
     { label: 'รีวิว', href: '/#reviews' },
   ]
 
-  // ไฮไลต์เมนูสีชมพูเฉพาะหน้าที่มีเส้นทางของตัวเอง (ตรวจสอบคิว/ประวัติของฉัน) — ไม่รวมลิงก์แบบ
+  // ไฮไลต์เมนูสีชมพูเฉพาะหน้าที่มีเส้นทางของตัวเอง (ประวัติของฉัน) — ไม่รวมลิงก์แบบ
   // เลื่อนไปหมวดในหน้าแรก (บริการ/ลายเล็บ/โปรโมชั่น/รีวิว) เพราะไม่มี "หน้าปัจจุบัน" แบบเดียวกัน
   const navLinkClass = (path) =>
     pathname === path ? 'text-rose-600 font-bold' : 'hover:text-rose-600 transition-colors'
@@ -30,7 +30,6 @@ export default function Header() {
               {link.label}
             </a>
           ))}
-          <Link to="/status" className={navLinkClass('/status')}>ตรวจสอบคิว</Link>
           <Link to="/history" className={navLinkClass('/history')}>ประวัติของฉัน</Link>
         </nav>
 
@@ -73,9 +72,6 @@ export default function Header() {
               {link.label}
             </a>
           ))}
-          <Link to="/status" onClick={() => setMenuOpen(false)} className={`py-2.5 ${navLinkClass('/status')}`}>
-            ตรวจสอบคิว
-          </Link>
           <Link to="/history" onClick={() => setMenuOpen(false)} className={`py-2.5 ${navLinkClass('/history')}`}>
             ประวัติของฉัน
           </Link>
