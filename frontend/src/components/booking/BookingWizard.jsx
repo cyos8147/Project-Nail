@@ -13,6 +13,17 @@ import {
   savePhone,
 } from '../../api/client.js'
 
+const THAI_MONTHS_SHORT = [
+  'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
+  'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.',
+]
+
+function formatDateKey(dateKey) {
+  if (!dateKey) return ''
+  const [y, m, d] = dateKey.split('-').map(Number)
+  return `${d} ${THAI_MONTHS_SHORT[m - 1]} ${y + 543}`
+}
+
 const initialContact = { name: '', phone: '', lineId: '' }
 const CARRY_DESIGN_KEY = 'nailglow_carry_design'
 
@@ -218,19 +229,36 @@ export default function BookingWizard() {
         <div className="bg-white rounded-3xl shadow-card p-10">
           <div className="text-5xl mb-4">🎉</div>
           <h2 className="font-display text-2xl font-bold text-gray-800">จองคิวสำเร็จแล้ว!</h2>
-          <p className="text-gray-500 mt-2">
-            {service?.name} วันที่ {selectedDate} เวลา {selectedTime} น.
-          </p>
-          {bookingResult?.booking_code && (
-            <div className="mt-6 bg-blush-50 border border-blush-200 rounded-2xl p-5 inline-block">
-              <p className="text-xs text-gray-400">รหัสคิวของคุณ (เก็บไว้ตรวจสอบสถานะ)</p>
-              <p className="font-display text-2xl font-bold text-rose-600 mt-1">{bookingResult.booking_code}</p>
+          <p className="text-gray-500 mt-2">ขอบคุณที่ใช้บริการ NailGlow</p>
+
+          <div className="mt-6 bg-blush-50 border border-blush-200 rounded-2xl p-5 max-w-xs mx-auto text-left space-y-2.5">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">บริการ</span>
+              <span className="font-medium text-gray-800">{service?.name}</span>
             </div>
-          )}
-          <p className="text-xs text-gray-400 mt-4 max-w-sm mx-auto">
-            💡 เพิ่มเพื่อน LINE ของร้าน (ดูไอดีได้ที่ท้ายเว็บไซต์) แล้วพิมพ์รหัสคิวด้านบนส่งไปในแชท
-            เพื่อรับแจ้งเตือนอัตโนมัติทุกครั้งที่ร้านยืนยัน/แก้ไขคิว
-          </p>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">วันที่</span>
+              <span className="font-medium text-gray-800">{formatDateKey(selectedDate)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">เวลา</span>
+              <span className="font-medium text-gray-800">{selectedTime} น.</span>
+            </div>
+            {bookingResult?.booking_code && (
+              <div className="flex justify-between items-center text-sm pt-2.5 mt-1 border-t border-blush-200">
+                <span className="text-gray-500">รหัสคิว</span>
+                <span className="font-display font-bold text-rose-600">{bookingResult.booking_code}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 max-w-xs mx-auto bg-white border border-blush-200 rounded-2xl p-4 flex gap-3 text-left">
+            <span className="text-lg leading-none">💡</span>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              เพิ่มเพื่อน LINE ของร้าน (ดูไอดีได้ที่ท้ายเว็บไซต์) แล้วพิมพ์รหัสคิวส่งในแชท
+              เพื่อรับแจ้งเตือนอัตโนมัติเมื่อร้านยืนยันหรือแก้ไขคิว
+            </p>
+          </div>
           <div className="flex flex-wrap justify-center gap-3 mt-6">
             <a href="/history" className="bg-white hover:bg-blush-100 text-rose-600 text-sm font-semibold px-6 py-3 rounded-full border border-blush-200 transition-colors">
               ดูประวัติของฉัน
