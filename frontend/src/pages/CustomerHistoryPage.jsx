@@ -89,7 +89,7 @@ export default function CustomerHistoryPage() {
       const res = await getCustomerHistory(p, code)
       setData(res)
       savePhone(p)
-      saveBookingCode(code)
+      if (res.verified) saveBookingCode(code)
       setStatus('done')
     } catch (err) {
       setError(err.message || 'ค้นหาไม่สำเร็จ')
@@ -99,7 +99,7 @@ export default function CustomerHistoryPage() {
 
   function handleSearch(e) {
     e.preventDefault()
-    if (phone.trim() && bookingCode.trim()) load(phone.trim(), bookingCode.trim())
+    if (phone.trim()) load(phone.trim(), bookingCode.trim())
   }
 
   const reviewedBookingIds = new Set((data?.reviews || []).map((r) => r.booking_id))
@@ -111,7 +111,7 @@ export default function CustomerHistoryPage() {
         <div className="text-center mb-8">
           <h1 className="font-display text-3xl font-bold text-gray-800">ประวัติของฉัน</h1>
           <p className="text-gray-500 mt-2">
-            กรอกเบอร์โทรพร้อมรหัสคิว (จากตอนจองครั้งล่าสุด) เพื่อดูประวัติทั้งหมด (ไม่ต้องสมัครสมาชิก)
+            กรอกเบอร์โทรเพื่อดูสรุปคิวที่เคยจอง หรือใส่รหัสคิวด้วยเพื่อดูรายละเอียด แก้ไข และให้รีวิว
           </p>
         </div>
 
@@ -126,9 +126,8 @@ export default function CustomerHistoryPage() {
           <input
             value={bookingCode}
             onChange={(e) => setBookingCode(e.target.value)}
-            placeholder="รหัสคิว เช่น NG-20260807-0001"
+            placeholder="รหัสคิว (ไม่บังคับ) เช่น NG-20260807-0001"
             className="flex-1 rounded-xl border border-blush-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-rose-300"
-            required
           />
           <button
             type="submit"
@@ -140,13 +139,30 @@ export default function CustomerHistoryPage() {
         </form>
         {error && <p className="text-sm text-red-500 text-center mt-3">{error}</p>}
 
+        {data && !data.verified && (
+          <p className="text-xs text-gold bg-gold/10 border border-gold/30 rounded-xl px-4 py-2.5 mt-3 text-center">
+            🔒 นี่คือสรุปแบบย่อ — กรอก "รหัสคิว" ในช่องด้านบนด้วย เพื่อดูเวลา/ราคา/แก้ไขวันเวลา/ให้รีวิว/รูป AI
+          </p>
+        )}
+
         {data && (
           <div className="mt-8 space-y-8">
             <div>
               <h2 className="font-display text-xl font-bold text-gray-800 mb-4">ประวัติการจอง ({data.bookings.length})</h2>
               <div className="space-y-3">
                 {data.bookings.length === 0 && <p className="text-sm text-gray-400">ยังไม่มีประวัติการจอง</p>}
-                {data.bookings.map((b) => (
+                {!data.verified && data.bookings.map((b, i) => (
+                  <div key={i} className="bg-white rounded-2xl shadow-card p-5">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="font-medium text-gray-800">{b.service_name}</p>
+                      <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-blush-100 text-rose-600">
+                        {STATUS_LABEL[b.status] || b.status}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-400">{b.booking_date}</p>
+                  </div>
+                ))}
+                {data.verified && data.bookings.map((b) => (
                   <div key={b.id} className="bg-white rounded-2xl shadow-card p-5">
                     <div className="flex items-center justify-between mb-2">
                       <p className="font-medium text-gray-800">{b.service_name}</p>
