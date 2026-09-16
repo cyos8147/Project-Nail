@@ -15,7 +15,7 @@ export default function Header() {
   // ไฮไลต์เมนูสีชมพูเฉพาะหน้าที่มีเส้นทางของตัวเอง (ตรวจสอบคิว/ประวัติของฉัน) — ไม่รวมลิงก์แบบ
   // เลื่อนไปหมวดในหน้าแรก (บริการ/ลายเล็บ/โปรโมชั่น/รีวิว) เพราะไม่มี "หน้าปัจจุบัน" แบบเดียวกัน
   const navLinkClass = (path) =>
-    pathname === path ? 'text-rose-600 font-semibold' : 'hover:text-rose-600 transition-colors'
+    pathname === path ? 'text-rose-600 font-bold' : 'hover:text-rose-600 transition-colors'
 
   return (
     <header className="sticky top-0 z-50 bg-blush-50/90 backdrop-blur border-b border-blush-200">
