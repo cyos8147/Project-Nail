@@ -219,8 +219,7 @@ export default function BookingWizard() {
           <div className="text-5xl mb-4">🎉</div>
           <h2 className="font-display text-2xl font-bold text-gray-800">จองคิวสำเร็จแล้ว!</h2>
           <p className="text-gray-500 mt-2">
-            {service?.name} วันที่ {selectedDate} เวลา {selectedTime} น. ทางร้านจะติดต่อกลับผ่านไลน์ไอดี{' '}
-            <span className="font-medium text-rose-600">{form.lineId}</span> เพื่อยืนยันอีกครั้ง
+            {service?.name} วันที่ {selectedDate} เวลา {selectedTime} น.
           </p>
           {bookingResult?.booking_code && (
             <div className="mt-6 bg-blush-50 border border-blush-200 rounded-2xl p-5 inline-block">
@@ -228,6 +227,10 @@ export default function BookingWizard() {
               <p className="font-display text-2xl font-bold text-rose-600 mt-1">{bookingResult.booking_code}</p>
             </div>
           )}
+          <p className="text-xs text-gray-400 mt-4 max-w-sm mx-auto">
+            💡 เพิ่มเพื่อน LINE ของร้าน (ดูไอดีได้ที่ท้ายเว็บไซต์) แล้วพิมพ์รหัสคิวด้านบนส่งไปในแชท
+            เพื่อรับแจ้งเตือนอัตโนมัติทุกครั้งที่ร้านยืนยัน/แก้ไขคิว
+          </p>
           <div className="flex flex-wrap justify-center gap-3 mt-6">
             <a href="/status" className="bg-white hover:bg-blush-100 text-rose-600 text-sm font-semibold px-6 py-3 rounded-full border border-blush-200 transition-colors">
               ตรวจสอบสถานะคิว
