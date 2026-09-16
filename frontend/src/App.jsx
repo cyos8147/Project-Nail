@@ -3,7 +3,6 @@ import HomePage from './pages/HomePage.jsx'
 import BookingPage from './pages/BookingPage.jsx'
 import EditBookingPage from './pages/EditBookingPage.jsx'
 import AiStudioPage from './pages/AiStudioPage.jsx'
-import BookingStatusPage from './pages/BookingStatusPage.jsx'
 import CustomerHistoryPage from './pages/CustomerHistoryPage.jsx'
 import AdminLoginPage from './pages/admin/AdminLoginPage.jsx'
 import AdminLayout from './pages/admin/AdminLayout.jsx'
@@ -22,7 +21,6 @@ export default function App() {
       <Route path="/booking" element={<BookingPage />} />
       <Route path="/booking/edit" element={<EditBookingPage />} />
       <Route path="/ai" element={<AiStudioPage />} />
-      <Route path="/status" element={<BookingStatusPage />} />
       <Route path="/history" element={<CustomerHistoryPage />} />
 
       <Route path="/admin/login" element={<AdminLoginPage />} />
