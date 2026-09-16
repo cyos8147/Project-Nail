@@ -152,10 +152,10 @@ export default function EditBookingPage() {
               {booking.booking_code} วันที่ {booking.booking_date} เวลา {booking.booking_time} น.
             </p>
             <Link
-              to="/status"
+              to="/history"
               className="inline-block mt-6 bg-rose-500 hover:bg-rose-600 text-white font-semibold px-6 py-3 rounded-full transition-colors"
             >
-              ตรวจสอบสถานะคิว
+              ดูประวัติของฉัน
             </Link>
           </div>
         )}
