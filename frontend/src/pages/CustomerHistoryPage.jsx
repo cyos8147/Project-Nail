@@ -68,16 +68,17 @@ function ReviewForm({ booking, phone, onSubmitted }) {
 
 export default function CustomerHistoryPage() {
   const [phone, setPhone] = useState(getSavedPhone())
+  const [bookingCode, setBookingCode] = useState('')
   const [data, setData] = useState(null)
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState(null)
   const [reviewingBookingId, setReviewingBookingId] = useState(null)
 
-  async function load(p) {
+  async function load(p, code) {
     setStatus('loading')
     setError(null)
     try {
-      const res = await getCustomerHistory(p)
+      const res = await getCustomerHistory(p, code)
       setData(res)
       savePhone(p)
       setStatus('done')
@@ -89,7 +90,7 @@ export default function CustomerHistoryPage() {
 
   function handleSearch(e) {
     e.preventDefault()
-    if (phone.trim()) load(phone.trim())
+    if (phone.trim() && bookingCode.trim()) load(phone.trim(), bookingCode.trim())
   }
 
   const reviewedBookingIds = new Set((data?.reviews || []).map((r) => r.booking_id))
@@ -100,14 +101,23 @@ export default function CustomerHistoryPage() {
       <section className="max-w-3xl mx-auto px-6 py-16">
         <div className="text-center mb-8">
           <h1 className="font-display text-3xl font-bold text-gray-800">ประวัติของฉัน</h1>
-          <p className="text-gray-500 mt-2">กรอกเบอร์โทรที่เคยใช้จองคิว เพื่อดูประวัติทั้งหมด (ไม่ต้องสมัครสมาชิก)</p>
+          <p className="text-gray-500 mt-2">
+            กรอกเบอร์โทรพร้อมรหัสคิว (จากตอนจองครั้งล่าสุด) เพื่อดูประวัติทั้งหมด (ไม่ต้องสมัครสมาชิก)
+          </p>
         </div>
 
-        <form onSubmit={handleSearch} className="bg-white rounded-3xl shadow-card p-6 flex gap-3">
+        <form onSubmit={handleSearch} className="bg-white rounded-3xl shadow-card p-6 flex flex-col sm:flex-row gap-3">
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="เบอร์โทรศัพท์"
+            className="flex-1 rounded-xl border border-blush-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-rose-300"
+            required
+          />
+          <input
+            value={bookingCode}
+            onChange={(e) => setBookingCode(e.target.value)}
+            placeholder="รหัสคิว เช่น NG-20260807-0001"
             className="flex-1 rounded-xl border border-blush-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-rose-300"
             required
           />
@@ -158,7 +168,7 @@ export default function CustomerHistoryPage() {
                           phone={phone.trim()}
                           onSubmitted={() => {
                             setReviewingBookingId(null)
-                            load(phone.trim())
+                            load(phone.trim(), bookingCode.trim())
                           }}
                         />
                       ) : (
