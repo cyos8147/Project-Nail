@@ -4,6 +4,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
 const ADMIN_TOKEN_KEY = 'nailglow_admin_token'
 const CUSTOMER_PHONE_KEY = 'nailglow_customer_phone'
+const CUSTOMER_BOOKING_CODE_KEY = 'nailglow_customer_booking_code'
 
 export function getAdminToken() {
   return localStorage.getItem(ADMIN_TOKEN_KEY)
@@ -18,6 +19,16 @@ export function getSavedPhone() {
 }
 export function savePhone(phone) {
   if (phone) localStorage.setItem(CUSTOMER_PHONE_KEY, phone)
+}
+
+// จำรหัสคิวล่าสุดที่ค้นสำเร็จไว้ในเครื่อง (เหมือนเบอร์โทรด้านบน) แค่เพื่อความสะดวกไม่ต้องพิมพ์ซ้ำ
+// ทุกครั้งที่กลับมาเปิดหน้า "ประวัติของฉัน" บนเครื่องเดิม -- ไม่ได้ลดความปลอดภัยลง เพราะเครื่องอื่น/
+// คนอื่นจะไม่มีค่านี้อยู่ดี ยังต้องรู้ทั้งเบอร์และรหัสคิวเหมือนเดิมถึงจะดูข้อมูลได้
+export function getSavedBookingCode() {
+  return localStorage.getItem(CUSTOMER_BOOKING_CODE_KEY) || ''
+}
+export function saveBookingCode(code) {
+  if (code) localStorage.setItem(CUSTOMER_BOOKING_CODE_KEY, code)
 }
 
 class ApiError extends Error {
