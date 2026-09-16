@@ -96,22 +96,11 @@ def check_status(booking_code: str, phone: str, db: Session = Depends(get_db)):
     return booking
 
 
-@router.get("/history", response_model=schemas.CustomerHistoryOut)
-def customer_history(phone: str, booking_code: str, db: Session = Depends(get_db)):
-    # ต้องยืนยันด้วยรหัสคิวคู่กับเบอร์โทรเสมอ (เหมือน check_status) ไม่รับแค่เบอร์โทรอย่างเดียว
-    # เพราะเบอร์โทรไม่ใช่ความลับ — ถ้ารับแค่เบอร์ ใครก็เปิดดูประวัติการจอง/รีวิว/รูป AI ของคนอื่นได้
-    # แค่รู้เบอร์เขา โดยไม่ต้องพิสูจน์ว่าเป็นเจ้าของเบอร์จริง
-    verified = (
-        db.query(models.Booking)
-        .filter(models.Booking.customer_phone == phone, models.Booking.booking_code == booking_code)
-        .first()
-    )
-    if verified is None:
-        raise HTTPException(404, "ไม่พบข้อมูล กรุณาตรวจสอบเบอร์โทรและรหัสคิวอีกครั้ง")
-
+@router.get("/history", response_model=schemas.CustomerHistoryResult)
+def customer_history(phone: str, booking_code: str | None = None, db: Session = Depends(get_db)):
     customer = db.query(models.Customer).filter(models.Customer.phone == phone).first()
     if customer is None:
-        return {"customer": {"phone": phone, "name": ""}, "bookings": [], "reviews": [], "tryon_history": []}
+        return schemas.CustomerHistorySummaryOut(customer={"phone": phone, "name": ""}, bookings=[])
 
     bookings = (
         db.query(models.Booking)
@@ -119,6 +108,29 @@ def customer_history(phone: str, booking_code: str, db: Session = Depends(get_db
         .order_by(models.Booking.booking_date.desc(), models.Booking.booking_time.desc())
         .all()
     )
+
+    # ต้องยืนยันด้วยรหัสคิวคู่กับเบอร์โทรก่อนถึงจะเห็นข้อมูลเต็ม (เหมือน check_status) เพราะเบอร์โทร
+    # ไม่ใช่ความลับ -- ถ้าใครรู้แค่เบอร์คนอื่นแล้วเห็น/แก้ไขได้เต็มๆ จะเอาไปยกเลิก/เลื่อนคิวของเขาได้เลย
+    # ยังไม่ยืนยัน -> ให้เห็นแค่สรุปคร่าวๆ (ไม่มี id/รหัสคิว/เวลา/ราคา/รูป) พอเดาไม่ได้ว่ามีคิวไหนบ้าง
+    # แต่ก็ไม่โชว์อะไรที่เอาไปทำอันตรายต่อได้
+    verified = bool(
+        booking_code
+        and db.query(models.Booking)
+        .filter(models.Booking.customer_phone == phone, models.Booking.booking_code == booking_code)
+        .first()
+    )
+
+    if not verified:
+        return schemas.CustomerHistorySummaryOut(
+            customer={"phone": customer.phone, "name": customer.name},
+            bookings=[
+                schemas.BookingHistorySummary(
+                    service_name=b.service_name, booking_date=b.booking_date, status=b.status
+                )
+                for b in bookings
+            ],
+        )
+
     reviews = db.query(models.Review).filter(models.Review.customer_id == customer.id).all()
     tryon = (
         db.query(models.AiTryonHistory)
@@ -126,11 +138,11 @@ def customer_history(phone: str, booking_code: str, db: Session = Depends(get_db
         .order_by(models.AiTryonHistory.created_at.desc())
         .all()
     )
-    return {
-        "customer": {"phone": customer.phone, "name": customer.name, "line_id": customer.line_id},
-        "bookings": bookings,
-        "reviews": reviews,
-        "tryon_history": [
+    return schemas.CustomerHistoryOut(
+        customer={"phone": customer.phone, "name": customer.name, "line_id": customer.line_id},
+        bookings=bookings,
+        reviews=reviews,
+        tryon_history=[
             {
                 "id": t.id,
                 "result_image_url": t.result_image_url,
@@ -142,7 +154,7 @@ def customer_history(phone: str, booking_code: str, db: Session = Depends(get_db
             }
             for t in tryon
         ],
-    }
+    )
 
 
 @router.patch("/{booking_id}/reschedule", response_model=schemas.BookingOut)
