@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import Header from '../components/Header.jsx'
 import Footer from '../components/Footer.jsx'
 import {
+  cancelBooking,
   createReview,
   fileToBase64,
   getCustomerHistory,
@@ -102,6 +103,16 @@ export default function CustomerHistoryPage() {
     if (phone.trim()) load(phone.trim(), bookingCode.trim())
   }
 
+  async function handleCancel(booking) {
+    if (!window.confirm('ยืนยันยกเลิกคิวนี้หรือไม่?')) return
+    try {
+      await cancelBooking(booking.id, phone.trim())
+      load(phone.trim(), bookingCode.trim())
+    } catch (err) {
+      setError(err.message || 'ยกเลิกไม่สำเร็จ')
+    }
+  }
+
   const reviewedBookingIds = new Set((data?.reviews || []).map((r) => r.booking_id))
 
   return (
@@ -111,7 +122,7 @@ export default function CustomerHistoryPage() {
         <div className="text-center mb-8">
           <h1 className="font-display text-3xl font-bold text-gray-800">ประวัติของฉัน</h1>
           <p className="text-gray-500 mt-2">
-            กรอกเบอร์โทรเพื่อดูสรุปคิวที่เคยจอง หรือใส่รหัสคิวด้วยเพื่อดูรายละเอียด แก้ไข และให้รีวิว
+            กรอกเบอร์โทรเพื่อดูสรุปคิวที่เคยจอง หรือใส่รหัสคิวด้วยเพื่อดูรายละเอียด แก้ไข ยกเลิก และให้รีวิว
           </p>
         </div>
 
@@ -141,7 +152,7 @@ export default function CustomerHistoryPage() {
 
         {data && !data.verified && (
           <p className="text-xs text-gold bg-gold/10 border border-gold/30 rounded-xl px-4 py-2.5 mt-3 text-center">
-            🔒 นี่คือสรุปแบบย่อ — กรอก "รหัสคิว" ในช่องด้านบนด้วย เพื่อดูเวลา/ราคา/แก้ไขวันเวลา/ให้รีวิว/รูป AI
+            🔒 นี่คือสรุปแบบย่อ — กรอก "รหัสคิว" ในช่องด้านบนด้วย เพื่อดูเวลา/ราคา/แก้ไข/ยกเลิก/ให้รีวิว/รูป AI
           </p>
         )}
 
@@ -176,14 +187,28 @@ export default function CustomerHistoryPage() {
                     {b.reference_image_url && (
                       <img src={b.reference_image_url} alt="รูปที่แนบ" className="mt-2 w-16 h-16 rounded-lg object-cover" />
                     )}
+                    {b.admin_note && (
+                      <p className="text-xs text-gray-500 mt-2 pt-2 border-t border-blush-100">
+                        หมายเหตุจากร้าน: {b.admin_note}
+                      </p>
+                    )}
 
                     {['pending', 'confirmed'].includes(b.status) && (
-                      <Link
-                        to={`/booking/edit?code=${encodeURIComponent(b.booking_code)}&phone=${encodeURIComponent(phone.trim())}`}
-                        className="mt-3 inline-block text-xs font-semibold text-rose-600 hover:underline"
-                      >
-                        ✏️ แก้ไขวันเวลา
-                      </Link>
+                      <div className="mt-3 flex items-center gap-4">
+                        <Link
+                          to={`/booking/edit?code=${encodeURIComponent(b.booking_code)}&phone=${encodeURIComponent(phone.trim())}`}
+                          className="text-xs font-semibold text-rose-600 hover:underline"
+                        >
+                          ✏️ แก้ไขวันเวลา
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => handleCancel(b)}
+                          className="text-xs font-semibold text-red-500 hover:underline"
+                        >
+                          ✕ ยกเลิกคิวนี้
+                        </button>
+                      </div>
                     )}
 
                     {b.status === 'completed' && !reviewedBookingIds.has(b.id) && (
