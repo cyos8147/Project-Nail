@@ -3,13 +3,14 @@ import uuid
 
 import cv2
 import numpy as np
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
 from ..ai import recommend as recommend_ai
 from ..ai import segmentation, tryon
 from ..database import get_db
+from ..rate_limit import limiter
 from ..storage import upload_bytes
 
 router = APIRouter(prefix="/ai", tags=["ai"])
@@ -19,7 +20,8 @@ COMPLEXITY_EXTRA_MINUTES = {"simple": 0, "medium": 15, "complex": 30}
 
 
 @router.post("/segment", response_model=schemas.SegmentResponse)
-def segment(payload: schemas.SegmentRequest):
+@limiter.limit("20/minute")
+def segment(request: Request, payload: schemas.SegmentRequest):
     try:
         bgr = segmentation.decode_base64_image(payload.image_base64)
     except Exception:
@@ -47,7 +49,8 @@ def segment(payload: schemas.SegmentRequest):
 
 
 @router.post("/tryon", response_model=schemas.TryOnResponse)
-def try_on(payload: schemas.TryOnRequest, db: Session = Depends(get_db)):
+@limiter.limit("20/minute")
+def try_on(request: Request, payload: schemas.TryOnRequest, db: Session = Depends(get_db)):
     try:
         bgr = segmentation.decode_base64_image(payload.image_base64)
     except Exception:
@@ -98,7 +101,8 @@ def try_on(payload: schemas.TryOnRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/analyze-style", response_model=schemas.ReferenceStyleResponse)
-def analyze_style(payload: schemas.ReferenceStyleRequest, db: Session = Depends(get_db)):
+@limiter.limit("20/minute")
+def analyze_style(request: Request, payload: schemas.ReferenceStyleRequest, db: Session = Depends(get_db)):
     try:
         bgr = segmentation.decode_base64_image(payload.image_base64)
     except Exception:
@@ -138,7 +142,8 @@ def analyze_style(payload: schemas.ReferenceStyleRequest, db: Session = Depends(
 
 
 @router.post("/recommend", response_model=schemas.RecommendResponse)
-def recommend(payload: schemas.RecommendRequest, db: Session = Depends(get_db)):
+@limiter.limit("20/minute")
+def recommend(request: Request, payload: schemas.RecommendRequest, db: Session = Depends(get_db)):
     designs = db.query(models.NailDesign).filter(models.NailDesign.active == True).all()  # noqa: E712
     if not designs:
         raise HTTPException(404, "ยังไม่มีลายเล็บในระบบ")
