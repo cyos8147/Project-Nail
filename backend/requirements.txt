@@ -35,6 +35,7 @@ apscheduler==3.10.4
 # --- misc ---
 httpx==0.27.2
 python-dotenv==1.0.1
+slowapi==0.1.9   # จำกัดจำนวนครั้งเรียก API ต่อ IP กัน brute-force login + สแปม
 
 # --- optional: server-side YOLOv8-Seg fine-tuning / inference ---
 # หนักและใช้เวลาติดตั้งนาน (ต้องใช้ torch) ให้ติดตั้งแยกเฉพาะตอนจะเทรน/ใช้โมเดล YOLOv8-Seg จริงเท่านั้น
