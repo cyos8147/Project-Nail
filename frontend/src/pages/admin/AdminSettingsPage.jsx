@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import {
   adminAddHoliday,
   adminChangePassword,
+  adminCreateUser,
   adminDeleteHoliday,
+  adminDeleteUser,
   adminListHolidays,
+  adminListUsers,
   adminUpdateShopSettings,
   getShopSettings,
 } from '../../api/client.js'
@@ -13,7 +17,71 @@ const WEEKDAYS = [
   { id: 4, label: 'พฤหัสบดี' }, { id: 5, label: 'ศุกร์' }, { id: 6, label: 'เสาร์' },
 ]
 
+const ROLE_LABEL = { owner: 'เจ้าของร้าน', staff: 'พนักงาน' }
+
+function AdminUsersSection() {
+  const [users, setUsers] = useState(null)
+  const [newUser, setNewUser] = useState({ username: '', password: '', full_name: '', role: 'staff' })
+  const [error, setError] = useState(null)
+
+  function load() {
+    adminListUsers().then(setUsers).catch((err) => setError(err.message))
+  }
+  useEffect(load, [])
+
+  async function handleCreate(e) {
+    e.preventDefault()
+    setError(null)
+    try {
+      await adminCreateUser(newUser)
+      setNewUser({ username: '', password: '', full_name: '', role: 'staff' })
+      load()
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  async function handleDelete(user) {
+    if (!window.confirm(`ลบบัญชี "${user.username}" หรือไม่?`)) return
+    setError(null)
+    try {
+      await adminDeleteUser(user.id)
+      load()
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  if (!users) return null
+
+  return (
+    <div className="bg-white rounded-2xl shadow-card p-6">
+      <p className="font-medium text-gray-700 mb-3">จัดการบัญชีแอดมิน</p>
+      <div className="space-y-1.5 mb-4">
+        {users.map((u) => (
+          <div key={u.id} className="flex items-center justify-between text-sm py-1.5 border-b border-blush-50">
+            <span className="text-gray-600">{u.username} · {u.full_name || '-'} · <span className="text-xs text-gray-400">{ROLE_LABEL[u.role] || u.role}</span></span>
+            <button onClick={() => handleDelete(u)} className="text-gray-300 hover:text-red-500">✕</button>
+          </div>
+        ))}
+      </div>
+      <form onSubmit={handleCreate} className="grid sm:grid-cols-4 gap-2">
+        <input placeholder="ชื่อผู้ใช้" value={newUser.username} onChange={(e) => setNewUser({ ...newUser, username: e.target.value })} className="rounded-xl border border-blush-200 px-3 py-2 text-sm" required />
+        <input placeholder="รหัสผ่าน (8 ตัวขึ้นไป)" type="password" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} className="rounded-xl border border-blush-200 px-3 py-2 text-sm" required />
+        <input placeholder="ชื่อเต็ม" value={newUser.full_name} onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })} className="rounded-xl border border-blush-200 px-3 py-2 text-sm" />
+        <select value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value })} className="rounded-xl border border-blush-200 px-3 py-2 text-sm">
+          <option value="staff">พนักงาน</option>
+          <option value="owner">เจ้าของร้าน</option>
+        </select>
+        <button type="submit" className="sm:col-span-4 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-5 py-2 rounded-xl">+ เพิ่มบัญชีแอดมิน</button>
+      </form>
+      {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
+    </div>
+  )
+}
+
 export default function AdminSettingsPage() {
+  const { admin } = useOutletContext()
   const [form, setForm] = useState(null)
   const [holidays, setHolidays] = useState([])
   const [newHoliday, setNewHoliday] = useState({ holiday_date: '', note: '' })
@@ -210,6 +278,8 @@ export default function AdminSettingsPage() {
           {holidays.length === 0 && <p className="text-sm text-gray-400">ยังไม่มีวันหยุดพิเศษ</p>}
         </div>
       </div>
+
+      {admin?.role === 'owner' && <AdminUsersSection />}
     </div>
   )
 }
