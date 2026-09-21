@@ -135,6 +135,16 @@ create index if not exists idx_bookings_date on bookings(booking_date);
 create index if not exists idx_bookings_customer on bookings(customer_id);
 create index if not exists idx_bookings_phone on bookings(customer_phone);
 create index if not exists idx_bookings_status on bookings(status);
+-- กันจองคิวเวลาเดียวกันซ้อนกัน (race condition): ถ้าลูกค้า 2 คนกดจองพร้อมกันเป๊ะๆ ก่อนหน้านี้ระบบเช็ค
+-- "ว่างไหม" แล้วค่อย insert แยกกัน 2 ทีโดยไม่มีอะไรกันชนที่ระดับฐานข้อมูล ทั้งคู่อาจจองสำเร็จซ้อนกันได้
+-- unique index นี้บังคับว่าคิวที่ "ยังไม่ยกเลิก/เสร็จ" (pending/confirmed) ห้ามมีวันที่+เวลาเริ่มซ้ำกัน
+-- ถ้าชนกัน DB จะโยน error ให้ทันที (ฝั่ง backend ดักไว้แล้วให้ตอบลูกค้าด้วยข้อความปกติ ไม่ใช่ error ดิบ)
+-- หมายเหตุ: กันได้เฉพาะกรณี "เวลาเริ่มตรงกันเป๊ะ" เท่านั้น กรณีบริการระยะเวลาไม่เท่ากันแล้วเวลาเริ่ม
+-- คาบเกี่ยวกัน (เช่น 10:00-11:30 กับ 10:30-12:00) ยังหลุดได้ในทางทฤษฎี แต่โอกาสเกิดต่ำกว่ามาก
+-- เพราะต้องแข่งกันในหน้าต่างเวลาสั้นๆ เท่านั้น (ดูรายละเอียดใน routers/bookings.py create_booking)
+create unique index if not exists idx_bookings_no_double_book
+  on bookings (booking_date, booking_time)
+  where status in ('pending', 'confirmed');
 
 -- ---------------------------------------------------------------------------
 -- 7) รีวิว
