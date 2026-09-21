@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from .config import get_settings
@@ -29,7 +29,13 @@ settings = get_settings()
 app = FastAPI(title=settings.app_name)
 
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+@app.exception_handler(RateLimitExceeded)
+def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    # ใช้ key "detail" (ไม่ใช่ "error" แบบ default ของ slowapi) ให้ตรงกับที่ frontend/api/client.js
+    # อ่านข้อความ error จาก response ทุก endpoint อยู่แล้ว ลูกค้า/แอดมินจะได้เห็นข้อความไทยที่เข้าใจง่าย
+    return JSONResponse(status_code=429, content={"detail": "มีการเรียกใช้งานถี่เกินไป กรุณารอสักครู่แล้วลองใหม่"})
 
 app.add_middleware(
     CORSMiddleware,
