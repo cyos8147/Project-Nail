@@ -55,3 +55,11 @@ def get_current_admin(
     if not admin:
         raise unauthorized
     return admin
+
+
+def require_owner(admin: AdminUser = Depends(get_current_admin)) -> AdminUser:
+    """ใช้กับ endpoint ที่จัดการบัญชีแอดมินคนอื่น (เพิ่ม/ลบ) -- staff ทำรายการปกติได้ตามเดิม
+    แต่จัดการบัญชีแอดมินคนอื่นได้เฉพาะ owner เท่านั้น"""
+    if admin.role != "owner":
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "ต้องเป็นเจ้าของร้าน (owner) เท่านั้นถึงจะทำรายการนี้ได้")
+    return admin
