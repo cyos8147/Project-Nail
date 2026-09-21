@@ -6,11 +6,13 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     JSON,
     Numeric,
     String,
     Text,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -162,6 +164,18 @@ class Booking(Base):
 
     customer: Mapped[Customer] = relationship(back_populates="bookings")
     review: Mapped["Review"] = relationship(back_populates="booking", uselist=False)
+
+    __table_args__ = (
+        # กันจองคิวเวลาเดียวกันซ้อนกัน (race condition) -- ดูคำอธิบายเต็มใน schema.sql
+        Index(
+            "idx_bookings_no_double_book",
+            "booking_date",
+            "booking_time",
+            unique=True,
+            postgresql_where=text("status in ('pending', 'confirmed')"),
+            sqlite_where=text("status in ('pending', 'confirmed')"),
+        ),
+    )
 
 
 class Review(Base):
