@@ -74,3 +74,34 @@ curl -X POST http://localhost:8000/api/bookings \
     "customer_phone": "0812345678",
     "line_id": "somying_j"
   }'
+
+curl -X POST http://localhost:8000/api/ai/recommend \
+  -H "Content-Type: application/json" \
+  -d '{
+    "skin_tone": "warm", "nail_shape": "almond", "nail_length": "long",
+    "style_preference": "bold", "occasion": "party"
+  }'
+
+TOKEN=$(curl -s -X POST http://localhost:8000/api/admin/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"owner","password":"changeme123"}' | python3 -c "import sys,json;print(json.load(sys.stdin)['access_token'])")
+
+curl http://localhost:8000/api/admin/dashboard/summary -H "Authorization: Bearer $TOKEN"
+
+curl -X POST http://localhost:8000/api/admin/bookings \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "category_id": "nail",
+    "service_id": "<service-uuid>",
+    "booking_date": "2026-08-10",
+    "booking_time": "14:00",
+    "customer_name": "สมหญิง ใจดี",
+    "customer_phone": "0812345678",
+    "status": "confirmed"
+  }'
+
+curl -X POST http://localhost:8000/api/admin/users \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"username": "staff1", "password": "รหัสผ่าน8ตัวขึ้นไป", "full_name": "พนักงาน หนึ่ง", "role": "staff"}'
