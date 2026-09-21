@@ -1,9 +1,135 @@
 import { useEffect, useState } from 'react'
-import { adminDeleteBooking, adminListBookings, adminUpdateBooking } from '../../api/client.js'
+import {
+  adminCreateBooking,
+  adminDeleteBooking,
+  adminListBookings,
+  adminUpdateBooking,
+  getServiceCategories,
+  getServices,
+  getShopSettings,
+} from '../../api/client.js'
+import DateTimePicker from '../../components/booking/DateTimePicker.jsx'
 
 const STATUS_OPTIONS = ['pending', 'confirmed', 'completed', 'cancelled', 'no_show']
 const STATUS_LABEL = {
   pending: 'รอยืนยัน', confirmed: 'ยืนยันแล้ว', completed: 'เสร็จสิ้น', cancelled: 'ยกเลิกแล้ว', no_show: 'ไม่มาตามนัด',
+}
+
+const initialNewBooking = { category_id: '', service_id: '', customer_name: '', customer_phone: '', line_id: '', status: 'confirmed', admin_note: '' }
+
+function CreateBookingForm({ onCreated, onCancel }) {
+  const [categories, setCategories] = useState([])
+  const [services, setServices] = useState([])
+  const [closedWeekdays, setClosedWeekdays] = useState(null)
+  const [form, setForm] = useState(initialNewBooking)
+  const [selectedDate, setSelectedDate] = useState(null)
+  const [selectedTime, setSelectedTime] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    getServiceCategories().then((list) => {
+      setCategories(list)
+      if (list[0]) setForm((f) => ({ ...f, category_id: list[0].id }))
+    })
+    getShopSettings().then((s) => setClosedWeekdays(s.closed_weekdays))
+  }, [])
+
+  useEffect(() => {
+    if (!form.category_id) return
+    setServices([])
+    setForm((f) => ({ ...f, service_id: '' }))
+    getServices(form.category_id).then((list) => {
+      setServices(list)
+      if (list[0]) setForm((f) => ({ ...f, service_id: list[0].id }))
+    })
+  }, [form.category_id])
+
+  const selectedService = services.find((s) => s.id === form.service_id)
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!selectedDate || !selectedTime) {
+      setError('กรุณาเลือกวันและเวลา')
+      return
+    }
+    setSubmitting(true)
+    setError(null)
+    try {
+      const created = await adminCreateBooking({
+        ...form,
+        booking_date: selectedDate,
+        booking_time: selectedTime,
+      })
+      onCreated(created)
+    } catch (err) {
+      setError(err.message || 'จองคิวไม่สำเร็จ')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-card p-5 space-y-4">
+      <p className="font-medium text-gray-700">เพิ่มคิวใหม่ (ลูกค้าโทรจอง / walk-in)</p>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <div>
+          <label className="text-xs text-gray-500 block mb-1">หมวดหมู่</label>
+          <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm">
+            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 block mb-1">บริการ</label>
+          <select value={form.service_id} onChange={(e) => setForm({ ...form, service_id: e.target.value })} className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm">
+            {services.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.price} บาท)</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 block mb-1">ชื่อลูกค้า</label>
+          <input value={form.customer_name} onChange={(e) => setForm({ ...form, customer_name: e.target.value })} className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm" required />
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 block mb-1">เบอร์โทร</label>
+          <input value={form.customer_phone} onChange={(e) => setForm({ ...form, customer_phone: e.target.value })} className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm" required />
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 block mb-1">ไอดีไลน์ (ไม่บังคับ)</label>
+          <input value={form.line_id} onChange={(e) => setForm({ ...form, line_id: e.target.value })} className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm" />
+        </div>
+        <div>
+          <label className="text-xs text-gray-500 block mb-1">สถานะเริ่มต้น</label>
+          <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm">
+            {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {selectedService && closedWeekdays !== null && (
+        <DateTimePicker
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          selectedTime={selectedTime}
+          setSelectedTime={setSelectedTime}
+          serviceDurationMinutes={selectedService.duration_minutes}
+          closedWeekdays={closedWeekdays}
+        />
+      )}
+
+      <div>
+        <label className="text-xs text-gray-500 block mb-1">หมายเหตุ (ไม่บังคับ)</label>
+        <input value={form.admin_note} onChange={(e) => setForm({ ...form, admin_note: e.target.value })} className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm" />
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button type="submit" disabled={submitting} className="bg-rose-500 hover:bg-rose-600 disabled:bg-blush-200 text-white text-sm font-semibold px-6 py-2.5 rounded-xl">
+          {submitting ? 'กำลังบันทึก...' : 'บันทึกคิว'}
+        </button>
+        <button type="button" onClick={onCancel} className="text-sm text-gray-500 hover:text-gray-700">ยกเลิก</button>
+        {error && <span className="text-sm text-red-500">{error}</span>}
+      </div>
+    </form>
+  )
 }
 
 export default function AdminBookingsPage() {
@@ -11,6 +137,7 @@ export default function AdminBookingsPage() {
   const [filters, setFilters] = useState({ status: '', search: '', date_from: '', date_to: '' })
   const [loading, setLoading] = useState(false)
   const [noteDraft, setNoteDraft] = useState({})
+  const [showCreateForm, setShowCreateForm] = useState(false)
 
   function load() {
     setLoading(true)
@@ -40,10 +167,31 @@ export default function AdminBookingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-gray-800">การจองคิว</h1>
-        <p className="text-gray-500 text-sm mt-1">ยืนยัน เลื่อน หรือยกเลิกคิว และดูรูปภาพที่ลูกค้าแนบมา</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-gray-800">การจองคิว</h1>
+          <p className="text-gray-500 text-sm mt-1">ยืนยัน เลื่อน หรือยกเลิกคิว และดูรูปภาพที่ลูกค้าแนบมา</p>
+        </div>
+        {!showCreateForm && (
+          <button
+            type="button"
+            onClick={() => setShowCreateForm(true)}
+            className="bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl whitespace-nowrap"
+          >
+            + เพิ่มคิวใหม่
+          </button>
+        )}
       </div>
+
+      {showCreateForm && (
+        <CreateBookingForm
+          onCreated={() => {
+            setShowCreateForm(false)
+            load()
+          }}
+          onCancel={() => setShowCreateForm(false)}
+        />
+      )}
 
       <div className="bg-white rounded-2xl shadow-card p-4 flex flex-wrap gap-3 items-end">
         <div>
