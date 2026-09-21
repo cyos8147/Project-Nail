@@ -119,9 +119,15 @@ export const adminChangePassword = (currentPassword, newPassword) =>
 
 // --- Admin bookings -----------------------------------------------------
 export const adminListBookings = (params) => request('/admin/bookings', { auth: true, params })
+export const adminCreateBooking = (payload) => request('/admin/bookings', { method: 'POST', auth: true, body: payload })
 export const adminUpdateBooking = (id, payload) =>
   request(`/admin/bookings/${id}`, { method: 'PATCH', auth: true, body: payload })
 export const adminDeleteBooking = (id) => request(`/admin/bookings/${id}`, { method: 'DELETE', auth: true })
+
+// --- Admin users (จัดการบัญชีแอดมิน -- เฉพาะ owner) ------------------------
+export const adminListUsers = () => request('/admin/users', { auth: true })
+export const adminCreateUser = (payload) => request('/admin/users', { method: 'POST', auth: true, body: payload })
+export const adminDeleteUser = (id) => request(`/admin/users/${id}`, { method: 'DELETE', auth: true })
 
 // --- Admin customers ------------------------------------------------------
 export const adminSearchCustomers = (q) => request('/admin/customers', { auth: true, params: { q } })
