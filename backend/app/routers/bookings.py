@@ -1,16 +1,21 @@
 import base64
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
 from ..availability import compute_available_slots, is_shop_open
 from ..database import get_db
+from ..rate_limit import limiter
 from ..services import line_notify
 from ..storage import upload_bytes
 from ..utils import generate_booking_code
 
 router = APIRouter(prefix="/bookings", tags=["bookings"])
+
+SLOT_TAKEN_MESSAGE = "ช่วงเวลานี้ถูกจองไปแล้วหรือไม่เปิดให้จอง กรุณาเลือกเวลาอื่น"
+MAX_BOOKING_ATTEMPTS = 5
 
 
 def _shop_recipient_ids(db: Session) -> list[str]:
@@ -30,7 +35,8 @@ def _get_or_create_customer(db: Session, phone: str, name: str, line_id: str) ->
 
 
 @router.post("", response_model=schemas.BookingOut, status_code=201)
-def create_booking(payload: schemas.BookingCreate, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def create_booking(request: Request, payload: schemas.BookingCreate, db: Session = Depends(get_db)):
     service = db.get(models.Service, payload.service_id)
     if service is None or not service.active:
         raise HTTPException(404, "ไม่พบบริการนี้ในระบบ")
@@ -38,10 +44,6 @@ def create_booking(payload: schemas.BookingCreate, db: Session = Depends(get_db)
         raise HTTPException(400, "ร้านปิดในวันที่เลือก กรุณาเลือกวันอื่น")
 
     estimated_duration = service.duration_minutes + max(0, payload.ai_extra_minutes)
-    slots = compute_available_slots(db, payload.booking_date, estimated_duration)
-    chosen = next((s for s in slots if s["time"] == payload.booking_time), None)
-    if chosen is None or not chosen["available"]:
-        raise HTTPException(409, "ช่วงเวลานี้ถูกจองไปแล้วหรือไม่เปิดให้จอง กรุณาเลือกเวลาอื่น")
 
     reference_image_url = None
     if payload.reference_image_base64:
@@ -52,32 +54,47 @@ def create_booking(payload: schemas.BookingCreate, db: Session = Depends(get_db)
             base64.b64decode(raw), "reference.jpg", "booking-references", "image/jpeg"
         )
 
-    customer = _get_or_create_customer(db, payload.customer_phone, payload.customer_name, payload.line_id)
+    # ลูกค้า 2 คนกดจองพร้อมกันเป๊ะๆ อาจแย่งช่วงเวลาเดียวกัน หรือได้รหัสคิวชนกัน (นับจากจำนวนคิว
+    # วันนั้น+1 -- ดู utils.generate_booking_code) เดิมถ้าชนกันจะโยน error 500 ดิบๆ ให้ลูกค้าทั้งที่
+    # จริงๆ อาจจองได้ (แค่ต้องคำนวณใหม่/สุ่มรหัสใหม่) เลยลองใหม่สั้นๆ ก่อนค่อยฟันธงว่าจองไม่ได้จริง
+    for _attempt in range(MAX_BOOKING_ATTEMPTS):
+        slots = compute_available_slots(db, payload.booking_date, estimated_duration)
+        chosen = next((s for s in slots if s["time"] == payload.booking_time), None)
+        if chosen is None or not chosen["available"]:
+            raise HTTPException(409, SLOT_TAKEN_MESSAGE)
 
-    booking = models.Booking(
-        booking_code=generate_booking_code(db, payload.booking_date),
-        customer_id=customer.id,
-        category_id=payload.category_id,
-        service_id=service.id,
-        service_name=service.name,
-        price=service.price,
-        shade_id=payload.shade_id,
-        shade_name=payload.shade_name,
-        nail_design_id=payload.nail_design_id,
-        reference_image_url=reference_image_url,
-        ai_style_tag=payload.ai_style_tag,
-        ai_extra_minutes=max(0, payload.ai_extra_minutes),
-        estimated_duration_minutes=estimated_duration,
-        booking_date=payload.booking_date,
-        booking_time=payload.booking_time,
-        customer_name=payload.customer_name,
-        customer_phone=payload.customer_phone,
-        line_id=payload.line_id,
-        status="pending",
-    )
-    db.add(booking)
-    db.commit()
-    db.refresh(booking)
+        customer = _get_or_create_customer(db, payload.customer_phone, payload.customer_name, payload.line_id)
+        booking = models.Booking(
+            booking_code=generate_booking_code(db, payload.booking_date),
+            customer_id=customer.id,
+            category_id=payload.category_id,
+            service_id=service.id,
+            service_name=service.name,
+            price=service.price,
+            shade_id=payload.shade_id,
+            shade_name=payload.shade_name,
+            nail_design_id=payload.nail_design_id,
+            reference_image_url=reference_image_url,
+            ai_style_tag=payload.ai_style_tag,
+            ai_extra_minutes=max(0, payload.ai_extra_minutes),
+            estimated_duration_minutes=estimated_duration,
+            booking_date=payload.booking_date,
+            booking_time=payload.booking_time,
+            customer_name=payload.customer_name,
+            customer_phone=payload.customer_phone,
+            line_id=payload.line_id,
+            status="pending",
+        )
+        db.add(booking)
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            continue
+        db.refresh(booking)
+        break
+    else:
+        raise HTTPException(409, SLOT_TAKEN_MESSAGE)
 
     line_notify.notify_booking_created(booking, customer.line_user_id)
     line_notify.notify_shop_new_booking(booking, _shop_recipient_ids(db))
