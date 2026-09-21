@@ -251,6 +251,40 @@ class AdminChangePasswordIn(BaseModel):
     new_password: str = Field(min_length=8)
 
 
+class AdminBookingCreate(BaseModel):
+    """แอดมินจองคิวแทนลูกค้า (รับสายโทรจอง/walk-in) -- ต่างจาก BookingCreate (ที่ลูกค้าจองเองผ่านเว็บ)
+    ตรงที่เลือกสถานะเริ่มต้นได้เอง (ปกติลูกค้าจองเองจะเริ่มที่ pending เสมอ แต่แอดมินคุยกับลูกค้าโดยตรง
+    แล้วอาจอยากยืนยันให้เลยทันที) และไม่มีฟิลด์เกี่ยวกับ AI/รูปอ้างอิงเพราะเป็นการจองผ่านโทรศัพท์"""
+
+    category_id: str
+    service_id: str
+    booking_date: date
+    booking_time: str
+    customer_name: str
+    customer_phone: str
+    line_id: str = ""
+    status: str = "confirmed"
+    admin_note: str = ""
+
+
+class AdminUserOut(BaseModel):
+    id: UUIDStr
+    username: str
+    full_name: str
+    role: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AdminUserCreate(BaseModel):
+    username: str = Field(min_length=3, max_length=64)
+    password: str = Field(min_length=8)
+    full_name: str = ""
+    role: str = "staff"
+
+
 class SegmentRequest(BaseModel):
     image_base64: str
 
