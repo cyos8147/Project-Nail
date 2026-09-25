@@ -1,28 +1,18 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import SkinToneAnalysis from '../components/SkinToneAnalysis.jsx'
+import { Link, useNavigate } from 'react-router-dom'
 import NailRecommendation from '../components/NailRecommendation.jsx'
 import AdvancedRecommend from '../components/AdvancedRecommend.jsx'
-import VirtualTryOn from '../components/VirtualTryOn.jsx'
-import ServerTryOn from '../components/ServerTryOn.jsx'
 import ReferenceImageAnalysis from '../components/ReferenceImageAnalysis.jsx'
+import NailTryOn from '../components/NailTryOn/NailTryOn.jsx'
 import Footer from '../components/Footer.jsx'
 
+const CARRY_DESIGN_KEY = 'nailglow_carry_design'
+
 export default function AiStudioPage() {
-  const [skinTone, setSkinTone] = useState(null)
-  const [uploadedPhoto, setUploadedPhoto] = useState(null)
-  const [tryOnRequestId, setTryOnRequestId] = useState(0)
+  const navigate = useNavigate()
 
-  function handleAnalyzed({ tone, image }) {
-    setSkinTone(tone)
-    if (image) setUploadedPhoto(image)
-  }
-
-  function handleTryOn({ tone, image }) {
-    if (tone) setSkinTone(tone)
-    if (image) setUploadedPhoto(image)
-    setTryOnRequestId((id) => id + 1)
-    document.getElementById('try-on')?.scrollIntoView({ behavior: 'smooth' })
+  function handleBookDesign(dataUrl) {
+    localStorage.setItem(CARRY_DESIGN_KEY, JSON.stringify({ reference_image_base64: dataUrl }))
+    navigate('/booking')
   }
 
   return (
@@ -57,16 +47,14 @@ export default function AiStudioPage() {
             ให้ AI ช่วยหา<span className="text-rose-500">ลุคเล็บที่ใช่</span>สำหรับคุณ
           </h1>
           <p className="text-gray-500 mt-4 max-w-xl mx-auto">
-            วิเคราะห์สีผิว รับคำแนะนำลายจากโมเดล Machine Learning ลองสีบนรูปจริง และหาลายที่ใกล้เคียงจากรูปที่ถูกใจ
-            — ครบในที่เดียว
+            ลองสี/ลายเล็บบนรูปจริงและวิเคราะห์สีผิวด้วย AI รับคำแนะนำลายจากโมเดล Machine Learning
+            และหาลายที่ใกล้เคียงจากรูปที่ถูกใจ — ครบในที่เดียว
           </p>
         </section>
 
-        <SkinToneAnalysis onAnalyzed={handleAnalyzed} onReset={() => setSkinTone(null)} onTryOn={handleTryOn} />
-        <NailRecommendation skinTone={skinTone} />
+        <NailTryOn onBookDesign={handleBookDesign} />
+        <NailRecommendation skinTone={null} />
         <AdvancedRecommend />
-        <VirtualTryOn skinTone={skinTone} uploadedPhoto={uploadedPhoto} tryOnRequestId={tryOnRequestId} />
-        <ServerTryOn />
         <ReferenceImageAnalysis />
 
         <Footer />

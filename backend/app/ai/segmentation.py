@@ -1,15 +1,15 @@
 """Nail segmentation — หาตำแหน่ง/ขอบเขตเล็บแต่ละนิ้วจากภาพมือ
 
-Pipeline หลัก (ค่าเริ่มต้น, ใช้ได้ทันทีไม่ต้องเทรนโมเดลเพิ่ม):
+Pipeline หลัก (ใช้งานจริงตอนนี้ — โมเดลเทรนเสร็จแล้ว วางไว้ที่ ml/models/yolov8_nail_seg.pt):
+  YOLOv8-Seg ที่เทรนเฉพาะเล็บ (mask mAP50-95 ≈ 0.91) แม่นกว่า ไม่ต้องพึ่ง landmark ประมาณการ
+  ระบบเช็คจาก settings.yolo_nail_seg_weights อัตโนมัติทุกครั้งที่เรียกใช้ (ดู segment_nails ด้านล่าง)
+
+Pipeline สำรอง (fallback อัตโนมัติถ้าโหลด/รันโมเดล YOLO ไม่สำเร็จ เช่น ติดตั้ง ultralytics ไม่ผ่าน):
   1. MediaPipe Hands (Google, pretrained) หา 21 hand landmarks
   2. จากตำแหน่งข้อนิ้วสุดท้าย (DIP) -> ปลายนิ้ว (TIP) ประมาณกรอบเล็บเบื้องต้นจากสัดส่วนกายวิภาค
   3. ปรับกรอบให้แนบขอบเล็บจริงด้วย region-growing (OpenCV flood-fill เทียบสีแบบ chroma-aware)
      — เทคนิคเดียวกับที่ frontend ใช้ฝั่งเบราว์เซอร์ (src/utils/nailSegmentation.js) แต่ทำฝั่งเซิร์ฟเวอร์
-     เพื่อให้ใช้ประวัติ/บันทึกผลลัพธ์ลงฐานข้อมูลได้ และเป็นจุดเสียบโมเดลที่แม่นกว่าในอนาคต
-
-Pipeline สำรอง (แม่นกว่า, ต้องเทรนก่อน — ดู backend/ml/train_yolo_seg.py):
-  ถ้ามีไฟล์น้ำหนักโมเดล YOLOv8-Seg ที่เทรนเฉพาะเล็บแล้วอยู่ที่ settings.yolo_nail_seg_weights
-  ระบบจะสลับไปใช้ YOLOv8-Seg แทนโดยอัตโนมัติ (แม่นยำกว่า ไม่ต้องพึ่ง landmark ประมาณการ)
+     เพื่อให้ใช้ประวัติ/บันทึกผลลัพธ์ลงฐานข้อมูลได้
 """
 
 from __future__ import annotations
@@ -58,14 +58,14 @@ def _get_mediapipe_hands():
     return _hands_singleton
 
 
-def _yolo_weights_available() -> bool:
+def yolo_weights_available() -> bool:
     return Path(settings.yolo_nail_seg_weights).is_file()
 
 
-def _get_yolo_model():
+def get_yolo_model():
     global _yolo_singleton
     if _yolo_singleton is None:
-        from ultralytics import YOLO  # optional heavy dependency, see requirements.txt
+        from ultralytics import YOLO  # heavy dependency, see requirements.txt
 
         _yolo_singleton = YOLO(settings.yolo_nail_seg_weights)
     return _yolo_singleton
@@ -225,7 +225,7 @@ def _segment_with_mediapipe_opencv(bgr: np.ndarray) -> list[dict]:
 
 
 def _segment_with_yolo(bgr: np.ndarray) -> list[dict]:
-    model = _get_yolo_model()
+    model = get_yolo_model()
     results = model.predict(bgr, verbose=False)[0]
     out = []
     if results.masks is None:
@@ -254,7 +254,7 @@ def _segment_with_yolo(bgr: np.ndarray) -> list[dict]:
 
 def segment_nails(bgr: np.ndarray) -> tuple[list[dict], str]:
     """คืนค่า (รายการเล็บที่ตรวจพบ, ชื่อ engine ที่ใช้จริง)"""
-    if _yolo_weights_available():
+    if yolo_weights_available():
         try:
             return _segment_with_yolo(bgr), "yolov8-seg"
         except Exception:

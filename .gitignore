@@ -24,3 +24,6 @@ dist-ssr/
 # Logs
 *.log
 npm-debug.log*
+
+# Local upload fallback (ใช้ตอน dev ที่ยังไม่ได้ตั้งค่า Supabase Storage -- ดู backend/app/storage.py)
+backend/static/uploads/

@@ -85,7 +85,7 @@ export default function BookingWizard() {
       })
       .catch(() => {})
 
-    // ลายที่ถูก "จองลายนี้" มาจากหน้า AI Studio (AdvancedRecommend / ServerTryOn)
+    // ลายที่ถูก "จองลายนี้"/"จองคิว" มาจากหน้า AI Studio (AdvancedRecommend / NailTryOn)
     const raw = localStorage.getItem(CARRY_DESIGN_KEY)
     if (raw) {
       try {
@@ -186,6 +186,9 @@ export default function BookingWizard() {
       let referenceImageBase64 = null
       if (imageFile) {
         referenceImageBase64 = await fileToBase64(imageFile)
+      } else if (carriedDesign?.reference_image_base64) {
+        // ลายที่ออกแบบเองจาก AI ลองเล็บ (คนละแบบกับ carriedDesign.nail_design_id ที่มาจากแคตตาล็อก)
+        referenceImageBase64 = carriedDesign.reference_image_base64
       }
 
       const result = await createBooking({

@@ -48,11 +48,28 @@ export default function ServiceDetails({
           : 'แนบรูปตัวอย่างลายเล็บที่อยากทำ เพื่อให้ช่างเตรียมงานได้ตรงใจที่สุด (ไม่บังคับ)'}
       </p>
 
-      {isNail && carriedDesign && (
+      {isNail && carriedDesign && carriedDesign.nail_design_id && (
         <div className="mb-6 flex items-center gap-3 bg-rose-50 border border-rose-200 rounded-xl p-4">
           <span className="w-10 h-10 rounded-full border border-black/10 flex-shrink-0" style={{ backgroundColor: carriedDesign.color_hex }} />
           <div className="flex-1">
             <p className="text-sm font-medium text-gray-800">ลายที่เลือกจาก AI: {carriedDesign.nail_design_name}</p>
+            <p className="text-xs text-gray-400">จะแนบไปกับการจองคิวนี้โดยอัตโนมัติ</p>
+          </div>
+          <button type="button" onClick={onClearCarriedDesign} className="text-xs text-gray-400 hover:text-rose-500">
+            ✕ ล้าง
+          </button>
+        </div>
+      )}
+
+      {isNail && carriedDesign && carriedDesign.reference_image_base64 && (
+        <div className="mb-6 flex items-center gap-3 bg-rose-50 border border-rose-200 rounded-xl p-4">
+          <img
+            src={carriedDesign.reference_image_base64}
+            alt="ลายที่ออกแบบจาก AI ลองเล็บ"
+            className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+          />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-gray-800">ใช้ลายที่ออกแบบจาก AI ลองเล็บ</p>
             <p className="text-xs text-gray-400">จะแนบไปกับการจองคิวนี้โดยอัตโนมัติ</p>
           </div>
           <button type="button" onClick={onClearCarriedDesign} className="text-xs text-gray-400 hover:text-rose-500">

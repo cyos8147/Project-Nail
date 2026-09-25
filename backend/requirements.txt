@@ -37,6 +37,12 @@ httpx==0.27.2
 python-dotenv==1.0.1
 slowapi==0.1.9   # จำกัดจำนวนครั้งเรียก API ต่อ IP กัน brute-force login + สแปม
 
-# --- optional: server-side YOLOv8-Seg fine-tuning / inference ---
-# หนักและใช้เวลาติดตั้งนาน (ต้องใช้ torch) ให้ติดตั้งแยกเฉพาะตอนจะเทรน/ใช้โมเดล YOLOv8-Seg จริงเท่านั้น
-# pip install ultralytics==8.2.103
+# --- server-side YOLOv8-Seg inference (เพื่อนเทรนโมเดลเสร็จแล้ว วางไว้ที่ ml/models/yolov8_nail_seg.pt) ---
+# ultralytics พ่วง torch มาด้วย -- ปกติ pip จะดึงเวอร์ชันที่รวม CUDA/GPU มาให้ (หนักเป็น GB เพราะลาก
+# ไลบรารี nvidia-* มาเพียบ) ทั้งที่ Render ไม่มี GPU ใช้เลย จึงบังคับดึงจาก index ของ PyTorch เองที่มี
+# เฉพาะ CPU (+cpu) แทน เบากว่ามาก (~150-200MB) -- ยังไม่เคย build จริงบน Render มาก่อน ถ้า deploy แล้วมี
+# ปัญหาเรื่องพื้นที่/แรมไม่พอบนแผนฟรี ต้องพิจารณาอัปเกรดแผนหรือหาโมเดลที่เบากว่า -- ระบบยัง fallback ไป
+# mediapipe+opencv ได้เองถ้าโหลดโมเดลนี้ไม่สำเร็จ (ดู segmentation.py segment_nails())
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.3.1+cpu
+ultralytics==8.2.103

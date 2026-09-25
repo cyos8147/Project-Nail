@@ -1,9 +1,11 @@
 import base64
+import io
 import uuid
 
 import cv2
 import numpy as np
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from PIL import Image
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
@@ -11,7 +13,7 @@ from ..ai import recommend as recommend_ai
 from ..ai import segmentation, tryon
 from ..database import get_db
 from ..rate_limit import limiter
-from ..storage import upload_bytes
+from ..storage import upload_bytes, validate_image_bytes
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
@@ -48,6 +50,41 @@ def segment(request: Request, payload: schemas.SegmentRequest):
             for n in nails
         ],
     )
+
+
+@router.post("/detect-nails")
+@limiter.limit("20/minute")
+async def detect_nails(request: Request, file: UploadFile = File(...)):
+    """หาตำแหน่งเล็บแบบ polygon (ขอบเขตจริงของเล็บ ไม่ใช่แค่กรอบสี่เหลี่ยม) ด้วย YOLOv8-Seg โดยเฉพาะ
+    -- ใช้กับหน้า AI ลองเล็บ (components/NailTryOn) ที่วาดผลลัพธ์บน canvas ตามรูปทรงเล็บจริง ไม่มี
+    fallback ไป mediapipe+opencv เหมือน /segment เพราะ mediapipe ให้แค่กรอบสี่เหลี่ยม ไม่ใช่ polygon"""
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(400, "ไฟล์ต้องเป็นรูปภาพ")
+    image_bytes = await file.read()
+    try:
+        validate_image_bytes(image_bytes)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+    if not segmentation.yolo_weights_available():
+        raise HTTPException(503, "ยังไม่พร้อมใช้งานฟีเจอร์นี้ กรุณาลองใหม่ภายหลัง")
+
+    try:
+        img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        model = segmentation.get_yolo_model()
+        width, height = img.size
+        # retina_masks=True อัปสเกล mask กลับไปความละเอียดเต็มของรูป ขอบ polygon คมกว่า proto mask ปกติ
+        results = model(np.array(img), retina_masks=True)
+    except Exception:
+        raise HTTPException(503, "ประมวลผลรูปภาพไม่สำเร็จ กรุณาลองใหม่ภายหลัง")
+
+    nails = []
+    if results and results[0].masks is not None:
+        for polygon in results[0].masks.xy:
+            normalized = [[float(x) / width, float(y) / height] for x, y in polygon]
+            nails.append(normalized)
+
+    return {"nails": nails, "count": len(nails)}
 
 
 @router.post("/tryon", response_model=schemas.TryOnResponse)
