@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react'
-import { adminCustomerDetail, adminSearchCustomers } from '../../api/client.js'
+import { adminCustomerDetail, adminSearchCustomers, adminUpdateCustomer } from '../../api/client.js'
 
 export default function AdminCustomersPage() {
   const [q, setQ] = useState('')
   const [customers, setCustomers] = useState([])
   const [selected, setSelected] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editForm, setEditForm] = useState({ name: '', phone: '', line_id: '' })
+  const [editError, setEditError] = useState(null)
+  const [savingEdit, setSavingEdit] = useState(false)
 
   function load() {
     setLoading(true)
@@ -17,6 +21,33 @@ export default function AdminCustomersPage() {
   async function openDetail(customer) {
     const detail = await adminCustomerDetail(customer.id)
     setSelected(detail)
+    setEditing(false)
+    setEditError(null)
+  }
+
+  function startEdit() {
+    setEditForm({
+      name: selected.customer.name || '',
+      phone: selected.customer.phone || '',
+      line_id: selected.customer.line_id || '',
+    })
+    setEditError(null)
+    setEditing(true)
+  }
+
+  async function handleSaveEdit() {
+    setSavingEdit(true)
+    setEditError(null)
+    try {
+      const updated = await adminUpdateCustomer(selected.customer.id, editForm)
+      setSelected({ ...selected, customer: updated })
+      setCustomers((prev) => prev.map((c) => (c.id === updated.id ? { ...c, name: updated.name, phone: updated.phone } : c)))
+      setEditing(false)
+    } catch (err) {
+      setEditError(err.message || 'บันทึกไม่สำเร็จ')
+    } finally {
+      setSavingEdit(false)
+    }
   }
 
   return (
@@ -60,10 +91,39 @@ export default function AdminCustomersPage() {
           {!selected && <p className="text-sm text-gray-400 p-4">เลือกลูกค้าทางซ้ายเพื่อดูรายละเอียด</p>}
           {selected && (
             <div className="bg-white rounded-2xl shadow-card p-5 space-y-5">
-              <div>
-                <p className="font-display text-lg font-bold text-gray-800">{selected.customer.name || '(ไม่ระบุชื่อ)'}</p>
-                <p className="text-sm text-gray-500">{selected.customer.phone} · Line: {selected.customer.line_id || '-'}</p>
-              </div>
+              {!editing && (
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-display text-lg font-bold text-gray-800">{selected.customer.name || '(ไม่ระบุชื่อ)'}</p>
+                    <p className="text-sm text-gray-500">{selected.customer.phone} · Line: {selected.customer.line_id || '-'}</p>
+                  </div>
+                  <button onClick={startEdit} className="text-xs font-semibold text-rose-600 hover:bg-blush-100 px-3 py-1.5 rounded-full whitespace-nowrap">แก้ไข</button>
+                </div>
+              )}
+              {editing && (
+                <div className="space-y-2.5">
+                  <div>
+                    <label className="text-xs text-gray-500 block mb-1">ชื่อ</label>
+                    <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 block mb-1">เบอร์โทร</label>
+                    <input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 block mb-1">LINE ID</label>
+                    <input value={editForm.line_id} onChange={(e) => setEditForm({ ...editForm, line_id: e.target.value })} className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={handleSaveEdit} disabled={savingEdit} className="bg-rose-500 hover:bg-rose-600 disabled:bg-blush-200 text-white text-xs font-semibold px-4 py-2 rounded-xl">
+                      {savingEdit ? 'กำลังบันทึก...' : 'บันทึก'}
+                    </button>
+                    <button onClick={() => setEditing(false)} className="text-xs text-gray-500 hover:bg-blush-100 px-3 py-2 rounded-xl">ยกเลิก</button>
+                    {editError && <span className="text-xs text-red-500">{editError}</span>}
+                  </div>
+                  <p className="text-[11px] text-gray-400">การแก้ไขนี้ไม่กระทบชื่อ/เบอร์ที่บันทึกไว้ในคิวเก่าที่เคยจองแล้ว</p>
+                </div>
+              )}
 
               <div>
                 <p className="text-xs font-semibold text-gray-500 mb-2">ประวัติการจอง ({selected.bookings.length})</p>

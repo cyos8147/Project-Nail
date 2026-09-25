@@ -2,11 +2,22 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from .. import models
+from .. import models, schemas
 from ..database import get_db
 from ..security import get_current_admin
 
 router = APIRouter(prefix="/admin/customers", tags=["admin-customers"])
+
+
+def _customer_out(customer: models.Customer) -> dict:
+    return {
+        "id": customer.id,
+        "phone": customer.phone,
+        "name": customer.name,
+        "line_id": customer.line_id,
+        "line_linked": bool(customer.line_user_id),
+        "created_at": customer.created_at.isoformat(),
+    }
 
 
 @router.get("")
@@ -60,14 +71,7 @@ def customer_detail(
         .all()
     )
     return {
-        "customer": {
-            "id": customer.id,
-            "phone": customer.phone,
-            "name": customer.name,
-            "line_id": customer.line_id,
-            "line_linked": bool(customer.line_user_id),
-            "created_at": customer.created_at.isoformat(),
-        },
+        "customer": _customer_out(customer),
         "bookings": [
             {
                 "id": b.id,
@@ -97,3 +101,35 @@ def customer_detail(
             for t in tryon
         ],
     }
+
+
+@router.patch("/{customer_id}")
+def update_customer(
+    customer_id: str,
+    payload: schemas.AdminCustomerUpdate,
+    db: Session = Depends(get_db),
+    admin: models.AdminUser = Depends(get_current_admin),
+):
+    """แก้ไขชื่อ/เบอร์โทร/LINE ID ของลูกค้า (เช่น พิมพ์เบอร์ผิดตอนจอง) -- ไม่ย้อนแก้ชื่อ/เบอร์ที่บันทึก
+    ไว้ในคิวเก่าที่เคยจองแล้ว (เป็น snapshot ณ ตอนจอง เหมือนราคา/ชื่อบริการ) แก้แค่ข้อมูลลูกค้าปัจจุบัน"""
+    customer = db.get(models.Customer, customer_id)
+    if customer is None:
+        raise HTTPException(404, "ไม่พบข้อมูลลูกค้า")
+
+    if payload.phone and payload.phone != customer.phone:
+        exists = (
+            db.query(models.Customer)
+            .filter(models.Customer.phone == payload.phone, models.Customer.id != customer_id)
+            .first()
+        )
+        if exists:
+            raise HTTPException(409, "เบอร์โทรนี้มีลูกค้าอื่นในระบบใช้อยู่แล้ว")
+        customer.phone = payload.phone
+    if payload.name is not None:
+        customer.name = payload.name
+    if payload.line_id is not None:
+        customer.line_id = payload.line_id
+
+    db.commit()
+    db.refresh(customer)
+    return _customer_out(customer)

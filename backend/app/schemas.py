@@ -272,6 +272,12 @@ class AdminBookingCreate(BaseModel):
     admin_note: str = ""
 
 
+class AdminCustomerUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    line_id: Optional[str] = None
+
+
 class AdminUserOut(BaseModel):
     id: UUIDStr
     username: str

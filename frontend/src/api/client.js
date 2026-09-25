@@ -132,6 +132,8 @@ export const adminDeleteUser = (id) => request(`/admin/users/${id}`, { method: '
 // --- Admin customers ------------------------------------------------------
 export const adminSearchCustomers = (q) => request('/admin/customers', { auth: true, params: { q } })
 export const adminCustomerDetail = (id) => request(`/admin/customers/${id}`, { auth: true })
+export const adminUpdateCustomer = (id, payload) =>
+  request(`/admin/customers/${id}`, { method: 'PATCH', auth: true, body: payload })
 
 // --- Admin catalog ------------------------------------------------------
 export const adminUpdateCategoryStaffCount = (categoryId, staffCount) =>

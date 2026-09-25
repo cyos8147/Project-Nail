@@ -3,9 +3,13 @@
 บัญชี Supabase ก่อน — สลับไปใช้ Supabase จริงตอน deploy ได้แค่ใส่ env var (ไม่ต้องแก้โค้ด)
 """
 
+import base64
+import io
 import os
 import uuid
 from pathlib import Path
+
+from PIL import Image
 
 from .config import get_settings
 
@@ -13,6 +17,46 @@ settings = get_settings()
 
 LOCAL_UPLOAD_DIR = Path(__file__).resolve().parent.parent / "static" / "uploads"
 LOCAL_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+MAX_IMAGE_BYTES = 8 * 1024 * 1024  # 8MB -- พอสำหรับรูปถ่ายมือถือทั่วไป กันไฟล์ใหญ่ผิดปกติ/โจมตี DoS
+MAX_IMAGE_DIMENSION = 4000  # กันรูป resolution สูงเกินจำเป็น เปลืองแรงประมวลผล/พื้นที่เก็บโดยใช่เหตุ
+ALLOWED_IMAGE_FORMATS = {"JPEG", "PNG", "WEBP"}
+
+
+def decode_and_validate_image(image_base64: str) -> tuple[bytes, str]:
+    """ถอดรหัสรูปที่ลูกค้า/แอดมินอัปโหลดมาเป็น base64 พร้อมตรวจสอบว่าเป็นรูปจริง ขนาดไม่ใหญ่ผิดปกติ
+    และเป็นชนิดไฟล์ที่รองรับ -- กันไฟล์ปลอมที่ไม่ใช่รูป (สวมนามสกุล) และกันไฟล์ใหญ่ผิดปกติที่เคยไม่มี
+    การตรวจสอบมาก่อนเลย (อัปโหลดตรงๆ ไปเก็บ/ประมวลผลได้โดยไม่จำกัดขนาด)
+    คืนค่า (raw bytes, content-type) หรือโยน ValueError (ข้อความภาษาไทย) ถ้าไม่ผ่าน"""
+    raw_str = image_base64
+    if "," in raw_str and raw_str.strip().startswith("data:"):
+        raw_str = raw_str.split(",", 1)[1]
+
+    # เช็คคร่าวๆ จากความยาว string ก่อน decode จริง (base64 ยาวกว่าไฟล์จริงราว 4/3 เท่า) ถูกกว่าการ
+    # decode ไฟล์ใหญ่ๆ ออกมาก่อนแล้วค่อยเจอว่าเกินขนาดทีหลัง
+    if len(raw_str) > MAX_IMAGE_BYTES * 4 // 3:
+        raise ValueError("ไฟล์รูปภาพมีขนาดใหญ่เกินไป (จำกัดไม่เกิน 8MB)")
+
+    try:
+        raw = base64.b64decode(raw_str, validate=True)
+    except Exception:
+        raise ValueError("ข้อมูลรูปภาพไม่ถูกต้อง")
+
+    if len(raw) > MAX_IMAGE_BYTES:
+        raise ValueError("ไฟล์รูปภาพมีขนาดใหญ่เกินไป (จำกัดไม่เกิน 8MB)")
+
+    try:
+        Image.open(io.BytesIO(raw)).verify()
+        img = Image.open(io.BytesIO(raw))  # verify() ปิด stream ไปแล้ว ต้องเปิดใหม่ถึงจะอ่านค่าต่อได้
+    except Exception:
+        raise ValueError("ไฟล์นี้ไม่ใช่รูปภาพที่เปิดได้ กรุณาลองไฟล์อื่น")
+
+    if img.format not in ALLOWED_IMAGE_FORMATS:
+        raise ValueError("รองรับเฉพาะไฟล์ JPEG, PNG, WEBP เท่านั้น")
+    if img.width > MAX_IMAGE_DIMENSION or img.height > MAX_IMAGE_DIMENSION:
+        raise ValueError(f"ขนาดรูปภาพใหญ่เกินไป (ไม่เกิน {MAX_IMAGE_DIMENSION}x{MAX_IMAGE_DIMENSION} พิกเซล)")
+
+    return raw, Image.MIME.get(img.format, "image/jpeg")
 
 _supabase_client = None
 

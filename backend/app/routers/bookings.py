@@ -1,5 +1,3 @@
-import base64
-
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -9,7 +7,7 @@ from ..availability import compute_available_slots, is_shop_open, lock_slot
 from ..database import get_db
 from ..rate_limit import limiter
 from ..services import line_notify
-from ..storage import upload_bytes
+from ..storage import decode_and_validate_image, upload_bytes
 from ..utils import generate_booking_code
 
 router = APIRouter(prefix="/bookings", tags=["bookings"])
@@ -47,12 +45,11 @@ def create_booking(request: Request, payload: schemas.BookingCreate, db: Session
 
     reference_image_url = None
     if payload.reference_image_base64:
-        raw = payload.reference_image_base64
-        if "," in raw and raw.strip().startswith("data:"):
-            raw = raw.split(",", 1)[1]
-        reference_image_url = upload_bytes(
-            base64.b64decode(raw), "reference.jpg", "booking-references", "image/jpeg"
-        )
+        try:
+            raw, content_type = decode_and_validate_image(payload.reference_image_base64)
+        except ValueError as e:
+            raise HTTPException(400, str(e))
+        reference_image_url = upload_bytes(raw, "reference.jpg", "booking-references", content_type)
 
     # ลูกค้าหลายคนกดจองพร้อมกันเป๊ะๆ อาจแย่งช่วงเวลาเดียวกัน (เกินจำนวนช่างของหมวดนั้น) หรือได้รหัสคิว
     # ชนกัน (นับจากจำนวนคิววันนั้น+1 -- ดู utils.generate_booking_code) จึงล็อกช่วงเวลานี้ไว้ก่อน (บน
@@ -105,7 +102,8 @@ def create_booking(request: Request, payload: schemas.BookingCreate, db: Session
 
 
 @router.get("/status", response_model=schemas.BookingOut)
-def check_status(booking_code: str, phone: str, db: Session = Depends(get_db)):
+@limiter.limit("20/minute")
+def check_status(request: Request, booking_code: str, phone: str, db: Session = Depends(get_db)):
     booking = (
         db.query(models.Booking)
         .filter(models.Booking.booking_code == booking_code, models.Booking.customer_phone == phone)
@@ -117,7 +115,8 @@ def check_status(booking_code: str, phone: str, db: Session = Depends(get_db)):
 
 
 @router.get("/history", response_model=schemas.CustomerHistoryResult)
-def customer_history(phone: str, booking_code: str | None = None, db: Session = Depends(get_db)):
+@limiter.limit("20/minute")
+def customer_history(request: Request, phone: str, booking_code: str | None = None, db: Session = Depends(get_db)):
     customer = db.query(models.Customer).filter(models.Customer.phone == phone).first()
     if customer is None:
         return schemas.CustomerHistorySummaryOut(customer={"phone": phone, "name": ""}, bookings=[])
@@ -178,7 +177,10 @@ def customer_history(phone: str, booking_code: str | None = None, db: Session = 
 
 
 @router.patch("/{booking_id}/reschedule", response_model=schemas.BookingOut)
-def reschedule_booking(booking_id: str, payload: schemas.BookingReschedule, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def reschedule_booking(
+    request: Request, booking_id: str, payload: schemas.BookingReschedule, db: Session = Depends(get_db)
+):
     booking = db.get(models.Booking, booking_id)
     if booking is None or booking.customer_phone != payload.phone:
         raise HTTPException(404, "ไม่พบข้อมูลการจอง")
@@ -213,7 +215,8 @@ def reschedule_booking(booking_id: str, payload: schemas.BookingReschedule, db: 
 
 
 @router.patch("/{booking_id}/cancel", response_model=schemas.BookingOut)
-def cancel_booking(booking_id: str, phone: str, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def cancel_booking(request: Request, booking_id: str, phone: str, db: Session = Depends(get_db)):
     booking = db.get(models.Booking, booking_id)
     if booking is None or booking.customer_phone != phone:
         raise HTTPException(404, "ไม่พบข้อมูลการจอง")

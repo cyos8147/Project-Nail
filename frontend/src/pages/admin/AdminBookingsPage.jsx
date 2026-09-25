@@ -15,6 +15,15 @@ const STATUS_LABEL = {
   pending: 'รอยืนยัน', confirmed: 'ยืนยันแล้ว', completed: 'เสร็จสิ้น', cancelled: 'ยกเลิกแล้ว', no_show: 'ไม่มาตามนัด',
 }
 
+// คิวที่เลยเวลานัดไปแล้วแต่ยังไม่ถูกปิดสถานะ (pending/confirmed ค้างอยู่) -- แค่จุดสังเกตให้แอดมินเห็นง่าย
+// ว่าควรตามเรื่อง ไม่ได้เปลี่ยนสถานะให้อัตโนมัติ (แอดมินเป็นคนตัดสินใจเองว่าลูกค้ามาจริงหรือไม่มา)
+function isOverdue(b) {
+  if (!['pending', 'confirmed'].includes(b.status)) return false
+  const start = new Date(`${b.booking_date}T${b.booking_time}:00`)
+  const end = new Date(start.getTime() + (b.estimated_duration_minutes || 60) * 60000)
+  return end < new Date()
+}
+
 const initialNewBooking = { category_id: '', service_id: '', customer_name: '', customer_phone: '', line_id: '', status: 'confirmed', admin_note: '' }
 
 function CreateBookingForm({ onCreated, onCancel }) {
@@ -221,10 +230,17 @@ export default function AdminBookingsPage() {
 
       <div className="space-y-3">
         {bookings.map((b) => (
-          <div key={b.id} className="bg-white rounded-2xl shadow-card p-5">
+          <div key={b.id} className={`bg-white rounded-2xl shadow-card p-5 ${isOverdue(b) ? 'ring-1 ring-amber-300' : ''}`}>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="font-medium text-gray-800">{b.customer_name} · {b.customer_phone}</p>
+                <p className="font-medium text-gray-800">
+                  {b.customer_name} · {b.customer_phone}
+                  {isOverdue(b) && (
+                    <span className="ml-2 text-[10px] font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full align-middle">
+                      ⚠️ เลยเวลานัดแล้ว
+                    </span>
+                  )}
+                </p>
                 <p className="text-xs text-gray-400 mt-0.5">{b.booking_code} · {b.service_name} · {b.booking_date} {b.booking_time} น. · {b.price} บาท</p>
                 {b.shade_name && <p className="text-xs text-gray-400">โทนสี: {b.shade_name}</p>}
                 {b.ai_style_tag && <p className="text-xs text-gray-400">AI style: {b.ai_style_tag} (+{b.ai_extra_minutes} นาที)</p>}

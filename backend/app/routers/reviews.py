@@ -1,11 +1,10 @@
-import base64
-
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
 from ..database import get_db
-from ..storage import upload_bytes
+from ..rate_limit import limiter
+from ..storage import decode_and_validate_image, upload_bytes
 
 router = APIRouter(prefix="/reviews", tags=["reviews"])
 
@@ -37,7 +36,8 @@ def list_reviews(limit: int = 20, db: Session = Depends(get_db)):
 
 
 @router.post("", response_model=schemas.ReviewOut, status_code=201)
-def create_review(payload: schemas.ReviewCreate, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def create_review(request: Request, payload: schemas.ReviewCreate, db: Session = Depends(get_db)):
     booking = (
         db.query(models.Booking)
         .filter(
@@ -55,10 +55,11 @@ def create_review(payload: schemas.ReviewCreate, db: Session = Depends(get_db)):
 
     photo_url = None
     if payload.photo_base64:
-        raw = payload.photo_base64
-        if "," in raw and raw.strip().startswith("data:"):
-            raw = raw.split(",", 1)[1]
-        photo_url = upload_bytes(base64.b64decode(raw), "review.jpg", "review-photos", "image/jpeg")
+        try:
+            raw, content_type = decode_and_validate_image(payload.photo_base64)
+        except ValueError as e:
+            raise HTTPException(400, str(e))
+        photo_url = upload_bytes(raw, "review.jpg", "review-photos", content_type)
 
     review = models.Review(
         booking_id=booking.id,

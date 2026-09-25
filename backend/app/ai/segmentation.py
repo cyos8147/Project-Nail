@@ -72,9 +72,9 @@ def _get_yolo_model():
 
 
 def decode_base64_image(image_base64: str) -> np.ndarray:
-    if "," in image_base64 and image_base64.strip().startswith("data:"):
-        image_base64 = image_base64.split(",", 1)[1]
-    raw = base64.b64decode(image_base64)
+    from ..storage import decode_and_validate_image
+
+    raw, _content_type = decode_and_validate_image(image_base64)
     img = Image.open(io.BytesIO(raw)).convert("RGB")
     return cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
 

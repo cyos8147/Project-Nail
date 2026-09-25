@@ -24,6 +24,8 @@ COMPLEXITY_EXTRA_MINUTES = {"simple": 0, "medium": 15, "complex": 30}
 def segment(request: Request, payload: schemas.SegmentRequest):
     try:
         bgr = segmentation.decode_base64_image(payload.image_base64)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     except Exception:
         raise HTTPException(400, "อ่านไฟล์รูปภาพไม่สำเร็จ กรุณาลองรูปอื่น")
 
@@ -53,6 +55,8 @@ def segment(request: Request, payload: schemas.SegmentRequest):
 def try_on(request: Request, payload: schemas.TryOnRequest, db: Session = Depends(get_db)):
     try:
         bgr = segmentation.decode_base64_image(payload.image_base64)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     except Exception:
         raise HTTPException(400, "อ่านไฟล์รูปภาพไม่สำเร็จ กรุณาลองรูปอื่น")
 
@@ -105,6 +109,8 @@ def try_on(request: Request, payload: schemas.TryOnRequest, db: Session = Depend
 def analyze_style(request: Request, payload: schemas.ReferenceStyleRequest, db: Session = Depends(get_db)):
     try:
         bgr = segmentation.decode_base64_image(payload.image_base64)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
     except Exception:
         raise HTTPException(400, "อ่านไฟล์รูปภาพไม่สำเร็จ กรุณาลองรูปอื่น")
 

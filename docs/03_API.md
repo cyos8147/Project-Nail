@@ -3,7 +3,7 @@ Base URL (dev): http://localhost:8000/api เอกสารแบบ interactiv
 
 Endpoint ที่ขึ้นต้นด้วย /admin/* ต้องแนบ header Authorization: Bearer <token> ที่ได้จาก POST /admin/login — ดูตัวอย่างเต็มใน Postman collection ที่ postman/NailGlow.postman_collection.json
 
-Rate limiting: /admin/login จำกัด 5 ครั้ง/นาทีต่อ IP (กัน brute-force รหัสผ่าน), /bookings (สร้างการจอง) จำกัด 10 ครั้ง/นาที, endpoint ทุกตัวใน /ai/* จำกัด 20 ครั้ง/นาที (กันสแปม/ปั่นค่า compute) — เกินโควตาจะได้ HTTP 429 พร้อม {"detail": "มีการเรียกใช้งานถี่เกินไป กรุณารอสักครู่แล้วลองใหม่"}
+Rate limiting: /admin/login จำกัด 5 ครั้ง/นาทีต่อ IP (กัน brute-force รหัสผ่าน), endpoint ทุกตัวใน /ai/* จำกัด 20 ครั้ง/นาที (กันสแปม/ปั่นค่า compute), /bookings /bookings/{id}/reschedule /bookings/{id}/cancel /reviews (เขียนข้อมูล) จำกัด 10 ครั้ง/นาที, /bookings/status /bookings/history (อ่านข้อมูล แต่รับ phone+booking_code เป็น query อาจถูกไล่เดาได้) จำกัด 20 ครั้ง/นาที — เกินโควตาจะได้ HTTP 429 พร้อม {"detail": "มีการเรียกใช้งานถี่เกินไป กรุณารอสักครู่แล้วลองใหม่"}
 
 ความจุ/จำนวนช่าง: คิวว่างนับแยกตามหมวดหมู่บริการ (service_categories.staff_count) ไม่ใช่รวมทั้งร้าน เพราะแต่ละหมวดมีช่างคนละคนกัน (ค่าเริ่มต้นตั้งค่าได้ในหน้าแอดมิน "ตั้งค่าร้าน") — จองหมวดผมกับหมวดเล็บเวลาเดียวกันได้ตามปกติ แต่จองซ้อนหมวดเดียวกันได้ไม่เกินจำนวนช่างของหมวดนั้น
 
