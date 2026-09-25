@@ -5,6 +5,8 @@ Endpoint ที่ขึ้นต้นด้วย /admin/* ต้องแน�
 
 Rate limiting: /admin/login จำกัด 5 ครั้ง/นาทีต่อ IP (กัน brute-force รหัสผ่าน), /bookings (สร้างการจอง) จำกัด 10 ครั้ง/นาที, endpoint ทุกตัวใน /ai/* จำกัด 20 ครั้ง/นาที (กันสแปม/ปั่นค่า compute) — เกินโควตาจะได้ HTTP 429 พร้อม {"detail": "มีการเรียกใช้งานถี่เกินไป กรุณารอสักครู่แล้วลองใหม่"}
 
+ความจุ/จำนวนช่าง: คิวว่างนับแยกตามหมวดหมู่บริการ (service_categories.staff_count) ไม่ใช่รวมทั้งร้าน เพราะแต่ละหมวดมีช่างคนละคนกัน (ค่าเริ่มต้นตั้งค่าได้ในหน้าแอดมิน "ตั้งค่าร้าน") — จองหมวดผมกับหมวดเล็บเวลาเดียวกันได้ตามปกติ แต่จองซ้อนหมวดเดียวกันได้ไม่เกินจำนวนช่างของหมวดนั้น
+
 Public (ลูกค้า — ไม่ต้องล็อกอิน)
 Method	Path	คำอธิบาย
 GET	/health	เช็คสถานะเซิร์ฟเวอร์
@@ -12,7 +14,7 @@ GET	/service-categories	รายการหมวดหมู่บริก�
 GET	/services?category_id=	รายการบริการ (กรองตามหมวดหมู่ได้)
 GET	/nail-designs?style_tag=	แคตตาล็อกลายเล็บ
 GET	/shop-settings	เวลาทำการ, วันหยุดประจำสัปดาห์, LINE OA Basic ID
-GET	/availability?date=YYYY-MM-DD&duration_minutes=	ช่วงเวลาว่างของวันนั้น
+GET	/availability?date=YYYY-MM-DD&duration_minutes=&category_id=	ช่วงเวลาว่างของวันนั้น (นับแยกตามหมวดหมู่ที่ระบุ)
 POST	/bookings	สร้างการจองใหม่ → คืนรหัสคิว (limit 10/นาที, กันจองซ้อน/รหัสชนกันอัตโนมัติ)
 GET	/bookings/status?booking_code=&phone=	ตรวจสอบสถานะคิว
 GET	/bookings/history?phone=&booking_code=	ประวัติการจอง — ใส่แค่ phone ได้สรุปแบบย่อ (ไม่มี id/เวลา/ราคา) ต้องใส่ booking_code ที่ตรงกับคิวจริงด้วยถึงจะเห็นประวัติ/รีวิว/AI try-on แบบเต็ม
@@ -41,6 +43,7 @@ PATCH	/admin/bookings/{id}	เปลี่ยนสถานะ/หมายเ�
 DELETE	/admin/bookings/{id}	ลบการจองถาวร (ลบรีวิวที่ผูกอยู่ไปด้วย)
 GET	/admin/customers?q=	ค้นหาลูกค้า
 GET	/admin/customers/{id}	ประวัติเต็มของลูกค้ารายนั้น
+PATCH	/admin/service-categories/{id}	ตั้งจำนวนช่างของหมวดหมู่นั้น (staff_count)
 GET/POST/PUT/DELETE	/admin/services	จัดการบริการ
 GET/POST/PUT/DELETE	/admin/nail-designs	จัดการแคตตาล็อกลายเล็บ
 PUT	/admin/shop-settings	แก้ชื่อร้าน/เบอร์โทร/LINE OA Basic ID/เวลาทำการ/วันหยุดประจำสัปดาห์
@@ -96,5 +99,11 @@ curl -X POST http://localhost:8000/api/admin/users \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"username": "staff1", "password": "รหัสผ่าน8ตัวขึ้นไป", "full_name": "พนักงาน หนึ่ง", "role": "staff"}'
+ตั้งจำนวนช่างของหมวดหมู่ (เช่น หมวดเล็บมีช่าง 1 คน):
+
+curl -X PATCH http://localhost:8000/api/admin/service-categories/nail \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"staff_count": 1}'
 ทดสอบด้วย Postman
 นำเข้าไฟล์ postman/NailGlow.postman_collection.json เข้า Postman (Import → File) — ตั้งค่า Postman environment variable base_url = http://localhost:8000/api และ admin_token (จะถูกเซ็ต อัตโนมัติหลังยิง request "Admin Login" เพราะมี test script เซ็ต env variable ไว้ให้)
