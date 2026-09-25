@@ -6,13 +6,11 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
-    Index,
     Integer,
     JSON,
     Numeric,
     String,
     Text,
-    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -80,6 +78,9 @@ class ServiceCategory(Base):
     name: Mapped[str] = mapped_column(String(64), nullable=False)
     icon: Mapped[str] = mapped_column(String(16), default="")
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    # จำนวนช่างที่ทำหมวดนี้ได้ (เช่น หมวดผม=แม่ 1 คน, หมวดเล็บ=พี่สาว 1 คน -- คนละคนคนละหมวด ทำแทนกันไม่ได้
+    # จึงแยกนับความจุเป็นรายหมวดหมู่ ไม่ใช่รวมทั้งร้าน) ใช้จำกัดจำนวนคิวสูงสุดที่ซ้อนกันได้ต่อช่วงเวลา
+    staff_count: Mapped[int] = mapped_column(Integer, default=1)
 
     services: Mapped[list["Service"]] = relationship(back_populates="category")
 
@@ -165,17 +166,11 @@ class Booking(Base):
     customer: Mapped[Customer] = relationship(back_populates="bookings")
     review: Mapped["Review"] = relationship(back_populates="booking", uselist=False)
 
-    __table_args__ = (
-        # กันจองคิวเวลาเดียวกันซ้อนกัน (race condition) -- ดูคำอธิบายเต็มใน schema.sql
-        Index(
-            "idx_bookings_no_double_book",
-            "booking_date",
-            "booking_time",
-            unique=True,
-            postgresql_where=text("status in ('pending', 'confirmed')"),
-            sqlite_where=text("status in ('pending', 'confirmed')"),
-        ),
-    )
+    # หมายเหตุ: เดิมมี unique index กันจองซ้อนตรงนี้ (บังคับ 1 คิว/วันเวลา ทั้งร้าน) แต่ร้านมีช่าง
+    # แยกตามหมวดหมู่ (เช่น หมวดผม 1 คน หมวดเล็บ 1 คน ทำพร้อมกันคนละหมวดได้) และบางหมวดอาจมีช่าง
+    # มากกว่า 1 คน จึงย้ายไปกันด้วย advisory lock ต่อ (หมวดหมู่, วันที่, เวลา) แทน -- ดู
+    # availability.py lock_slot() และ routers/bookings.py create_booking (รองรับ "จำนวนที่ซ้อนกันได้"
+    # ตาม service_categories.staff_count ซึ่ง unique index ทำไม่ได้)
 
 
 class Review(Base):

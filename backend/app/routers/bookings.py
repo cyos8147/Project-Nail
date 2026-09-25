@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
-from ..availability import compute_available_slots, is_shop_open
+from ..availability import compute_available_slots, is_shop_open, lock_slot
 from ..database import get_db
 from ..rate_limit import limiter
 from ..services import line_notify
@@ -54,13 +54,16 @@ def create_booking(request: Request, payload: schemas.BookingCreate, db: Session
             base64.b64decode(raw), "reference.jpg", "booking-references", "image/jpeg"
         )
 
-    # ลูกค้า 2 คนกดจองพร้อมกันเป๊ะๆ อาจแย่งช่วงเวลาเดียวกัน หรือได้รหัสคิวชนกัน (นับจากจำนวนคิว
-    # วันนั้น+1 -- ดู utils.generate_booking_code) เดิมถ้าชนกันจะโยน error 500 ดิบๆ ให้ลูกค้าทั้งที่
-    # จริงๆ อาจจองได้ (แค่ต้องคำนวณใหม่/สุ่มรหัสใหม่) เลยลองใหม่สั้นๆ ก่อนค่อยฟันธงว่าจองไม่ได้จริง
+    # ลูกค้าหลายคนกดจองพร้อมกันเป๊ะๆ อาจแย่งช่วงเวลาเดียวกัน (เกินจำนวนช่างของหมวดนั้น) หรือได้รหัสคิว
+    # ชนกัน (นับจากจำนวนคิววันนั้น+1 -- ดู utils.generate_booking_code) จึงล็อกช่วงเวลานี้ไว้ก่อน (บน
+    # Postgres) ให้ทีละคนตรวจ+จองเสร็จก่อนคนต่อไปจะเช็ค กันนับจำนวนคิวที่ทับกันผิดตอนแย่งกัน แล้วค่อย
+    # ลองใหม่สั้นๆ ถ้ารหัสคิวชนกัน (คนละเรื่องกับเวลาชนกัน) ก่อนจะฟันธงว่าจองไม่ได้จริง
     for _attempt in range(MAX_BOOKING_ATTEMPTS):
-        slots = compute_available_slots(db, payload.booking_date, estimated_duration)
+        lock_slot(db, payload.category_id, payload.booking_date, payload.booking_time)
+        slots = compute_available_slots(db, payload.booking_date, estimated_duration, payload.category_id)
         chosen = next((s for s in slots if s["time"] == payload.booking_time), None)
         if chosen is None or not chosen["available"]:
+            db.rollback()
             raise HTTPException(409, SLOT_TAKEN_MESSAGE)
 
         customer = _get_or_create_customer(db, payload.customer_phone, payload.customer_name, payload.line_id)
@@ -184,11 +187,17 @@ def reschedule_booking(booking_id: str, payload: schemas.BookingReschedule, db: 
     if not is_shop_open(db, payload.booking_date):
         raise HTTPException(400, "ร้านปิดในวันที่เลือก กรุณาเลือกวันอื่น")
 
+    lock_slot(db, booking.category_id, payload.booking_date, payload.booking_time)
     slots = compute_available_slots(
-        db, payload.booking_date, booking.estimated_duration_minutes, exclude_booking_id=booking_id
+        db,
+        payload.booking_date,
+        booking.estimated_duration_minutes,
+        booking.category_id,
+        exclude_booking_id=booking_id,
     )
     chosen = next((s for s in slots if s["time"] == payload.booking_time), None)
     if chosen is None or not chosen["available"]:
+        db.rollback()
         raise HTTPException(409, "ช่วงเวลานี้ถูกจองไปแล้วหรือไม่เปิดให้จอง กรุณาเลือกเวลาอื่น")
 
     booking.booking_date = payload.booking_date

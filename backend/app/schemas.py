@@ -28,9 +28,14 @@ class ServiceCategoryOut(BaseModel):
     name: str
     icon: str
     sort_order: int
+    staff_count: int
 
     class Config:
         from_attributes = True
+
+
+class ServiceCategoryStaffUpdate(BaseModel):
+    staff_count: int = Field(ge=1, le=50)
 
 
 class ServiceOut(BaseModel):

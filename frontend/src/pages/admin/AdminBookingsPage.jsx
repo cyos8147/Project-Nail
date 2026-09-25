@@ -112,6 +112,7 @@ function CreateBookingForm({ onCreated, onCancel }) {
           selectedTime={selectedTime}
           setSelectedTime={setSelectedTime}
           serviceDurationMinutes={selectedService.duration_minutes}
+          categoryId={form.category_id}
           closedWeekdays={closedWeekdays}
         />
       )}

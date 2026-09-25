@@ -75,9 +75,9 @@ export const getServiceCategories = () => request('/service-categories')
 export const getServices = (categoryId) => request('/services', { params: { category_id: categoryId } })
 export const getNailDesigns = (styleTag) => request('/nail-designs', { params: { style_tag: styleTag } })
 export const getShopSettings = () => request('/shop-settings')
-export const getAvailability = (date, durationMinutes, excludeBookingId) =>
+export const getAvailability = (date, durationMinutes, categoryId, excludeBookingId) =>
   request('/availability', {
-    params: { date, duration_minutes: durationMinutes, exclude_booking_id: excludeBookingId },
+    params: { date, duration_minutes: durationMinutes, category_id: categoryId, exclude_booking_id: excludeBookingId },
   })
 
 // --- Bookings -----------------------------------------------------------
@@ -134,6 +134,9 @@ export const adminSearchCustomers = (q) => request('/admin/customers', { auth: t
 export const adminCustomerDetail = (id) => request(`/admin/customers/${id}`, { auth: true })
 
 // --- Admin catalog ------------------------------------------------------
+export const adminUpdateCategoryStaffCount = (categoryId, staffCount) =>
+  request(`/admin/service-categories/${categoryId}`, { method: 'PATCH', auth: true, body: { staff_count: staffCount } })
+
 export const adminListServices = () => request('/admin/services', { auth: true })
 export const adminCreateService = (payload) => request('/admin/services', { method: 'POST', auth: true, body: payload })
 export const adminUpdateService = (id, payload) =>

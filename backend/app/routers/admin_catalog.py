@@ -99,6 +99,23 @@ def delete_design(
     db.commit()
 
 
+# --- Service categories (จำนวนช่างต่อหมวดหมู่) ---------------------------
+@router.patch("/service-categories/{category_id}", response_model=schemas.ServiceCategoryOut)
+def update_category_staff_count(
+    category_id: str,
+    payload: schemas.ServiceCategoryStaffUpdate,
+    db: Session = Depends(get_db),
+    admin: models.AdminUser = Depends(get_current_admin),
+):
+    category = db.get(models.ServiceCategory, category_id)
+    if category is None:
+        raise HTTPException(404, "ไม่พบหมวดหมู่นี้")
+    category.staff_count = payload.staff_count
+    db.commit()
+    db.refresh(category)
+    return category
+
+
 # --- Shop settings + holidays --------------------------------------------
 @router.put("/shop-settings", response_model=schemas.ShopSettingsOut)
 def update_shop_settings(

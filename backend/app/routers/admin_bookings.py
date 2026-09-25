@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
-from ..availability import compute_available_slots, is_shop_open
+from ..availability import compute_available_slots, is_shop_open, lock_slot
 from ..database import get_db
 from ..security import get_current_admin
 from ..services import line_notify
@@ -66,9 +66,11 @@ def create_booking_by_admin(
     estimated_duration = service.duration_minutes
 
     for _attempt in range(MAX_BOOKING_ATTEMPTS):
-        slots = compute_available_slots(db, payload.booking_date, estimated_duration)
+        lock_slot(db, payload.category_id, payload.booking_date, payload.booking_time)
+        slots = compute_available_slots(db, payload.booking_date, estimated_duration, payload.category_id)
         chosen = next((s for s in slots if s["time"] == payload.booking_time), None)
         if chosen is None or not chosen["available"]:
+            db.rollback()
             raise HTTPException(409, SLOT_TAKEN_MESSAGE)
 
         customer = _get_or_create_customer(db, payload.customer_phone, payload.customer_name, payload.line_id)

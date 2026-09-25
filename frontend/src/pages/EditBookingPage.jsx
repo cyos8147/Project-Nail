@@ -126,6 +126,7 @@ export default function EditBookingPage() {
               selectedTime={selectedTime}
               setSelectedTime={setSelectedTime}
               serviceDurationMinutes={booking.estimated_duration_minutes}
+              categoryId={booking.category_id}
               excludeBookingId={booking.id}
             />
 

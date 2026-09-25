@@ -40,6 +40,7 @@ def shop_settings(db: Session = Depends(get_db)):
 def availability(
     target_date: date = Query(..., alias="date"),
     duration_minutes: int = Query(60, ge=15, le=480),
+    category_id: str = Query(...),
     exclude_booking_id: str | None = Query(None),
     db: Session = Depends(get_db),
 ):
@@ -48,5 +49,7 @@ def availability(
     return {
         "date": target_date,
         "is_open": is_shop_open(db, target_date),
-        "slots": compute_available_slots(db, target_date, duration_minutes, exclude_booking_id=exclude_booking_id),
+        "slots": compute_available_slots(
+            db, target_date, duration_minutes, category_id, exclude_booking_id=exclude_booking_id
+        ),
     }

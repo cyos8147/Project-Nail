@@ -1,9 +1,9 @@
 from datetime import date, datetime, time, timedelta
 
-from sqlalchemy import and_
+from sqlalchemy import and_, text
 from sqlalchemy.orm import Session
 
-from .models import Booking, ShopHoliday, ShopSettings
+from .models import Booking, ServiceCategory, ShopHoliday, ShopSettings
 
 ACTIVE_STATUSES = ("pending", "confirmed")
 
@@ -42,11 +42,21 @@ def is_shop_open(db: Session, target_date: date) -> bool:
 
 
 def compute_available_slots(
-    db: Session, target_date: date, duration_minutes: int, exclude_booking_id: str | None = None
+    db: Session,
+    target_date: date,
+    duration_minutes: int,
+    category_id: str,
+    exclude_booking_id: str | None = None,
 ) -> list[dict]:
+    """คิวว่างนับแยกตามหมวดหมู่บริการ (ไม่รวมทั้งร้าน) เพราะแต่ละหมวดมีช่างคนละคนกัน
+    (เช่น หมวดผม=แม่ 1 คน หมวดเล็บ=พี่สาว 1 คน) จองผมกับจองเล็บเวลาเดียวกันจึงไม่ชนกัน
+    ความจุ (จองซ้อนกันได้กี่คิว/ช่วงเวลา) มาจาก service_categories.staff_count ของหมวดนั้นๆ"""
     settings = get_shop_settings(db)
     if not is_shop_open(db, target_date) or duration_minutes <= 0:
         return []
+
+    category = db.get(ServiceCategory, category_id)
+    capacity = category.staff_count if category else 0
 
     open_min = _time_to_minutes(settings.opening_time)
     close_min = _time_to_minutes(settings.closing_time)
@@ -55,6 +65,7 @@ def compute_available_slots(
     existing_query = db.query(Booking).filter(
         and_(
             Booking.booking_date == target_date,
+            Booking.category_id == category_id,
             Booking.status.in_(ACTIVE_STATUSES),
         )
     )
@@ -75,14 +86,25 @@ def compute_available_slots(
     slots = []
     t = open_min
     while t + duration_minutes <= close_min:
-        available = True
-        if is_today and t <= now_minutes:
-            available = False
-        for busy_start, busy_end in busy_ranges:
-            if t < busy_end and (t + duration_minutes) > busy_start:
-                available = False
-                break
+        is_past = is_today and t <= now_minutes
+        overlapping = sum(
+            1
+            for busy_start, busy_end in busy_ranges
+            if t < busy_end and (t + duration_minutes) > busy_start
+        )
+        available = not is_past and overlapping < capacity
         slots.append({"time": _minutes_to_time(t), "available": available})
         t += step
 
     return slots
+
+
+def lock_slot(db: Session, category_id: str, target_date: date, target_time: str) -> None:
+    """ล็อกช่วงเวลานี้ไว้ชั่วคราวระหว่างเช็ค+สร้าง/แก้ไขคิว กันแย่งกันจองพร้อมกันเป๊ะๆ แล้วนับ
+    จำนวนคิวที่ทับกันผิด (ดู routers/bookings.py create_booking) ทำงานเฉพาะบน Postgres เท่านั้น
+    (advisory lock ผูกกับ transaction ปัจจุบัน ปล่อยเองอัตโนมัติตอน commit/rollback) -- SQLite (dev)
+    ข้ามไปเพราะไม่รองรับฟังก์ชันนี้ และไม่มีการยิงพร้อมกันจริงอยู่แล้วตอนรันเซิร์ฟเวอร์ dev คนเดียว"""
+    if db.get_bind().dialect.name != "postgresql":
+        return
+    key = f"{category_id}|{target_date.isoformat()}|{target_time}"
+    db.execute(text("select pg_advisory_xact_lock(hashtext(:key))"), {"key": key})

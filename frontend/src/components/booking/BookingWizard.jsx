@@ -355,6 +355,7 @@ export default function BookingWizard() {
             selectedTime={selectedTime}
             setSelectedTime={setSelectedTime}
             serviceDurationMinutes={estimatedDuration}
+            categoryId={category}
             closedWeekdays={closedWeekdays}
           />
         )}

@@ -8,7 +8,9 @@ import {
   adminDeleteUser,
   adminListHolidays,
   adminListUsers,
+  adminUpdateCategoryStaffCount,
   adminUpdateShopSettings,
+  getServiceCategories,
   getShopSettings,
 } from '../../api/client.js'
 
@@ -18,6 +20,68 @@ const WEEKDAYS = [
 ]
 
 const ROLE_LABEL = { owner: 'เจ้าของร้าน', staff: 'พนักงาน' }
+
+function CategoryStaffSection() {
+  const [categories, setCategories] = useState(null)
+  const [savedId, setSavedId] = useState(null)
+  const [error, setError] = useState(null)
+
+  function load() {
+    getServiceCategories().then(setCategories).catch((err) => setError(err.message))
+  }
+  useEffect(load, [])
+
+  function setCount(id, value) {
+    setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, staff_count: value } : c)))
+  }
+
+  async function handleSave(category) {
+    setError(null)
+    try {
+      await adminUpdateCategoryStaffCount(category.id, Number(category.staff_count) || 1)
+      setSavedId(category.id)
+      setTimeout(() => setSavedId(null), 2000)
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  if (!categories) return null
+
+  return (
+    <div className="bg-white rounded-2xl shadow-card p-6">
+      <p className="font-medium text-gray-700 mb-1">จำนวนช่างต่อหมวดหมู่</p>
+      <p className="text-xs text-gray-400 mb-4">
+        แต่ละหมวดมีช่างคนละคนกัน กำหนดไว้ว่าหมวดนั้นทำพร้อมกันได้กี่คิวในเวลาเดียวกัน (คนละหมวดไม่แย่งคิวกัน
+        เช่น จองตัดผมกับจองทำเล็บเวลาเดียวกันได้ตามปกติ)
+      </p>
+      <div className="space-y-2.5">
+        {categories.map((c) => (
+          <div key={c.id} className="flex items-center gap-3">
+            <span className="text-sm text-gray-600 flex-1">{c.name}</span>
+            <input
+              type="number"
+              min={1}
+              max={50}
+              value={c.staff_count}
+              onChange={(e) => setCount(c.id, e.target.value)}
+              className="w-20 rounded-xl border border-blush-200 px-3 py-1.5 text-sm"
+            />
+            <button
+              type="button"
+              onClick={() => handleSave(c)}
+              className="text-xs font-semibold text-rose-600 hover:bg-blush-100 px-3 py-1.5 rounded-xl"
+            >
+              บันทึก
+            </button>
+            {savedId === c.id && <span className="text-xs text-green-600">✅</span>}
+          </div>
+        ))}
+      </div>
+      {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
+    </div>
+  )
+}
 
 function AdminUsersSection() {
   const [users, setUsers] = useState(null)
@@ -278,6 +342,8 @@ export default function AdminSettingsPage() {
           {holidays.length === 0 && <p className="text-sm text-gray-400">ยังไม่มีวันหยุดพิเศษ</p>}
         </div>
       </div>
+
+      <CategoryStaffSection />
 
       {admin?.role === 'owner' && <AdminUsersSection />}
     </div>

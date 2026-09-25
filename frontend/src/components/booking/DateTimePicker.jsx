@@ -24,6 +24,7 @@ export default function DateTimePicker({
   selectedTime,
   setSelectedTime,
   serviceDurationMinutes = 60,
+  categoryId,
   closedWeekdays,
   excludeBookingId,
 }) {
@@ -72,11 +73,11 @@ export default function DateTimePicker({
   }
 
   useEffect(() => {
-    if (!selectedDate) return
+    if (!selectedDate || !categoryId) return
     let cancelled = false
     setLoadingSlots(true)
     setSlotsError(null)
-    getAvailability(selectedDate, serviceDurationMinutes, excludeBookingId)
+    getAvailability(selectedDate, serviceDurationMinutes, categoryId, excludeBookingId)
       .then((res) => {
         if (!cancelled) setSlots(res.slots || [])
       })
@@ -89,7 +90,7 @@ export default function DateTimePicker({
     return () => {
       cancelled = true
     }
-  }, [selectedDate, serviceDurationMinutes, excludeBookingId])
+  }, [selectedDate, serviceDurationMinutes, categoryId, excludeBookingId])
 
   return (
     <div>

@@ -52,7 +52,12 @@ create table if not exists service_categories (
   id text primary key,            -- 'hair' | 'nail'
   name text not null,
   icon text not null default '',
-  sort_order int not null default 0
+  sort_order int not null default 0,
+  -- จำนวนช่างที่ทำหมวดนี้ได้ (แต่ละหมวดเป็นคนละคนกัน เช่น หมวดผม=แม่ 1 คน หมวดเล็บ=พี่สาว 1 คน
+  -- ทำแทนกันไม่ได้ จึงแยกความจุเป็นรายหมวด ไม่รวมทั้งร้าน) ใช้จำกัดจำนวนคิวสูงสุดที่ซ้อนกันได้ต่อช่วงเวลา
+  -- ฐานข้อมูลเก่าที่มีตารางนี้อยู่แล้ว (create table if not exists จะไม่เพิ่มคอลัมน์ให้) ต้องรัน
+  -- "alter table service_categories add column if not exists staff_count int not null default 1;" เอง
+  staff_count int not null default 1
 );
 
 create table if not exists services (
@@ -135,16 +140,20 @@ create index if not exists idx_bookings_date on bookings(booking_date);
 create index if not exists idx_bookings_customer on bookings(customer_id);
 create index if not exists idx_bookings_phone on bookings(customer_phone);
 create index if not exists idx_bookings_status on bookings(status);
--- กันจองคิวเวลาเดียวกันซ้อนกัน (race condition): ถ้าลูกค้า 2 คนกดจองพร้อมกันเป๊ะๆ ก่อนหน้านี้ระบบเช็ค
--- "ว่างไหม" แล้วค่อย insert แยกกัน 2 ทีโดยไม่มีอะไรกันชนที่ระดับฐานข้อมูล ทั้งคู่อาจจองสำเร็จซ้อนกันได้
--- unique index นี้บังคับว่าคิวที่ "ยังไม่ยกเลิก/เสร็จ" (pending/confirmed) ห้ามมีวันที่+เวลาเริ่มซ้ำกัน
--- ถ้าชนกัน DB จะโยน error ให้ทันที (ฝั่ง backend ดักไว้แล้วให้ตอบลูกค้าด้วยข้อความปกติ ไม่ใช่ error ดิบ)
--- หมายเหตุ: กันได้เฉพาะกรณี "เวลาเริ่มตรงกันเป๊ะ" เท่านั้น กรณีบริการระยะเวลาไม่เท่ากันแล้วเวลาเริ่ม
--- คาบเกี่ยวกัน (เช่น 10:00-11:30 กับ 10:30-12:00) ยังหลุดได้ในทางทฤษฎี แต่โอกาสเกิดต่ำกว่ามาก
--- เพราะต้องแข่งกันในหน้าต่างเวลาสั้นๆ เท่านั้น (ดูรายละเอียดใน routers/bookings.py create_booking)
-create unique index if not exists idx_bookings_no_double_book
-  on bookings (booking_date, booking_time)
-  where status in ('pending', 'confirmed');
+-- กันจองคิวเวลาเดียวกันซ้อนกันเกินจำนวนช่าง (race condition): ถ้าลูกค้าหลายคนกดจองพร้อมกันเป๊ะๆ
+-- ก่อนหน้านี้ระบบเช็ค "ว่างไหม" แล้วค่อย insert แยกกันโดยไม่มีอะไรกันชนที่ระดับฐานข้อมูล อาจจองสำเร็จ
+-- เกินจำนวนช่างที่มีจริงได้ -- เดิมกันด้วย unique index (บังคับ 1 คิว/วันเวลา ทั้งร้าน) แต่ร้านมีช่างแยก
+-- ตามหมวดหมู่และบางหมวดมีมากกว่า 1 คน (ดูคอลัมน์ staff_count ในตาราง service_categories ด้านบน)
+-- unique index ทำได้แค่ "ห้ามซ้ำ" ไม่ใช่ "ซ้ำได้ไม่เกิน N" จึงย้ายไปกันด้วย Postgres advisory lock ที่ระดับ
+-- แอปแทน (ล็อกด้วยคีย์ หมวดหมู่+วันที่+เวลา ให้ทีละคนตรวจนับ+จองเสร็จก่อนคนต่อไปจะเช็ค แล้วเทียบจำนวน
+-- คิวที่ทับกันกับ staff_count ของหมวดนั้น) ดูรายละเอียดใน availability.py lock_slot() และ
+-- routers/bookings.py create_booking -- หมายเหตุ: กันได้เฉพาะกรณี "เวลาเริ่มตรงกันเป๊ะ" เท่านั้น กรณี
+-- บริการระยะเวลาไม่เท่ากันแล้วเวลาเริ่มคาบเกี่ยวกัน (เช่น 10:00-11:30 กับ 10:30-12:00) ยังหลุดได้ใน
+-- ทางทฤษฎี แต่โอกาสเกิดต่ำกว่ามากเพราะต้องแข่งกันในหน้าต่างเวลาสั้นๆ เท่านั้น (เหมือนเดิมก่อนแก้ไขนี้)
+--
+-- ฐานข้อมูลเก่าที่เคยรัน schema.sql เวอร์ชันก่อนหน้าไปแล้ว (มี idx_bookings_no_double_book อยู่จริง)
+-- ต้องลบ index นี้ทิ้งด้วยตัวเอง ไม่งั้นจะบล็อกคิวที่ 2/3 ของหมวดที่มีช่างมากกว่า 1 คนผิดพลาด:
+drop index if exists idx_bookings_no_double_book;
 
 -- ---------------------------------------------------------------------------
 -- 7) รีวิว
