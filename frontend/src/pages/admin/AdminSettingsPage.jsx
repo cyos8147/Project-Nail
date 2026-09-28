@@ -271,10 +271,6 @@ export default function AdminSettingsPage() {
       <form onSubmit={handleSave} className="bg-white rounded-2xl shadow-card p-6 space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className="text-xs text-gray-500 block mb-1">ชื่อร้าน</label>
-            <input value={form.shop_name} onChange={(e) => setForm({ ...form, shop_name: e.target.value })} className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm" />
-          </div>
-          <div>
             <label className="text-xs text-gray-500 block mb-1">เบอร์โทรร้าน</label>
             <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm" />
           </div>
@@ -284,7 +280,7 @@ export default function AdminSettingsPage() {
           </div>
           <div>
             <label className="text-xs text-gray-500 block mb-1">LINE OA Basic ID</label>
-            <input value={form.line_oa_basic_id} onChange={(e) => setForm({ ...form, line_oa_basic_id: e.target.value })} className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm" placeholder="@nailglow" />
+            <input value={form.line_oa_basic_id} onChange={(e) => setForm({ ...form, line_oa_basic_id: e.target.value })} className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm" placeholder="@luckysalon" />
           </div>
           <div>
             <label className="text-xs text-gray-500 block mb-1">ช่วงเวลาต่อคิว (นาที)</label>

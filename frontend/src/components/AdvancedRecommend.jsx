@@ -143,7 +143,11 @@ export default function AdvancedRecommend() {
                 {result.recommendations.map((r, i) => (
                   <div key={r.design.id} className="flex items-center gap-3 border border-blush-200 rounded-xl p-3">
                     <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
-                      <NailThumb label="" accent={ACCENTS[i % ACCENTS.length]} />
+                      {r.design.image_url ? (
+                        <img src={r.design.image_url} alt={r.design.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <NailThumb label="" accent={ACCENTS[i % ACCENTS.length]} />
+                      )}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
