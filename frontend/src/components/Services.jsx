@@ -1,11 +1,28 @@
-const services = [
-  { icon: '💅', title: 'ทำสีเจล', desc: 'สีเจลคุณภาพ ทนนาน เงางาม', price: 'เริ่มต้น 350 บาท' },
-  { icon: '🎨', title: 'เพ้นท์ลาย', desc: 'ลายมือ ลายสติกเกอร์ ลายพิเศษ', price: 'เริ่มต้น 200 บาท' },
-  { icon: '✨', title: 'ต่อเล็บ PVC / เจล', desc: 'ต่อเล็บทรงสวย เหมาะกับทุกมือ', price: 'เริ่มต้น 600 บาท' },
-  { icon: '🧴', title: 'ดูแลผิวมือ & เท้า', desc: 'ขัดผิว พอกมือ ผ่อนคลาย', price: 'เริ่มต้น 300 บาท' },
+import { useEffect, useState } from 'react'
+import { getServices } from '../api/client.js'
+
+const CATEGORY_ICON = { hair: '💇‍♀️', nail: '💅' }
+
+const fallbackServices = [
+  { id: 'f1', icon: '💅', name: 'ทำสีเจล', description: 'สีเจลคุณภาพ ทนนาน เงางาม', price: 350 },
+  { id: 'f2', icon: '🎨', name: 'เพ้นท์ลาย', description: 'ลายมือ ลายสติกเกอร์ ลายพิเศษ', price: 200 },
+  { id: 'f3', icon: '✨', name: 'ต่อเล็บ PVC / เจล', description: 'ต่อเล็บทรงสวย เหมาะกับทุกมือ', price: 600 },
+  { id: 'f4', icon: '🧴', name: 'ดูแลผิวมือ & เท้า', description: 'ขัดผิว พอกมือ ผ่อนคลาย', price: 300 },
 ]
 
 export default function Services() {
+  const [services, setServices] = useState(fallbackServices)
+
+  useEffect(() => {
+    getServices()
+      .then((data) => {
+        if (data?.length) setServices(data)
+      })
+      .catch(() => {
+        /* ใช้ fallbackServices ต่อไปถ้าเรียก backend ไม่สำเร็จ */
+      })
+  }, [])
+
   return (
     <section id="services" className="max-w-6xl mx-auto px-6 py-16">
       <div className="text-center mb-10">
@@ -16,13 +33,19 @@ export default function Services() {
       <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-5">
         {services.map((s) => (
           <div
-            key={s.title}
-            className="bg-white rounded-2xl shadow-card p-6 text-center hover:-translate-y-1 transition-transform"
+            key={s.id}
+            className="bg-white rounded-2xl shadow-card overflow-hidden text-center hover:-translate-y-1 transition-transform"
           >
-            <div className="text-3xl mb-3">{s.icon}</div>
-            <h3 className="font-display font-semibold text-gray-800">{s.title}</h3>
-            <p className="text-sm text-gray-500 mt-1">{s.desc}</p>
-            <p className="text-rose-600 text-sm font-semibold mt-3">{s.price}</p>
+            {s.image_url ? (
+              <img src={s.image_url} alt={s.name} className="w-full h-32 object-cover" />
+            ) : (
+              <div className="text-3xl pt-6">{s.icon || CATEGORY_ICON[s.category_id] || '✨'}</div>
+            )}
+            <div className="p-5 pt-3">
+              <h3 className="font-display font-semibold text-gray-800">{s.name}</h3>
+              {s.description && <p className="text-sm text-gray-500 mt-1">{s.description}</p>}
+              <p className="text-rose-600 text-sm font-semibold mt-3">เริ่มต้น {s.price} บาท</p>
+            </div>
           </div>
         ))}
       </div>

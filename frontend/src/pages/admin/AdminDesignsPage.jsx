@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { adminCreateDesign, adminDeleteDesign, adminListDesigns, adminUpdateDesign } from '../../api/client.js'
+import { adminCreateDesign, adminDeleteDesign, adminListDesigns, adminUpdateDesign, fileToBase64 } from '../../api/client.js'
 
 const emptyForm = {
   name: '', price: '', duration_minutes: '', complexity: 'simple', style_tag: 'classic',
-  color_hex: '#B5793A', popularity: 50, active: true,
+  color_hex: '#B5793A', popularity: 50, image_url: null, image_base64: null, active: true,
   tone_fit: { warm: 70, cool: 70, neutral: 70 },
 }
 
@@ -20,12 +20,19 @@ export default function AdminDesignsPage() {
 
   function startEdit(d) {
     setEditingId(d.id)
-    setForm({ ...d, tone_fit: d.tone_fit || { warm: 70, cool: 70, neutral: 70 } })
+    setForm({ ...d, image_base64: null, tone_fit: d.tone_fit || { warm: 70, cool: 70, neutral: 70 } })
   }
 
   function resetForm() {
     setEditingId(null)
     setForm(emptyForm)
+  }
+
+  async function handleImageChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const dataUrl = await fileToBase64(file)
+    setForm({ ...form, image_base64: dataUrl })
   }
 
   async function handleSubmit(e) {
@@ -102,6 +109,16 @@ export default function AdminDesignsPage() {
           เปิดใช้งาน
         </label>
 
+        <div className="sm:col-span-3 flex items-center gap-3">
+          {(form.image_base64 || form.image_url) && (
+            <img src={form.image_base64 || form.image_url} alt="ตัวอย่างรูปลายเล็บ" className="w-16 h-16 rounded-xl object-cover border border-blush-200" />
+          )}
+          <label className="text-sm text-gray-600">
+            <span className="block mb-1">รูปภาพลายเล็บ (ไม่บังคับ)</span>
+            <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageChange} className="text-xs" />
+          </label>
+        </div>
+
         <div className="sm:col-span-3 flex gap-2">
           <button type="submit" className="bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-5 py-2 rounded-xl">
             {editingId ? 'บันทึกการแก้ไข' : '+ เพิ่มลายเล็บ'}
@@ -115,7 +132,11 @@ export default function AdminDesignsPage() {
         {designs.map((d) => (
           <div key={d.id} className="bg-white rounded-2xl shadow-card p-4">
             <div className="flex items-center gap-3">
-              <span className="w-10 h-10 rounded-full border border-black/10 flex-shrink-0" style={{ backgroundColor: d.color_hex }} />
+              {d.image_url ? (
+                <img src={d.image_url} alt={d.name} className="w-10 h-10 rounded-full object-cover border border-black/10 flex-shrink-0" />
+              ) : (
+                <span className="w-10 h-10 rounded-full border border-black/10 flex-shrink-0" style={{ backgroundColor: d.color_hex }} />
+              )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-800 truncate">{d.name} {!d.active && <span className="text-[10px] text-gray-400">(ปิด)</span>}</p>
                 <p className="text-xs text-gray-400">{d.style_tag} · {d.complexity} · {d.price} บาท</p>

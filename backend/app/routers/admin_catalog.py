@@ -5,8 +5,23 @@ from .. import models, schemas
 from ..availability import get_shop_settings
 from ..database import get_db
 from ..security import get_current_admin
+from ..storage import decode_and_validate_image, upload_bytes
 
 router = APIRouter(prefix="/admin", tags=["admin-catalog"])
+
+# bucket เดียวใช้ร่วมกันสำหรับรูปบริการ + ลายเล็บ (ต้องสร้าง public bucket นี้ใน Supabase Storage ก่อนใช้งาน)
+CATALOG_PHOTOS_BUCKET = "catalog-photos"
+
+
+def _uploaded_image_url(image_base64: str | None) -> str | None:
+    """ตรวจสอบ+อัปโหลดรูป ถ้ามีการส่ง image_base64 มา คืนค่า None ถ้าไม่ได้ส่งมา (ไม่แตะ image_url เดิม)"""
+    if not image_base64:
+        return None
+    try:
+        raw, content_type = decode_and_validate_image(image_base64)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return upload_bytes(raw, "catalog.jpg", CATALOG_PHOTOS_BUCKET, content_type)
 
 
 # --- Services -----------------------------------------------------------
@@ -19,7 +34,11 @@ def admin_list_services(db: Session = Depends(get_db), admin: models.AdminUser =
 def create_service(
     payload: schemas.ServiceIn, db: Session = Depends(get_db), admin: models.AdminUser = Depends(get_current_admin)
 ):
-    service = models.Service(**payload.model_dump())
+    data = payload.model_dump(exclude={"image_base64"})
+    uploaded_url = _uploaded_image_url(payload.image_base64)
+    if uploaded_url:
+        data["image_url"] = uploaded_url
+    service = models.Service(**data)
     db.add(service)
     db.commit()
     db.refresh(service)
@@ -36,7 +55,11 @@ def update_service(
     service = db.get(models.Service, service_id)
     if service is None:
         raise HTTPException(404, "ไม่พบบริการนี้")
-    for key, value in payload.model_dump().items():
+    data = payload.model_dump(exclude={"image_base64"})
+    uploaded_url = _uploaded_image_url(payload.image_base64)
+    if uploaded_url:
+        data["image_url"] = uploaded_url
+    for key, value in data.items():
         setattr(service, key, value)
     db.commit()
     db.refresh(service)
@@ -64,7 +87,11 @@ def admin_list_designs(db: Session = Depends(get_db), admin: models.AdminUser = 
 def create_design(
     payload: schemas.NailDesignIn, db: Session = Depends(get_db), admin: models.AdminUser = Depends(get_current_admin)
 ):
-    design = models.NailDesign(**payload.model_dump())
+    data = payload.model_dump(exclude={"image_base64"})
+    uploaded_url = _uploaded_image_url(payload.image_base64)
+    if uploaded_url:
+        data["image_url"] = uploaded_url
+    design = models.NailDesign(**data)
     db.add(design)
     db.commit()
     db.refresh(design)
@@ -81,7 +108,11 @@ def update_design(
     design = db.get(models.NailDesign, design_id)
     if design is None:
         raise HTTPException(404, "ไม่พบลายเล็บนี้")
-    for key, value in payload.model_dump().items():
+    data = payload.model_dump(exclude={"image_base64"})
+    uploaded_url = _uploaded_image_url(payload.image_base64)
+    if uploaded_url:
+        data["image_url"] = uploaded_url
+    for key, value in data.items():
         setattr(design, key, value)
     db.commit()
     db.refresh(design)

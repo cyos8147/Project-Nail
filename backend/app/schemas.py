@@ -46,6 +46,7 @@ class ServiceOut(BaseModel):
     price: float
     duration_minutes: int
     is_color_service: bool
+    image_url: Optional[str] = None
     active: bool
 
     class Config:
@@ -59,6 +60,8 @@ class ServiceIn(BaseModel):
     price: float
     duration_minutes: int
     is_color_service: bool = False
+    image_url: Optional[str] = None
+    image_base64: Optional[str] = None
     active: bool = True
     sort_order: int = 0
 
@@ -90,6 +93,7 @@ class NailDesignIn(BaseModel):
     tone_fit: dict = Field(default_factory=lambda: {"warm": 70, "cool": 70, "neutral": 70})
     popularity: int = 50
     image_url: Optional[str] = None
+    image_base64: Optional[str] = None
     active: bool = True
 
 

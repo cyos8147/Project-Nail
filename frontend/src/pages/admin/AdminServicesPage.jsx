@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
-import { adminCreateService, adminDeleteService, adminListServices, adminUpdateService } from '../../api/client.js'
+import { adminCreateService, adminDeleteService, adminListServices, adminUpdateService, fileToBase64 } from '../../api/client.js'
 
-const emptyForm = { category_id: 'hair', name: '', description: '', price: '', duration_minutes: '', is_color_service: false, active: true, sort_order: 0 }
+const emptyForm = {
+  category_id: 'hair', name: '', description: '', price: '', duration_minutes: '', is_color_service: false,
+  image_url: null, image_base64: null, active: true, sort_order: 0,
+}
 
 export default function AdminServicesPage() {
   const [services, setServices] = useState([])
@@ -18,13 +21,21 @@ export default function AdminServicesPage() {
     setEditingId(s.id)
     setForm({
       category_id: s.category_id, name: s.name, description: s.description, price: s.price,
-      duration_minutes: s.duration_minutes, is_color_service: s.is_color_service, active: s.active, sort_order: 0,
+      duration_minutes: s.duration_minutes, is_color_service: s.is_color_service,
+      image_url: s.image_url || null, image_base64: null, active: s.active, sort_order: 0,
     })
   }
 
   function resetForm() {
     setEditingId(null)
     setForm(emptyForm)
+  }
+
+  async function handleImageChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const dataUrl = await fileToBase64(file)
+    setForm({ ...form, image_base64: dataUrl })
   }
 
   async function handleSubmit(e) {
@@ -71,6 +82,15 @@ export default function AdminServicesPage() {
           <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
           เปิดใช้งาน
         </label>
+        <div className="sm:col-span-2 flex items-center gap-3">
+          {(form.image_base64 || form.image_url) && (
+            <img src={form.image_base64 || form.image_url} alt="ตัวอย่างรูปบริการ" className="w-16 h-16 rounded-xl object-cover border border-blush-200" />
+          )}
+          <label className="text-sm text-gray-600">
+            <span className="block mb-1">รูปภาพบริการ (ไม่บังคับ)</span>
+            <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageChange} className="text-xs" />
+          </label>
+        </div>
         <div className="sm:col-span-2 flex gap-2">
           <button type="submit" className="bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-5 py-2 rounded-xl">
             {editingId ? 'บันทึกการแก้ไข' : '+ เพิ่มบริการ'}
@@ -83,11 +103,16 @@ export default function AdminServicesPage() {
       <div className="bg-white rounded-2xl shadow-card divide-y divide-blush-50">
         {services.map((s) => (
           <div key={s.id} className="p-4 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-medium text-gray-800">{s.name} {!s.active && <span className="text-[10px] text-gray-400">(ปิดใช้งาน)</span>}</p>
-              <p className="text-xs text-gray-400">{s.category_id === 'hair' ? 'ทำผม' : 'ทำเล็บ'} · {s.duration_minutes} นาที · {s.price} บาท</p>
+            <div className="flex items-center gap-3 min-w-0">
+              {s.image_url && (
+                <img src={s.image_url} alt={s.name} className="w-12 h-12 rounded-xl object-cover border border-blush-200 flex-shrink-0" />
+              )}
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-800 truncate">{s.name} {!s.active && <span className="text-[10px] text-gray-400">(ปิดใช้งาน)</span>}</p>
+                <p className="text-xs text-gray-400">{s.category_id === 'hair' ? 'ทำผม' : 'ทำเล็บ'} · {s.duration_minutes} นาที · {s.price} บาท</p>
+              </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-shrink-0">
               <button onClick={() => startEdit(s)} className="text-xs font-semibold text-rose-600 hover:bg-blush-100 px-3 py-1.5 rounded-full">แก้ไข</button>
               <button onClick={() => handleDelete(s.id)} className="text-xs font-semibold text-gray-400 hover:text-red-500 px-3 py-1.5 rounded-full">ปิดใช้งาน</button>
             </div>

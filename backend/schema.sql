@@ -68,6 +68,9 @@ create table if not exists services (
   price numeric(10,2) not null,
   duration_minutes int not null,
   is_color_service boolean not null default false,
+  -- รูปภาพประกอบบริการ (แสดงหน้าแรก) -- ฐานข้อมูลเก่าที่มีตารางนี้อยู่แล้วต้องรัน
+  -- "alter table services add column if not exists image_url text;" เอง (create table if not exists ไม่เพิ่มคอลัมน์ให้)
+  image_url text,
   active boolean not null default true,
   sort_order int not null default 0,
   created_at timestamptz not null default now(),
