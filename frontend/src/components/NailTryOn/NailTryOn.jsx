@@ -41,6 +41,22 @@ const FINISHES = [
   { key: 'texture', label: 'พื้นผิว' }, { key: 'glitter', label: 'ประกาย' },
 ];
 
+// how far a nail extends past its real detected tip, as a fraction of its own
+// half-length (0 = natural length, no extension)
+const LENGTH_PRESETS = [
+  { key: 'natural', label: 'ธรรมชาติ', frac: 0 },
+  { key: 'medium', label: 'กลาง', frac: 0.45 },
+  { key: 'long', label: 'ยาว', frac: 0.85 },
+  { key: 'veryLong', label: 'ยาวมาก', frac: 1.3 },
+];
+
+const TIP_SHAPES = [
+  { key: 'round', label: 'มน' },
+  { key: 'square', label: 'เหลี่ยม' },
+  { key: 'almond', label: 'อัลมอนด์' },
+  { key: 'squoval', label: 'สควอย์' },
+];
+
 // opacity: how much polish covers the nail; lightTransfer: how much of the real
 // nail's light/shadow shows through; curvature: darkening toward the side walls
 // (a nail is curved across its width); gloss/glossWidth: the shine streak
@@ -321,6 +337,78 @@ function roundNailShape(polygon, frame) {
   return out;
 }
 
+function projectUV(point, frame) {
+  const { cx, cy, ax, ay, bx, by, halfLen, halfWid } = frame;
+  const dx = point[0] - cx, dy = point[1] - cy;
+  return [(dx * bx + dy * by) / halfWid, (dx * ax + dy * ay) / halfLen];
+}
+
+function fromUV(u, v, frame) {
+  const { cx, cy, ax, ay, bx, by, halfLen, halfWid } = frame;
+  const upx = u * halfWid, vpx = v * halfLen;
+  return [cx + bx * upx + ax * vpx, cy + by * upx + ay * vpx];
+}
+
+// Half-width of an extension at t (0 = base of the extension, 1 = its very tip),
+// as a fraction of the width where it starts -- the extension's own taper, a
+// natural nail's taper (the polygon rebuilt by roundNailShape) is separate and
+// already applied to the part before it.
+function tipTaper(t, shape) {
+  switch (shape) {
+    case 'square':
+      return t < 0.85 ? 1 : Math.cos(((t - 0.85) / 0.15) * (Math.PI / 2));
+    case 'almond':
+      // narrows the whole way, ending in a soft point (like a classic almond nail)
+      return Math.pow(Math.max(0, 1 - t), 0.55);
+    case 'squoval':
+      // wide with a gently rounded, still-flat-ish tip (between round and square)
+      return t < 0.55 ? 1 - 0.08 * (t / 0.55) : 0.92 * Math.cos(((t - 0.55) / 0.45) * (Math.PI / 2) * 0.85);
+    case 'round':
+    default:
+      // stays close to full width, then a true quarter-circle dome at the very
+      // end -- a blunt rounded cap, not a taper down to a point
+      return t < 0.7 ? 1 - 0.08 * (t / 0.7) : 0.92 * Math.sqrt(Math.max(0, 1 - ((t - 0.7) / 0.3) ** 2));
+  }
+}
+
+// Extends a nail outline past its detected tip: keeps the shape unchanged from
+// the cuticle up to `seamFrac` of the way to the tip (the part backed by real
+// detected nail), then replaces the rest with a new tip in the chosen shape,
+// tapering from the real width measured right at the seam so there's no visible
+// jump where real nail meets extension.
+function extendNailShape(baseShape, frame, extendFrac, tipShape, seamFrac = 0.55) {
+  if (extendFrac <= 0.001) return baseShape;
+  const uv = baseShape.map((p) => projectUV(p, frame));
+  const n = uv.length;
+  let tipIdx = 0;
+  for (let i = 1; i < n; i++) if (uv[i][1] > uv[tipIdx][1]) tipIdx = i;
+
+  let rIdx = tipIdx;
+  while (rIdx > 0 && uv[rIdx][1] > seamFrac) rIdx--;
+  let lIdx = tipIdx;
+  while (lIdx < n - 1 && uv[lIdx][1] > seamFrac) lIdx++;
+  if (rIdx >= lIdx) return baseShape; // degenerate outline, leave it alone
+
+  const [uR, vR] = uv[rIdx];
+  const [uL, vL] = uv[lIdx];
+  const wR = Math.abs(uR) || 0.3, wL = Math.abs(uL) || 0.3;
+  const signR = uR >= 0 ? 1 : -1, signL = uL >= 0 ? 1 : -1;
+  const vMax = 1 + extendFrac;
+  const steps = 16;
+
+  const rightExt = [];
+  for (let s = 1; s <= steps; s++) {
+    const t = s / steps;
+    rightExt.push(fromUV(signR * wR * tipTaper(t, tipShape), vR + t * (vMax - vR), frame));
+  }
+  const leftExt = [];
+  for (let s = steps; s >= 1; s--) {
+    const t = s / steps;
+    leftExt.push(fromUV(signL * wL * tipTaper(t, tipShape), vL + t * (vMax - vL), frame));
+  }
+  return [...baseShape.slice(0, rIdx + 1), ...rightExt, ...leftExt, ...baseShape.slice(lIdx)];
+}
+
 function readPixels(img, w, h) {
   const c = document.createElement('canvas');
   c.width = w;
@@ -475,9 +563,12 @@ function paintNail(ctx, polygon, frame, hex, finish, seed) {
       const v = (dx * ax + dy * ay) / halfLen;
       const u = (dx * bx + dy * by) / halfWid;
 
-      const lum = 0.299 * d[o] + 0.587 * d[o + 1] + 0.114 * d[o + 2];
+      // past v=1 there's no real nail under this pixel (it's an extended tip
+      // over skin/background), so its actual luminance means nothing -- light
+      // it the same as the nail's own average instead of sampling the photo
+      const lum = v <= 1 ? 0.299 * d[o] + 0.587 * d[o + 1] + 0.114 * d[o + 2] : lMean;
       const light = Math.min(1.35, Math.max(0.65, 1 + style.lightTransfer * (lum - lMean) / 128));
-      const curve = 1 - style.curvature * u * u - 0.05 * v * v * v * v;
+      const curve = 1 - style.curvature * u * u - 0.05 * Math.min(v, 1.15) ** 4;
       const edge = 1 - 0.2 * (1 - rim[i]);
       // polish pools slightly thicker/darker along the cuticle (v -> -1)
       const cuticle = 1 - 0.08 * smoothstep(0.55, 1.0, -v);
@@ -794,8 +885,11 @@ export default function NailTryOn({ onBookDesign } = {}) {
   const fileInputRef = useRef(null);
   const baseImageRef = useRef(null);
   const workSizeRef = useRef({ w: 0, h: 0 });
-  const nailRegionsRef = useRef([]); // [[[x,y],...]] pixel-space polygons, not rendered directly so kept out of state
+  const nailRegionsRef = useRef([]); // [[[x,y],...]] real detected pixel-space polygons, kept out of state
   const nailFramesRef = useRef([]); // per-nail axis/size (see nailFrames), computed once per photo
+  const renderRegionsRef = useRef([]); // nailRegionsRef stretched to the chosen length/shape (see redraw)
+  const renderRegionsSigRef = useRef('');
+  const detectionGenRef = useRef(0); // bumped on every successful detection, to invalidate the cache above
   const videoRef = useRef(null);
   const cameraStreamRef = useRef(null);
   const compareWrapRef = useRef(null);
@@ -814,6 +908,8 @@ export default function NailTryOn({ onBookDesign } = {}) {
   const [errorText, setErrorText] = useState(null);
   const [mode, setMode] = useState('single');
   const [activeFinish, setActiveFinish] = useState('creamy');
+  const [lengthPreset, setLengthPreset] = useState('natural');
+  const [tipShape, setTipShape] = useState('round');
   const [selectedFinger, setSelectedFinger] = useState(null);
   const [selectedHex, setSelectedHex] = useState(null);
   const [zoom, setZoom] = useState(1);
@@ -863,7 +959,16 @@ export default function NailTryOn({ onBookDesign } = {}) {
     } else {
       ctx.drawImage(img, 0, 0, w, h);
       const frames = nailFramesRef.current;
-      nailRegionsRef.current.forEach((polygon, i) => {
+      const sig = `${detectionGenRef.current}|${lengthPreset}|${tipShape}`;
+      if (renderRegionsSigRef.current !== sig) {
+        const extendFrac = LENGTH_PRESETS.find((p) => p.key === lengthPreset)?.frac || 0;
+        renderRegionsRef.current = nailRegionsRef.current.map((shape, i) =>
+          extendFrac > 0 ? extendNailShape(shape, frames[i], extendFrac, tipShape) : shape
+        );
+        renderRegionsSigRef.current = sig;
+      }
+      const regions = renderRegionsRef.current;
+      regions.forEach((polygon, i) => {
         const applied = nailColors[i];
         if (applied) {
           const seed = i * 7919 + parseInt(applied.hex.slice(1), 16);
@@ -883,7 +988,7 @@ export default function NailTryOn({ onBookDesign } = {}) {
     }
 
     if (mode === 'multi' && selectedFinger !== null) {
-      const polygon = nailRegionsRef.current[selectedFinger];
+      const polygon = renderRegionsRef.current[selectedFinger] || nailRegionsRef.current[selectedFinger];
       if (polygon) {
         ctx.save();
         ctx.strokeStyle = '#FF4B82';
@@ -965,6 +1070,8 @@ export default function NailTryOn({ onBookDesign } = {}) {
     baseImageRef.current = null;
     nailRegionsRef.current = [];
     nailFramesRef.current = [];
+    renderRegionsRef.current = [];
+    renderRegionsSigRef.current = '';
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (compareWrapRef.current) compareWrapRef.current.style.transform = 'scale(1)';
   }
@@ -1078,6 +1185,7 @@ export default function NailTryOn({ onBookDesign } = {}) {
     const shapes = hulls.map((hull, i) => roundNailShape(hull, hullFrames[i]));
     nailRegionsRef.current = shapes;
     nailFramesRef.current = shapes.map((shape, i) => frameFromAxis(shape, hullFrames[i].ax, hullFrames[i].ay));
+    detectionGenRef.current += 1;
     setNailColors(Array.from({ length: nailRegionsRef.current.length }, () => null));
     setSelectedFinger(null);
     setStatusText(null);
@@ -1173,7 +1281,8 @@ export default function NailTryOn({ onBookDesign } = {}) {
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top) * scaleY;
     let closest = null, closestDist = Infinity;
-    nailRegionsRef.current.forEach((polygon, i) => {
+    const regions = renderRegionsRef.current.length ? renderRegionsRef.current : nailRegionsRef.current;
+    regions.forEach((polygon, i) => {
       const bbox = polygonBBox(polygon);
       const dist = Math.hypot(x - bbox.cx, y - bbox.cy);
       const hitRadius = Math.max(bbox.w, bbox.h) * 0.8;
@@ -1483,6 +1592,41 @@ export default function NailTryOn({ onBookDesign } = {}) {
               </p>
             )}
 
+            <div className="section-label">ความยาวเล็บ</div>
+            <div className="length-grid">
+              {LENGTH_PRESETS.map(({ key, label }, i) => (
+                <button
+                  key={key}
+                  type="button"
+                  className={`length-chip ${lengthPreset === key ? 'active' : ''}`}
+                  onClick={() => setLengthPreset(key)}
+                >
+                  <span className="length-preview"><span className={`length-nail len-${i}`} /></span>
+                  <span className="length-label">{label}</span>
+                </button>
+              ))}
+            </div>
+
+            {lengthPreset !== 'natural' && (
+              <>
+                <div className="section-label">ทรงปลายเล็บ</div>
+                <div className="shape-grid">
+                  {TIP_SHAPES.map(({ key, label }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      className={`shape-chip ${tipShape === key ? 'active' : ''}`}
+                      onClick={() => setTipShape(key)}
+                    >
+                      <span className="shape-preview"><span className={`shape-nail shape-${key}`} /></span>
+                      <span className="shape-label">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <div className="section-label">สี</div>
             <div className="swatch-grid">
               {PALETTE.map(({ hex, name }) => (
                 <button
