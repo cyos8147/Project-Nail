@@ -117,7 +117,7 @@ Minimal/Classic/Bold) เหมาะสำหรับ demo และใช้�
 
 ## เครื่องมือที่ใช้ระหว่างพัฒนา/เทรน
 
-- **Postman** — ทดสอบ API แต่ละ endpoint (`postman/NailGlow.postman_collection.json`)
+- **Postman** — ทดสอบ API แต่ละ endpoint (`postman/LuckySalon.postman_collection.json`)
 - **Visual Studio Code** — พัฒนาโค้ด
 - **Git/GitHub** — จัดการซอร์สโค้ด
 - **Roboflow / CVAT / Label Studio** — label ชุดข้อมูล segmentation (ถ้าจะเทรน YOLOv8-Seg)

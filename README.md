@@ -1,4 +1,4 @@
-# NailGlow — ระบบจองคิวร้านเสริมสวยและวิเคราะห์สีเล็บอัจฉริยะ
+# Lucky Salon — ระบบจองคิวร้านเสริมสวยและวิเคราะห์สีเล็บอัจฉริยะ
 
 **Beauty Booking & Intelligent Nail Color Analysis System**
 

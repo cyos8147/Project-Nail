@@ -1,7 +1,7 @@
 03 — API Reference
 Base URL (dev): http://localhost:8000/api เอกสารแบบ interactive (ทดสอบยิง request ได้จริง): http://localhost:8000/docs (Swagger UI, สร้าง อัตโนมัติจาก FastAPI) หรือ http://localhost:8000/redoc
 
-Endpoint ที่ขึ้นต้นด้วย /admin/* ต้องแนบ header Authorization: Bearer <token> ที่ได้จาก POST /admin/login — ดูตัวอย่างเต็มใน Postman collection ที่ postman/NailGlow.postman_collection.json
+Endpoint ที่ขึ้นต้นด้วย /admin/* ต้องแนบ header Authorization: Bearer <token> ที่ได้จาก POST /admin/login — ดูตัวอย่างเต็มใน Postman collection ที่ 
 
 Rate limiting: /admin/login จำกัด 5 ครั้ง/นาทีต่อ IP (กัน brute-force รหัสผ่าน), endpoint ทุกตัวใน /ai/* จำกัด 20 ครั้ง/นาที (กันสแปม/ปั่นค่า compute), /bookings /bookings/{id}/reschedule /bookings/{id}/cancel /reviews (เขียนข้อมูล) จำกัด 10 ครั้ง/นาที, /bookings/status /bookings/history (อ่านข้อมูล แต่รับ phone+booking_code เป็น query อาจถูกไล่เดาได้) จำกัด 20 ครั้ง/นาที — เกินโควตาจะได้ HTTP 429 พร้อม {"detail": "มีการเรียกใช้งานถี่เกินไป กรุณารอสักครู่แล้วลองใหม่"}
 
@@ -106,4 +106,4 @@ curl -X PATCH http://localhost:8000/api/admin/service-categories/nail \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"staff_count": 1}'
 ทดสอบด้วย Postman
-นำเข้าไฟล์ postman/NailGlow.postman_collection.json เข้า Postman (Import → File) — ตั้งค่า Postman environment variable base_url = http://localhost:8000/api และ admin_token (จะถูกเซ็ต อัตโนมัติหลังยิง request "Admin Login" เพราะมี test script เซ็ต env variable ไว้ให้)
+นำเข้าไฟล์ postman/LuckySalon.postman_collection.json เข้า Postman (Import → File) — ตั้งค่า Postman environment variable base_url = http://localhost:8000/api และ admin_token (จะถูกเซ็ต อัตโนมัติหลังยิง request "Admin Login" เพราะมี test script เซ็ต env variable ไว้ให้)

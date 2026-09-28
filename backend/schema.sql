@@ -1,5 +1,5 @@
 -- ============================================================================
--- NailGlow Booking — Supabase (PostgreSQL) schema
+-- Lucky Salon Booking — Supabase (PostgreSQL) schema
 -- ระบบจองคิวร้านเสริมสวยและวิเคราะห์สีเล็บอัจฉริยะ
 --
 -- วิธีใช้: เปิดโปรเจกต์ Supabase ของคุณ -> SQL Editor -> New query -> วางไฟล์นี้ทั้งหมด -> Run
