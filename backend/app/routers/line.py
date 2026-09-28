@@ -88,7 +88,7 @@ async def line_webhook(request: Request, x_line_signature: str = Header(default=
 
                 if isinstance(event, FollowEvent):
                     reply = (
-                        "🌸 ยินดีต้อนรับสู่ NailGlow!\n"
+                        "🌸 ยินดีต้อนรับสู่ Lucky Salon!\n"
                         "พิมพ์ \"รหัสคิว\" ที่ได้ตอนจองคิว (เช่น NG-20260807-0001) เพื่อผูกบัญชีไลน์ "
                         "ระบบจะได้ส่งแจ้งเตือนสถานะคิวให้อัตโนมัติค่ะ"
                     )

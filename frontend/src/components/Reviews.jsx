@@ -25,7 +25,7 @@ export default function Reviews() {
         if (data?.length) {
           setReviews(
             data.map((r) => ({
-              name: r.customer_name || 'ลูกค้า NailGlow',
+              name: r.customer_name || 'ลูกค้า Lucky Salon',
               rating: r.rating,
               text: r.comment || r.service_name || '',
               photo_url: r.photo_url,

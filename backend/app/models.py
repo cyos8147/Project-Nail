@@ -36,7 +36,7 @@ class ShopSettings(Base):
     __tablename__ = "shop_settings"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
-    shop_name: Mapped[str] = mapped_column(String(120), default="NailGlow")
+    shop_name: Mapped[str] = mapped_column(String(120), default="Lucky Salon")
     phone: Mapped[str] = mapped_column(String(32), default="")
     address: Mapped[str] = mapped_column(Text, default="")
     line_oa_basic_id: Mapped[str] = mapped_column(String(64), default="")

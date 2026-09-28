@@ -8,20 +8,22 @@ export default function Header() {
   const links = [
     { label: 'บริการ', href: '/#services' },
     { label: 'ลายเล็บยอดนิยม', href: '/#popular' },
-    { label: 'โปรโมชั่น', href: '/#promotions' },
     { label: 'รีวิว', href: '/#reviews' },
   ]
 
   // ไฮไลต์เมนูสีชมพูเฉพาะหน้าที่มีเส้นทางของตัวเอง (ประวัติของฉัน) — ไม่รวมลิงก์แบบ
-  // เลื่อนไปหมวดในหน้าแรก (บริการ/ลายเล็บ/โปรโมชั่น/รีวิว) เพราะไม่มี "หน้าปัจจุบัน" แบบเดียวกัน
+  // เลื่อนไปหมวดในหน้าแรก (บริการ/ลายเล็บ/รีวิว) เพราะไม่มี "หน้าปัจจุบัน" แบบเดียวกัน
   const navLinkClass = (path) =>
     pathname === path ? 'text-rose-600 font-bold' : 'hover:text-rose-600 transition-colors'
 
   return (
     <header className="sticky top-0 z-50 bg-blush-50/90 backdrop-blur border-b border-blush-200">
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
-        <a href="/#home" className="font-display text-2xl font-bold text-rose-600 whitespace-nowrap">
-          Nail<span className="text-gray-800">Glow</span>
+        <a href="/#home" className="flex items-center gap-2 whitespace-nowrap">
+          <img src="/logo.jpg" alt="Lucky Salon" className="w-9 h-9 rounded-full object-cover" />
+          <span className="font-display text-2xl font-bold text-rose-600">
+            Lucky<span className="text-gray-800"> Salon</span>
+          </span>
         </a>
 
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">

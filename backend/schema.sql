@@ -25,7 +25,7 @@ create table if not exists admin_users (
 -- ---------------------------------------------------------------------------
 create table if not exists shop_settings (
   id int primary key default 1,
-  shop_name text not null default 'NailGlow',
+  shop_name text not null default 'Lucky Salon',
   phone text not null default '',
   address text not null default '',
   line_oa_basic_id text not null default '',

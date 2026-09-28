@@ -7,12 +7,6 @@ const swatches = [
   { color: '#6B3FA0', label: 'Plum', top: '68%', left: '62%', delay: '1.2s' },
 ]
 
-const stats = [
-  { value: '500+', label: 'ลูกค้าพึงพอใจ' },
-  { value: '4.9', label: 'คะแนนรีวิวเฉลี่ย' },
-  { value: '8', label: 'ปีที่เปิดให้บริการ' },
-]
-
 export default function Hero() {
   return (
     <section id="home" className="relative overflow-hidden">
@@ -25,7 +19,7 @@ export default function Hero() {
             ร้านเสริมสวยเล็บ อันดับ 1 ในใจลูกค้า
           </span>
           <h1 className="font-display text-4xl md:text-5xl font-bold text-gray-800 leading-tight">
-            สวยครบ<br />จบที่ <span className="text-rose-500">NailGlow</span>
+            สวยครบ<br />จบที่ <span className="text-rose-500">Lucky Salon</span>
           </h1>
           <p className="mt-5 text-gray-500 leading-relaxed max-w-md">
             เลือกลายเล็บที่ใช่ จองคิวได้ในไม่กี่ขั้นตอน พร้อมทีมช่างมืออาชีพดูแลคุณทุกรายละเอียด
@@ -44,15 +38,6 @@ export default function Hero() {
               ดูลายเล็บยอดนิยม
             </a>
           </div>
-
-          <div className="mt-10 flex flex-wrap gap-x-8 gap-y-4">
-            {stats.map((s) => (
-              <div key={s.label}>
-                <p className="font-display text-2xl font-bold text-rose-500">{s.value}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{s.label}</p>
-              </div>
-            ))}
-          </div>
         </div>
 
         <div className="relative aspect-[4/3] rounded-3xl bg-gradient-to-br from-rose-100 via-blush-100 to-peach/60 shadow-card overflow-hidden">
@@ -70,9 +55,9 @@ export default function Hero() {
             </div>
           ))}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <span className="font-display text-rose-400/50 text-sm px-6 text-center">
-              รูปภาพร้าน / ผลงานลายเล็บ
-            </span>
+            <div className="bg-white/90 rounded-full p-4 shadow-card">
+              <img src="/logo.jpg" alt="Lucky Salon" className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover" />
+            </div>
           </div>
         </div>
       </div>

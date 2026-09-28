@@ -51,8 +51,9 @@ export default function AdminLayout() {
     <div className="min-h-screen bg-blush-50 flex">
       <aside className="w-60 bg-white border-r border-blush-200 flex-shrink-0 hidden md:flex flex-col">
         <div className="px-6 py-5 border-b border-blush-100">
-          <p className="font-display text-xl font-bold text-rose-600">
-            Nail<span className="text-gray-800">Glow</span>
+          <p className="flex items-center gap-2 font-display text-xl font-bold text-rose-600">
+            <img src="/logo.jpg" alt="Lucky Salon" className="w-8 h-8 rounded-full object-cover" />
+            Lucky<span className="text-gray-800"> Salon</span>
           </p>
           <p className="text-xs text-gray-400 mt-0.5">แผงควบคุมเจ้าของร้าน</p>
         </div>
@@ -85,7 +86,7 @@ export default function AdminLayout() {
 
       <div className="flex-1 min-w-0">
         <header className="md:hidden bg-white border-b border-blush-200 px-4 py-3 flex items-center justify-between">
-          <p className="font-display text-lg font-bold text-rose-600">NailGlow Admin</p>
+          <p className="font-display text-lg font-bold text-rose-600">Lucky Salon Admin</p>
           <button onClick={handleLogout} className="text-xs font-semibold text-rose-600">ออกจากระบบ</button>
         </header>
         <nav className="md:hidden bg-white border-b border-blush-200 px-4 py-2 flex gap-2 overflow-x-auto">

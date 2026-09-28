@@ -27,8 +27,9 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen bg-blush-50 flex items-center justify-center px-6">
       <div className="w-full max-w-sm bg-white rounded-3xl shadow-card p-8">
+        <img src="/logo.jpg" alt="Lucky Salon" className="w-16 h-16 rounded-full object-cover mx-auto mb-3" />
         <p className="font-display text-2xl font-bold text-rose-600 text-center mb-1">
-          Nail<span className="text-gray-800">Glow</span>
+          Lucky<span className="text-gray-800"> Salon</span>
         </p>
         <p className="text-center text-sm text-gray-500 mb-6">เข้าสู่ระบบสำหรับเจ้าของร้าน</p>
 

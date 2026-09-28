@@ -243,7 +243,7 @@ export default function BookingWizard() {
         <div className="bg-white rounded-3xl shadow-card p-10">
           <div className="text-5xl mb-4">🎉</div>
           <h2 className="font-display text-2xl font-bold text-gray-800">จองคิวสำเร็จแล้ว!</h2>
-          <p className="text-gray-500 mt-2">ขอบคุณที่ใช้บริการ NailGlow</p>
+          <p className="text-gray-500 mt-2">ขอบคุณที่ใช้บริการ Lucky Salon</p>
 
           <div className="mt-6 bg-blush-50 border border-blush-200 rounded-2xl p-5 max-w-xs mx-auto text-left space-y-2.5">
             <div className="flex justify-between text-sm">

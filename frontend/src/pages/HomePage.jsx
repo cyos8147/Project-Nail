@@ -3,7 +3,6 @@ import Hero from '../components/Hero.jsx'
 import FeatureHighlights from '../components/FeatureHighlights.jsx'
 import Services from '../components/Services.jsx'
 import PopularNails from '../components/PopularNails.jsx'
-import Promotions from '../components/Promotions.jsx'
 import Reviews from '../components/Reviews.jsx'
 import Footer from '../components/Footer.jsx'
 import MobileStickyBar from '../components/MobileStickyBar.jsx'
@@ -16,7 +15,6 @@ export default function HomePage() {
       <FeatureHighlights />
       <Services />
       <PopularNails />
-      <Promotions />
       <Reviews />
       <Footer />
       <MobileStickyBar />

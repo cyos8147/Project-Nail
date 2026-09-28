@@ -13,8 +13,9 @@ export default function BookingPage() {
       <div className="relative z-10">
         <header className="sticky top-0 z-50 bg-blush-50/80 backdrop-blur border-b border-blush-200">
           <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
-            <p className="font-display text-2xl font-bold text-rose-600 whitespace-nowrap">
-              Nail<span className="text-gray-800">Glow</span>
+            <p className="flex items-center gap-2 font-display text-2xl font-bold text-rose-600 whitespace-nowrap">
+              <img src="/logo.jpg" alt="Lucky Salon" className="w-8 h-8 rounded-full object-cover" />
+              Lucky<span className="text-gray-800"> Salon</span>
             </p>
             <p className="text-sm font-medium text-gray-500 hidden sm:block">📅 จองคิวออนไลน์</p>
             <Link

@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     # --- App ---
-    app_name: str = "NailGlow Booking API"
+    app_name: str = "Lucky Salon Booking API"
     environment: str = "development"
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
