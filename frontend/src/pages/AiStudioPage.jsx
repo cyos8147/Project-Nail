@@ -1,7 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import NailRecommendation from '../components/NailRecommendation.jsx'
 import AdvancedRecommend from '../components/AdvancedRecommend.jsx'
-import ReferenceImageAnalysis from '../components/ReferenceImageAnalysis.jsx'
 import NailTryOn from '../components/NailTryOn/NailTryOn.jsx'
 import Footer from '../components/Footer.jsx'
 
@@ -47,15 +46,14 @@ export default function AiStudioPage() {
             ให้ AI ช่วยหา<span className="text-rose-500">ลุคเล็บที่ใช่</span>สำหรับคุณ
           </h1>
           <p className="text-gray-500 mt-4 max-w-xl mx-auto">
-            ลองสี/ลายเล็บบนรูปจริงและวิเคราะห์สีผิวด้วย AI รับคำแนะนำลายจากโมเดล Machine Learning
-            และหาลายที่ใกล้เคียงจากรูปที่ถูกใจ — ครบในที่เดียว
+            ลองสี/ลายเล็บบนรูปจริงและวิเคราะห์สีผิวด้วย AI พร้อมรับคำแนะนำลายจากโมเดล Machine Learning
+            — ครบในที่เดียว
           </p>
         </section>
 
         <NailTryOn onBookDesign={handleBookDesign} />
         <NailRecommendation skinTone={null} />
         <AdvancedRecommend />
-        <ReferenceImageAnalysis />
 
         <Footer />
       </div>
