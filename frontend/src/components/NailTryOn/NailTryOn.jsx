@@ -2,6 +2,28 @@ import { useEffect, useRef, useState } from 'react';
 import './NailTryOn.css';
 
 const API_URL = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}/ai/detect-nails`;
+// เผื่อเวลาเซิร์ฟเวอร์ฟรีตื่นจากหลับ + โหลดโมเดลครั้งแรก แต่ไม่ให้หน้าเว็บรอไม่รู้จบถ้าเซิร์ฟเวอร์ไม่ตอบ
+const DETECT_TIMEOUT_MS = 60000;
+
+async function postImageForNails(blob, filename) {
+  const formData = new FormData();
+  formData.append('file', blob, filename);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), DETECT_TIMEOUT_MS);
+  try {
+    const resp = await fetch(API_URL, { method: 'POST', body: formData, signal: controller.signal });
+    if (!resp.ok) {
+      const detail = await resp.json().catch(() => null);
+      throw new Error(detail?.detail || `API error ${resp.status}`);
+    }
+    return await resp.json();
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error('ระบบ AI ใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง');
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 const PALETTE = [
   { hex: '#D23B4E', name: 'แดงเชอร์รี่', undertone: 'warm' }, { hex: '#93273F', name: 'แดงไวน์', undertone: 'cool' }, { hex: '#B33A5E', name: 'แดงเบอร์รี่', undertone: 'cool' },
@@ -710,21 +732,15 @@ export default function NailTryOn({ onBookDesign } = {}) {
   async function detectAndRender() {
     setStatusText('กำลังตรวจจับตำแหน่งเล็บ...');
     const blob = await canvasToBlob();
-    const formData = new FormData();
-    formData.append('file', blob, 'photo.jpg');
 
     let data;
     try {
-      const resp = await fetch(API_URL, { method: 'POST', body: formData });
-      if (!resp.ok) {
-        const detail = await resp.json().catch(() => null);
-        throw new Error(detail?.detail || `API error ${resp.status}`);
-      }
-      data = await resp.json();
+      data = await postImageForNails(blob, 'photo.jpg');
     } catch (err) {
       console.error(err);
       setStatusText(null);
-      setErrorText('เชื่อมต่อ AI backend ไม่สำเร็จ ตรวจสอบว่า server รันอยู่ที่ localhost:8000');
+      const known = err.message && !err.message.startsWith('API error') && err.name !== 'TypeError';
+      setErrorText(known ? err.message : 'เชื่อมต่อระบบ AI ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
       return;
     }
 
@@ -982,11 +998,7 @@ export default function NailTryOn({ onBookDesign } = {}) {
   // its polygons anchor where real finger skin is, instead of guessing
   async function detectSkinNailPolygons() {
     const blob = await skinCanvasToBlob();
-    const formData = new FormData();
-    formData.append('file', blob, 'skin-photo.jpg');
-    const resp = await fetch(API_URL, { method: 'POST', body: formData });
-    if (!resp.ok) throw new Error(`API error ${resp.status}`);
-    const data = await resp.json();
+    const data = await postImageForNails(blob, 'skin-photo.jpg');
     if (!data.nails) return [];
     const { w, h } = skinWorkSizeRef.current;
     return data.nails.map((polygon) =>

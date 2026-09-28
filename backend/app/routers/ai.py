@@ -5,6 +5,7 @@ import uuid
 import cv2
 import numpy as np
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from PIL import Image
 from sqlalchemy.orm import Session
 
@@ -70,20 +71,14 @@ async def detect_nails(request: Request, file: UploadFile = File(...)):
         raise HTTPException(503, "ยังไม่พร้อมใช้งานฟีเจอร์นี้ กรุณาลองใหม่ภายหลัง")
 
     try:
-        img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-        model = segmentation.get_yolo_model()
-        width, height = img.size
-        # retina_masks=True อัปสเกล mask กลับไปความละเอียดเต็มของรูป ขอบ polygon คมกว่า proto mask ปกติ
-        results = model(np.array(img), retina_masks=True)
+        rgb = np.array(Image.open(io.BytesIO(image_bytes)).convert("RGB"))
+        # รันโมเดลใน threadpool: งานหนัก CPU ใน async def ตรงๆ จะบล็อกทั้งเซิร์ฟเวอร์ (worker เดียว)
+        # ระหว่างนั้นคำขออื่นๆ เช่น จองคิว/health check จะค้างตามไปด้วย
+        polygons = await run_in_threadpool(segmentation.detect_nail_polygons, rgb)
     except Exception:
         raise HTTPException(503, "ประมวลผลรูปภาพไม่สำเร็จ กรุณาลองใหม่ภายหลัง")
 
-    nails = []
-    if results and results[0].masks is not None:
-        for polygon in results[0].masks.xy:
-            normalized = [[float(x) / width, float(y) / height] for x, y in polygon]
-            nails.append(normalized)
-
+    nails = [poly.tolist() for poly in polygons]
     return {"nails": nails, "count": len(nails)}
 
 

@@ -1,10 +1,11 @@
 """Nail segmentation — หาตำแหน่ง/ขอบเขตเล็บแต่ละนิ้วจากภาพมือ
 
-Pipeline หลัก (ใช้งานจริงตอนนี้ — โมเดลเทรนเสร็จแล้ว วางไว้ที่ ml/models/yolov8_nail_seg.pt):
+Pipeline หลัก (ใช้งานจริงตอนนี้ — ml/models/yolov8_nail_seg.onnx แปลงมาจาก yolov8_nail_seg.pt):
   YOLOv8-Seg ที่เทรนเฉพาะเล็บ (mask mAP50-95 ≈ 0.91) แม่นกว่า ไม่ต้องพึ่ง landmark ประมาณการ
+  รันผ่าน onnxruntime (ดู nail_onnx.py) ไม่ใช้ ultralytics/PyTorch เพราะกินแรมเกิน 512MB ของ Render ฟรี
   ระบบเช็คจาก settings.yolo_nail_seg_weights อัตโนมัติทุกครั้งที่เรียกใช้ (ดู segment_nails ด้านล่าง)
 
-Pipeline สำรอง (fallback อัตโนมัติถ้าโหลด/รันโมเดล YOLO ไม่สำเร็จ เช่น ติดตั้ง ultralytics ไม่ผ่าน):
+Pipeline สำรอง (fallback อัตโนมัติถ้าโหลด/รันโมเดล YOLO ไม่สำเร็จ):
   1. MediaPipe Hands (Google, pretrained) หา 21 hand landmarks
   2. จากตำแหน่งข้อนิ้วสุดท้าย (DIP) -> ปลายนิ้ว (TIP) ประมาณกรอบเล็บเบื้องต้นจากสัดส่วนกายวิภาค
   3. ปรับกรอบให้แนบขอบเล็บจริงด้วย region-growing (OpenCV flood-fill เทียบสีแบบ chroma-aware)
@@ -44,7 +45,6 @@ ABS_SEED_THRESHOLD = 48
 MIN_POINTS = 25
 
 _hands_singleton = None
-_yolo_singleton = None
 
 
 def _get_mediapipe_hands():
@@ -62,13 +62,11 @@ def yolo_weights_available() -> bool:
     return Path(settings.yolo_nail_seg_weights).is_file()
 
 
-def get_yolo_model():
-    global _yolo_singleton
-    if _yolo_singleton is None:
-        from ultralytics import YOLO  # heavy dependency, see requirements.txt
+def detect_nail_polygons(rgb: np.ndarray) -> list[np.ndarray]:
+    """polygon ขอบเล็บแต่ละชิ้น (พิกัดสัดส่วน 0-1) จากรูป RGB"""
+    from . import nail_onnx
 
-        _yolo_singleton = YOLO(settings.yolo_nail_seg_weights)
-    return _yolo_singleton
+    return nail_onnx.detect_nail_polygons(rgb, settings.yolo_nail_seg_weights)
 
 
 def decode_base64_image(image_base64: str) -> np.ndarray:
@@ -225,13 +223,11 @@ def _segment_with_mediapipe_opencv(bgr: np.ndarray) -> list[dict]:
 
 
 def _segment_with_yolo(bgr: np.ndarray) -> list[dict]:
-    model = get_yolo_model()
-    results = model.predict(bgr, verbose=False)[0]
+    h, w = bgr.shape[:2]
+    polygons = detect_nail_polygons(cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
     out = []
-    if results.masks is None:
-        return out
-    for i, mask in enumerate(results.masks.xy):
-        pts = np.array(mask)
+    for i, poly in enumerate(polygons):
+        pts = poly * np.array([w, h], dtype=np.float32)
         if len(pts) < 3:
             continue
         (cx, cy), (mw, mh), angle = cv2.minAreaRect(pts.astype(np.float32))

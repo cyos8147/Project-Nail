@@ -19,8 +19,8 @@ Pipeline ของระบบตอนนี้ (app/ai/segmentation.py) ใช
     python -m ml.train_yolo_seg --data ml/datasets/nail_seg/data.yaml --epochs 100
 
 ผลลัพธ์: น้ำหนักโมเดลที่เทรนเสร็จจะอยู่ที่ runs/segment/train/weights/best.pt
-ให้คัดลอกไฟล์นั้นไปไว้ที่ backend/ml/models/yolov8_nail_seg.pt (ตาม YOLO_NAIL_SEG_WEIGHTS ใน .env)
-ระบบ (app/ai/segmentation.py) จะตรวจพบไฟล์นี้และสลับไปใช้ YOLOv8-Seg แทน MediaPipe+OpenCV โดยอัตโนมัติ
+ให้คัดลอกไฟล์นั้นไปไว้ที่ backend/ml/models/yolov8_nail_seg.pt แล้วรัน `python -m ml.export_onnx`
+เพื่อแปลงเป็น ml/models/yolov8_nail_seg.onnx -- เซิร์ฟเวอร์ใช้ไฟล์ .onnx (ดู ml/export_onnx.py)
 """
 
 import argparse
@@ -46,7 +46,8 @@ def main():
     print(f"Precision:       {metrics.seg.mp:.4f}")
     print(f"Recall:          {metrics.seg.mr:.4f}")
     print("\nน้ำหนักโมเดลที่ดีที่สุดถูกบันทึกไว้ใน runs/segment/train/weights/best.pt")
-    print("คัดลอกไปไว้ที่ backend/ml/models/yolov8_nail_seg.pt เพื่อให้ backend เริ่มใช้งานโมเดลนี้")
+    print("คัดลอกไปไว้ที่ backend/ml/models/yolov8_nail_seg.pt แล้วรัน python -m ml.export_onnx")
+    print("เพื่อแปลงเป็น .onnx ที่เซิร์ฟเวอร์ใช้งานจริง")
 
 
 if __name__ == "__main__":

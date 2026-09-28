@@ -47,10 +47,17 @@ python -m ml.train_yolo_seg --data ml/datasets/nail_seg/data.yaml --epochs 100
 ```
 สคริปต์จะพิมพ์ผลประเมิน (mAP50-95, mAP50, Precision, Recall) ให้ตอนจบ
 
-**ขั้นตอนที่ 3 — ใช้งานโมเดลที่เทรนแล้ว**
+**ขั้นตอนที่ 3 — แปลงเป็น ONNX แล้วใช้งาน**
 ```bash
 cp runs/segment/train/weights/best.pt backend/ml/models/yolov8_nail_seg.pt
+cd backend
+python -m ml.export_onnx      # ได้ ml/models/yolov8_nail_seg.onnx
 ```
+เซิร์ฟเวอร์ใช้ไฟล์ `.onnx` (รันด้วย onnxruntime ใน `app/ai/nail_onnx.py`) ไม่ใช่ `.pt` โดยตรง เพราะ
+ultralytics + PyTorch วัดแรมได้ ~900MB เกิน 512MB ของ Render แผนฟรี (เซิร์ฟเวอร์โดน kill ตอนโหลดโมเดล)
+ส่วน onnxruntime ใช้ราว 200MB และให้ polygon ตรงกับ ultralytics ทุกจุด — **เทรนใหม่ทุกครั้งต้องรัน
+`export_onnx` ใหม่ด้วย** ไม่งั้นเซิร์ฟเวอร์จะยังใช้โมเดลตัวเก่า
+
 รี-สตาร์ท backend — `app/ai/segmentation.py` จะตรวจพบไฟล์นี้อัตโนมัติ (เช็คจาก
 `YOLO_NAIL_SEG_WEIGHTS` ใน `.env`) และสลับไปใช้ YOLOv8-Seg แทน MediaPipe+OpenCV ทันที โดยไม่ต้อง
 แก้โค้ดใดๆ (ดู endpoint response field `"engine"` จะเปลี่ยนจาก `"mediapipe+opencv"` เป็น

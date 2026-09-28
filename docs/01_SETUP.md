@@ -118,7 +118,7 @@ npm run dev
 | `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | อัปโหลดรูปภาพขึ้น Supabase Storage | ว่าง = เก็บไฟล์ในเครื่อง (`backend/static/uploads/`) แทน |
 | `JWT_SECRET` | เซ็น token ล็อกอินแอดมิน | **ต้องเปลี่ยนก่อนขึ้น production เสมอ** |
 | `LINE_CHANNEL_ACCESS_TOKEN` / `LINE_CHANNEL_SECRET` | ส่ง/รับข้อความ LINE OA | ว่าง = ข้ามการแจ้งเตือน LINE เงียบๆ (ไม่ error) |
-| `YOLO_NAIL_SEG_WEIGHTS` | path โมเดล YOLOv8-Seg ที่เทรนแล้ว | ถ้าไม่มีไฟล์ = ใช้ MediaPipe+OpenCV แทนอัตโนมัติ |
+| `YOLO_NAIL_SEG_WEIGHTS` | path โมเดล YOLOv8-Seg แบบ ONNX (ค่าเริ่มต้น `ml/models/yolov8_nail_seg.onnx` — ไม่ต้องตั้งเอง) | ถ้าไม่มีไฟล์ = ใช้ MediaPipe+OpenCV แทนอัตโนมัติ |
 
 ## Troubleshooting
 

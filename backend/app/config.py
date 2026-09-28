@@ -43,7 +43,8 @@ class Settings(BaseSettings):
     shop_owner_link_phrase: str = "ผูกไลน์เจ้าของร้าน"
 
     # --- AI ---
-    yolo_nail_seg_weights: str = "ml/models/yolov8_nail_seg.pt"
+    # ONNX ที่แปลงจาก yolov8_nail_seg.pt (รันด้วย onnxruntime แทน PyTorch เพื่อให้พอแรม 512MB ของ Render ฟรี)
+    yolo_nail_seg_weights: str = "ml/models/yolov8_nail_seg.onnx"
     xgboost_model_path: str = "ml/models/nail_recommender.json"
     xgboost_encoders_path: str = "ml/models/nail_recommender_encoders.json"
 
