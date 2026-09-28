@@ -41,9 +41,18 @@ const FINISHES = [
   { key: 'texture', label: 'พื้นผิว' }, { key: 'glitter', label: 'ประกาย' },
 ];
 
-const FINISH_ALPHA = {
-  creamy: 0.93, jelly: 0.75, sheer: 0.4, matte: 0.95,
-  metallic: 0.9, pearl: 0.68, texture: 0.9, glitter: 0.9,
+// opacity: how much polish covers the nail; lightTransfer: how much of the real
+// nail's light/shadow shows through; curvature: darkening toward the side walls
+// (a nail is curved across its width); gloss/glossWidth: the shine streak
+const FINISH_STYLE = {
+  creamy:   { opacity: 0.96, lightTransfer: 0.35, curvature: 0.22, gloss: 0.75, glossWidth: 0.16 },
+  jelly:    { opacity: 0.78, lightTransfer: 0.45, curvature: 0.16, gloss: 0.95, glossWidth: 0.14 },
+  sheer:    { opacity: 0.42, lightTransfer: 0.60, curvature: 0.10, gloss: 0.70, glossWidth: 0.16 },
+  matte:    { opacity: 0.97, lightTransfer: 0.25, curvature: 0.14, gloss: 0.00, glossWidth: 0.30 },
+  metallic: { opacity: 0.97, lightTransfer: 0.20, curvature: 0.22, gloss: 1.00, glossWidth: 0.10 },
+  pearl:    { opacity: 0.88, lightTransfer: 0.35, curvature: 0.16, gloss: 0.80, glossWidth: 0.22 },
+  texture:  { opacity: 0.95, lightTransfer: 0.30, curvature: 0.18, gloss: 0.35, glossWidth: 0.20 },
+  glitter:  { opacity: 0.94, lightTransfer: 0.30, curvature: 0.18, gloss: 0.65, glossWidth: 0.16 },
 };
 
 const TIPS_DISMISSED_KEY = 'nailTipsDismissed';
@@ -111,116 +120,413 @@ function tracePolygon(ctx, points) {
   ctx.closePath();
 }
 
-// Recolors within the real nail polygon (opaque tint + 'hue' blend so some of
-// the original highlights/shadows stay visible without washing the color
-// out), then layers finish-specific effects, then a soft blurred edge stroke
-// so the polish blends into the skin instead of looking cut out.
-function paintNail(ctx, polygon, hex, finish) {
-  const bbox = polygonBBox(polygon);
-  const w = Math.max(bbox.w, 4), h = Math.max(bbox.h, 4);
+// Andrew's monotone chain. A nail is convex, so the hull drops the dents and
+// jaggies of the pixel-mask outline the model returns.
+function convexHull(points) {
+  if (points.length < 4) return points;
+  const pts = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lower = [];
+  for (const p of pts) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+    lower.push(p);
+  }
+  const upper = [];
+  for (let i = pts.length - 1; i >= 0; i--) {
+    const p = pts[i];
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+    upper.push(p);
+  }
+  lower.pop();
+  upper.pop();
+  return lower.concat(upper);
+}
 
+function resampleClosed(points, count) {
+  const n = points.length;
+  const seg = [];
+  let total = 0;
+  for (let i = 0; i < n; i++) {
+    const a = points[i], b = points[(i + 1) % n];
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    seg.push(len);
+    total += len;
+  }
+  if (total === 0) return points.slice();
+  const out = [];
+  let i = 0, acc = 0;
+  for (let k = 0; k < count; k++) {
+    const target = (k / count) * total;
+    while (i < n - 1 && acc + seg[i] < target) { acc += seg[i]; i++; }
+    const t = seg[i] ? (target - acc) / seg[i] : 0;
+    const a = points[i], b = points[(i + 1) % n];
+    out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]);
+  }
+  return out;
+}
+
+// Nail frame for a given length axis (ax, ay): centre, half-length along the
+// finger, half-width across it. The width axis always points to the lower-right
+// half-plane so the shine lands on the same side of every nail, like one light
+// source from the upper-left; lightEnd says which end of the nail faces it.
+function frameFromAxis(points, ax, ay) {
+  let bx = -ay, by = ax;
+  if (bx + by < 0) { bx = -bx; by = -by; }
+  let mx = 0, my = 0;
+  points.forEach(([x, y]) => { mx += x; my += y; });
+  mx /= points.length;
+  my /= points.length;
+  let minA = Infinity, maxA = -Infinity, minB = Infinity, maxB = -Infinity;
+  points.forEach(([x, y]) => {
+    const pa = (x - mx) * ax + (y - my) * ay;
+    const pb = (x - mx) * bx + (y - my) * by;
+    minA = Math.min(minA, pa); maxA = Math.max(maxA, pa);
+    minB = Math.min(minB, pb); maxB = Math.max(maxB, pb);
+  });
+  const ca = (minA + maxA) / 2, cb = (minB + maxB) / 2;
+  return {
+    cx: mx + ax * ca + bx * cb,
+    cy: my + ay * ca + by * cb,
+    ax, ay, bx, by,
+    halfLen: Math.max((maxA - minA) / 2, 1),
+    halfWid: Math.max((maxB - minB) / 2, 1),
+    lightEnd: ax + ay < 0 ? 1 : -1,
+  };
+}
+
+// Which way the finger runs from the nail: sample a ring around the nail for
+// skin-coloured pixels (YCrCb skin range) -- the finger side is skin, past the
+// fingertip is background. Returns the unit vector toward the finger base, or
+// null when the ring is almost all skin or almost none (e.g. skin-toned
+// background, fingers pressed together) so the caller can fall back.
+function fingerDirection(imageData, cx, cy, radius) {
+  const { data, width, height } = imageData;
+  let sx = 0, sy = 0, skin = 0, total = 0;
+  for (let k = 0; k < 36; k++) {
+    const ang = (k / 36) * Math.PI * 2;
+    const ux = Math.cos(ang), uy = Math.sin(ang);
+    for (const f of [1.5, 1.9, 2.3]) {
+      const x = Math.round(cx + ux * radius * f), y = Math.round(cy + uy * radius * f);
+      if (x < 0 || y < 0 || x >= width || y >= height) continue;
+      const o = (y * width + x) * 4;
+      const r = data[o], g = data[o + 1], b = data[o + 2];
+      const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+      const cr = (r - lum) * 0.713 + 128, cb = (b - lum) * 0.564 + 128;
+      total++;
+      if (cr >= 133 && cr <= 178 && cb >= 77 && cb <= 127) {
+        skin++;
+        sx += ux;
+        sy += uy;
+      }
+    }
+  }
+  if (!total) return null;
+  const len = Math.hypot(sx, sy);
+  const fraction = skin / total;
+  if (fraction < 0.15 || fraction > 0.85 || len / total < 0.15) return null;
+  return [sx / len, sy / len];
+}
+
+// Long axis (along the finger, +a toward the fingertip) and size of every nail.
+// The finger direction comes from the skin around each nail; the nail's own
+// outline can't be trusted for it because short nails are often wider than
+// they are long. Nails where that fails borrow the average direction of the
+// others, and only if none worked fall back to the outline's PCA axis.
+function nailFrames(polygons, imageData) {
+  const base = polygons.map((poly) => {
+    const pts = resampleClosed(poly, 48);
+    let mx = 0, my = 0;
+    pts.forEach(([x, y]) => { mx += x; my += y; });
+    mx /= pts.length;
+    my /= pts.length;
+    let sxx = 0, syy = 0, sxy = 0;
+    pts.forEach(([x, y]) => {
+      const dx = x - mx, dy = y - my;
+      sxx += dx * dx; syy += dy * dy; sxy += dx * dy;
+    });
+    const theta = 0.5 * Math.atan2(2 * sxy, sxx - syy);
+    const pca = frameFromAxis(pts, Math.cos(theta), Math.sin(theta));
+    const dir = imageData ? fingerDirection(imageData, pca.cx, pca.cy, Math.max(pca.halfLen, pca.halfWid)) : null;
+    return { pts, theta, dir };
+  });
+
+  let sx = 0, sy = 0;
+  base.forEach(({ dir }) => {
+    if (dir) {
+      const t = Math.atan2(dir[1], dir[0]);
+      sx += Math.cos(2 * t);
+      sy += Math.sin(2 * t);
+    }
+  });
+  const consensus = sx || sy ? 0.5 * Math.atan2(sy, sx) : null;
+
+  return base.map(({ pts, theta, dir }) => {
+    if (dir) return frameFromAxis(pts, -dir[0], -dir[1]);
+    const t = consensus ?? theta;
+    let ax = Math.cos(t), ay = Math.sin(t);
+    if (ax + ay < 0) { ax = -ax; ay = -ay; }
+    return frameFromAxis(pts, ax, ay);
+  });
+}
+
+// Rebuilds a nail outline as a smooth rounded curve. Works in the nail's own
+// frame scaled to its length/width, where any nail is roughly a unit circle:
+// the radius at each angle is low-pass filtered there (keeping the egg-like
+// difference between cuticle and tip), so corners and flat runs from the pixel
+// mask become a rounded edge -- and long thin nails don't get pinched into a
+// peanut shape the way filtering the raw radius would.
+function roundNailShape(polygon, frame) {
+  const N = 72, K = 3;
+  const { cx, cy, ax, ay, bx, by, halfLen, halfWid } = frame;
+  const local = polygon.map(([x, y]) => [
+    ((x - cx) * bx + (y - cy) * by) / halfWid,
+    ((x - cx) * ax + (y - cy) * ay) / halfLen,
+  ]);
+  const radii = new Array(N).fill(0);
+  const n = local.length;
+  for (let i = 0; i < N; i++) {
+    const ang = (i / N) * Math.PI * 2;
+    const dx = Math.cos(ang), dy = Math.sin(ang);
+    for (let j = 0; j < n; j++) {
+      const [x1, y1] = local[j];
+      const [x2, y2] = local[(j + 1) % n];
+      const ex = x2 - x1, ey = y2 - y1;
+      const den = dx * ey - dy * ex;
+      if (Math.abs(den) < 1e-9) continue;
+      const t = (x1 * ey - y1 * ex) / den;
+      const s = (x1 * dy - y1 * dx) / den;
+      if (t > radii[i] && s >= 0 && s <= 1) radii[i] = t;
+    }
+  }
+  const ca = [], sa = [];
+  for (let k = 0; k <= K; k++) {
+    let c = 0, s = 0;
+    for (let i = 0; i < N; i++) {
+      const ang = (i / N) * Math.PI * 2;
+      c += radii[i] * Math.cos(k * ang);
+      s += radii[i] * Math.sin(k * ang);
+    }
+    ca.push(((k === 0 ? 1 : 2) * c) / N);
+    sa.push((2 * s) / N);
+  }
+  const out = [];
+  for (let i = 0; i < N; i++) {
+    const ang = (i / N) * Math.PI * 2;
+    let r = ca[0];
+    for (let k = 1; k <= K; k++) r += ca[k] * Math.cos(k * ang) + sa[k] * Math.sin(k * ang);
+    r = 0.75 * r + 0.25 * radii[i];
+    const u = Math.cos(ang) * r * halfWid, v = Math.sin(ang) * r * halfLen;
+    out.push([cx + bx * u + ax * v, cy + by * u + ay * v]);
+  }
+  return out;
+}
+
+function readPixels(img, w, h) {
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const g = c.getContext('2d');
+  g.drawImage(img, 0, 0, w, h);
+  return g.getImageData(0, 0, w, h);
+}
+
+function boxBlur(src, w, h, r) {
+  const size = 2 * r + 1;
+  const tmp = new Float32Array(w * h), out = new Float32Array(w * h);
+  const at = (arr, row, x) => arr[row + Math.min(w - 1, Math.max(0, x))];
+  for (let y = 0; y < h; y++) {
+    const row = y * w;
+    let acc = 0;
+    for (let x = -r; x <= r; x++) acc += at(src, row, x);
+    for (let x = 0; x < w; x++) {
+      tmp[row + x] = acc / size;
+      acc += at(src, row, x + r + 1) - at(src, row, x - r);
+    }
+  }
+  for (let x = 0; x < w; x++) {
+    const col = (y) => tmp[Math.min(h - 1, Math.max(0, y)) * w + x];
+    let acc = 0;
+    for (let y = -r; y <= r; y++) acc += col(y);
+    for (let y = 0; y < h; y++) {
+      out[y * w + x] = acc / size;
+      acc += col(y + r + 1) - col(y - r);
+    }
+  }
+  return out;
+}
+
+// stable per-pixel noise so glitter/texture don't reshuffle on every redraw
+// (e.g. while dragging the compare slider)
+function hash2(x, y, seed) {
+  const s = Math.sin(x * 12.9898 + y * 78.233 + seed * 0.0137) * 43758.5453;
+  return s - Math.floor(s);
+}
+
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function smoothstep(e0, e1, x) {
+  const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
+  return t * t * (3 - 2 * t);
+}
+
+// anti-aliased coverage of the nail shape + a softened copy used to darken the
+// polish toward its edge; cached per polygon since only the colors change
+const nailMaskCache = new WeakMap();
+function nailMask(polygon, frame, canvasW, canvasH) {
+  const cached = nailMaskCache.get(polygon);
+  if (cached) return cached;
+  const pad = 4;
+  const bb = polygonBBox(polygon);
+  const x0 = Math.max(0, Math.floor(bb.minX) - pad), y0 = Math.max(0, Math.floor(bb.minY) - pad);
+  const x1 = Math.min(canvasW, Math.ceil(bb.maxX) + pad), y1 = Math.min(canvasH, Math.ceil(bb.maxY) + pad);
+  const bw = x1 - x0, bh = y1 - y0;
+  if (bw <= 0 || bh <= 0) return null;
+  const c = document.createElement('canvas');
+  c.width = bw;
+  c.height = bh;
+  const g = c.getContext('2d');
+  g.translate(-x0, -y0);
+  g.fillStyle = '#fff';
+  g.beginPath();
+  tracePolygon(g, polygon);
+  g.fill();
+  const px = g.getImageData(0, 0, bw, bh).data;
+  const alpha = new Float32Array(bw * bh);
+  for (let i = 0; i < alpha.length; i++) alpha[i] = px[i * 4 + 3] / 255;
+  const rimRadius = Math.max(1, Math.round(Math.min(frame.halfWid, frame.halfLen) * 0.22));
+  const mask = { x0, y0, bw, bh, alpha, rim: boxBlur(alpha, bw, bh, rimRadius) };
+  nailMaskCache.set(polygon, mask);
+  return mask;
+}
+
+function drawGlints(ctx, polygon, frame, seed) {
+  const rand = mulberry32(seed);
+  const { cx, cy, ax, ay, bx, by, halfLen, halfWid } = frame;
   ctx.save();
   ctx.beginPath();
   tracePolygon(ctx, polygon);
   ctx.clip();
-  ctx.translate(bbox.cx, bbox.cy);
-
-  const alpha = FINISH_ALPHA[finish] ?? 0.8;
-
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.globalAlpha = alpha * 0.75;
-  ctx.fillStyle = hex;
-  ctx.fillRect(-w, -h, w * 2, h * 2);
-  ctx.globalAlpha = 1;
-
-  ctx.globalCompositeOperation = 'hue';
-  ctx.fillStyle = hex;
-  ctx.fillRect(-w, -h, w * 2, h * 2);
-  ctx.globalCompositeOperation = 'source-over';
-
-  // soft dome shading -- a real nail bed is a curved surface, so light
-  // catches a soft highlight near the upper-center and gently falls off
-  // toward the edges. Applied under every finish so even plain creamy
-  // polish reads as a rounded 3D surface instead of a flat color fill.
   ctx.globalCompositeOperation = 'screen';
-  const domeLight = ctx.createRadialGradient(-w * 0.08, -h * 0.3, 0, -w * 0.08, -h * 0.3, Math.max(w, h) * 0.85);
-  domeLight.addColorStop(0, 'rgba(255,255,255,0.32)');
-  domeLight.addColorStop(0.55, 'rgba(255,255,255,0.08)');
-  domeLight.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = domeLight;
-  ctx.fillRect(-w, -h, w * 2, h * 2);
-
-  ctx.globalCompositeOperation = 'multiply';
-  const domeShade = ctx.createRadialGradient(w * 0.05, h * 0.25, Math.max(w, h) * 0.25, w * 0.05, h * 0.25, Math.max(w, h));
-  domeShade.addColorStop(0, 'rgba(40,20,25,0)');
-  domeShade.addColorStop(1, 'rgba(40,20,25,0.16)');
-  ctx.fillStyle = domeShade;
-  ctx.fillRect(-w, -h, w * 2, h * 2);
-  ctx.globalCompositeOperation = 'source-over';
-
-  if (finish === 'matte') {
-    ctx.globalCompositeOperation = 'saturation';
-    ctx.globalAlpha = 0.5;
-    ctx.fillStyle = '#9a9a9a';
-    ctx.fillRect(-w, -h, w * 2, h * 2);
-    ctx.globalAlpha = 1;
+  const count = 5 + Math.round(Math.min(halfLen, halfWid) / 6);
+  for (let k = 0; k < count; k++) {
+    const ang = rand() * Math.PI * 2, rad = Math.sqrt(rand()) * 0.8;
+    const u = Math.cos(ang) * rad, v = Math.sin(ang) * rad;
+    const x = cx + bx * u * halfWid + ax * v * halfLen;
+    const y = cy + by * u * halfWid + ay * v * halfLen;
+    const size = halfWid * (0.12 + rand() * 0.14);
+    const glow = ctx.createRadialGradient(x, y, 0, x, y, size);
+    glow.addColorStop(0, 'rgba(255,255,255,0.95)');
+    glow.addColorStop(0.35, 'rgba(255,255,255,0.35)');
+    glow.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+    ctx.lineWidth = Math.max(0.6, size * 0.12);
+    ctx.beginPath();
+    ctx.moveTo(x - size, y); ctx.lineTo(x + size, y);
+    ctx.moveTo(x, y - size); ctx.lineTo(x, y + size);
+    ctx.stroke();
   }
+  ctx.restore();
+}
 
-  if (finish === 'metallic' || finish === 'jelly') {
-    ctx.globalCompositeOperation = 'screen';
-    const grad = ctx.createLinearGradient(-w * 0.4, -h, w * 0.15, h);
-    const peak = finish === 'metallic' ? 0.85 : 0.45;
-    grad.addColorStop(0, 'rgba(255,255,255,0)');
-    grad.addColorStop(0.45, `rgba(255,255,255,${peak})`);
-    grad.addColorStop(0.62, 'rgba(255,255,255,0)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(-w, -h, w * 2, h * 2);
-  }
+// Paints polish over one nail, pixel by pixel in the nail's own frame
+// (u = across the width, v = along the finger): the original nail's light and
+// shadow carry through so the polish sits in the photo's lighting, the sides
+// darken because a nail curves across its width, the edge darkens slightly so
+// the polish looks seated rather than stuck on, and a soft shine streak runs
+// along the nail like on real gloss.
+function paintNail(ctx, polygon, frame, hex, finish, seed) {
+  const style = FINISH_STYLE[finish] || FINISH_STYLE.creamy;
+  const mask = nailMask(polygon, frame, ctx.canvas.width, ctx.canvas.height);
+  if (!mask) return;
+  const { x0, y0, bw, bh, alpha, rim } = mask;
+  const image = ctx.getImageData(x0, y0, bw, bh);
+  const d = image.data;
+  const [pr, pg, pb] = hexToRgb(hex);
+  const { cx, cy, ax, ay, bx, by, halfLen, halfWid, lightEnd } = frame;
 
-  if (finish === 'pearl') {
-    ctx.globalCompositeOperation = 'screen';
-    const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, Math.max(w, h));
-    grad.addColorStop(0, 'rgba(255,255,255,.6)');
-    grad.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(-w, -h, w * 2, h * 2);
-  }
-
-  if (finish === 'glitter') {
-    ctx.globalCompositeOperation = 'source-over';
-    for (let i = 0; i < 26; i++) {
-      const gx = (Math.random() * 2 - 1) * w * 0.85;
-      const gy = (Math.random() * 2 - 1) * h * 0.85;
-      ctx.beginPath();
-      ctx.fillStyle = `rgba(255,255,255,${0.3 + Math.random() * 0.5})`;
-      ctx.arc(gx, gy, 0.6 + Math.random() * 1.1, 0, Math.PI * 2);
-      ctx.fill();
+  let lSum = 0, lCount = 0;
+  for (let i = 0; i < alpha.length; i++) {
+    if (alpha[i] > 0.5) {
+      lSum += 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
+      lCount++;
     }
   }
+  const lMean = lCount ? lSum / lCount : 128;
 
-  if (finish === 'texture') {
-    ctx.globalCompositeOperation = 'overlay';
-    for (let i = 0; i < 40; i++) {
-      const gx = (Math.random() * 2 - 1) * w * 0.9;
-      const gy = (Math.random() * 2 - 1) * h * 0.9;
-      ctx.beginPath();
-      ctx.fillStyle = `rgba(255,255,255,${0.06 + Math.random() * 0.08})`;
-      ctx.arc(gx, gy, 1.2 + Math.random() * 1.4, 0, Math.PI * 2);
-      ctx.fill();
+  for (let py = 0; py < bh; py++) {
+    for (let px = 0; px < bw; px++) {
+      const i = py * bw + px;
+      const cover = alpha[i];
+      if (cover <= 0) continue;
+      const o = i * 4;
+      const dx = x0 + px + 0.5 - cx, dy = y0 + py + 0.5 - cy;
+      const v = (dx * ax + dy * ay) / halfLen;
+      const u = (dx * bx + dy * by) / halfWid;
+
+      const lum = 0.299 * d[o] + 0.587 * d[o + 1] + 0.114 * d[o + 2];
+      const light = Math.min(1.35, Math.max(0.65, 1 + style.lightTransfer * (lum - lMean) / 128));
+      const curve = 1 - style.curvature * u * u - 0.05 * v * v * v * v;
+      const edge = 1 - 0.2 * (1 - rim[i]);
+      // polish pools slightly thicker/darker along the cuticle (v -> -1)
+      const cuticle = 1 - 0.08 * smoothstep(0.55, 1.0, -v);
+      const k = light * curve * edge * cuticle;
+      let r = pr * k, g = pg * k, b = pb * k;
+
+      if (finish === 'metallic') {
+        const band = 0.8 + 0.3 * Math.cos(u * 2.4 + 0.5);
+        r *= band; g *= band; b *= band;
+      } else if (finish === 'matte') {
+        const grey = 0.3 * r + 0.59 * g + 0.11 * b;
+        r = r * 0.85 + grey * 0.15 + 8; g = g * 0.85 + grey * 0.15 + 8; b = b * 0.85 + grey * 0.15 + 8;
+      } else if (finish === 'pearl') {
+        const sheen = 0.16 * (0.5 + 0.5 * Math.sin(v * 3.2 + u * 1.8));
+        r += (255 - r) * sheen; g += (236 - g) * sheen; b += (250 - b) * sheen;
+      } else if (finish === 'texture') {
+        const grain = 1 + 0.2 * (hash2((x0 + px) >> 1, (y0 + py) >> 1, seed) - 0.5);
+        r *= grain; g *= grain; b *= grain;
+      } else if (finish === 'glitter') {
+        const n = hash2(x0 + px, y0 + py, seed);
+        if (n > 0.88) {
+          const s = ((n - 0.88) / 0.12) * 0.8;
+          r += (255 - r) * s; g += (255 - g) * s; b += (255 - b) * s;
+        } else {
+          const t = 0.9 + 0.2 * n;
+          r *= t; g *= t; b *= t;
+        }
+      }
+
+      if (style.gloss > 0) {
+        const du = (u + 0.32) / style.glossWidth;
+        const streak = Math.exp(-du * du) * (1 - smoothstep(0.35, 0.85, Math.abs(v + 0.1)));
+        const su = (u + 0.32) / 0.14, sv = (v - 0.35 * lightEnd) / 0.16;
+        const spot = Math.exp(-(su * su + sv * sv));
+        const shine = Math.min(1, style.gloss * (0.5 * streak + 0.55 * spot));
+        r = 255 - (255 - r) * (1 - shine);
+        g = 255 - (255 - g) * (1 - shine);
+        b = 255 - (255 - b) * (1 - shine);
+      }
+
+      const a = cover * style.opacity;
+      d[o] = d[o] * (1 - a) + clamp255(r) * a;
+      d[o + 1] = d[o + 1] * (1 - a) + clamp255(g) * a;
+      d[o + 2] = d[o + 2] * (1 - a) + clamp255(b) * a;
     }
   }
+  ctx.putImageData(image, x0, y0);
 
-  ctx.restore();
-
-  ctx.save();
-  ctx.filter = 'blur(2px)';
-  ctx.strokeStyle = hex;
-  ctx.globalAlpha = 0.35;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  tracePolygon(ctx, polygon);
-  ctx.stroke();
-  ctx.restore();
+  if (finish === 'glitter') drawGlints(ctx, polygon, frame, seed);
 }
 
 // ---------- skin tone science (approximate, client-side estimate) ----------
@@ -489,6 +795,7 @@ export default function NailTryOn({ onBookDesign } = {}) {
   const baseImageRef = useRef(null);
   const workSizeRef = useRef({ w: 0, h: 0 });
   const nailRegionsRef = useRef([]); // [[[x,y],...]] pixel-space polygons, not rendered directly so kept out of state
+  const nailFramesRef = useRef([]); // per-nail axis/size (see nailFrames), computed once per photo
   const videoRef = useRef(null);
   const cameraStreamRef = useRef(null);
   const compareWrapRef = useRef(null);
@@ -496,6 +803,7 @@ export default function NailTryOn({ onBookDesign } = {}) {
   const compareDividerRef = useRef(null);
   const comparePosRef = useRef(50); // 0-100, kept in a ref so dragging doesn't re-render every pixel
   const isDraggingCompareRef = useRef(false);
+  const detectingRef = useRef(false);
   const redrawRef = useRef(() => {});
   const pendingUploadActionRef = useRef(null); // 'file' | 'camera'
   const toastTimerRef = useRef(null);
@@ -554,9 +862,13 @@ export default function NailTryOn({ onBookDesign } = {}) {
       setCompareVisible(false);
     } else {
       ctx.drawImage(img, 0, 0, w, h);
+      const frames = nailFramesRef.current;
       nailRegionsRef.current.forEach((polygon, i) => {
         const applied = nailColors[i];
-        if (applied) paintNail(ctx, polygon, applied.hex, applied.finish);
+        if (applied) {
+          const seed = i * 7919 + parseInt(applied.hex.slice(1), 16);
+          paintNail(ctx, polygon, frames[i], applied.hex, applied.finish, seed);
+        }
       });
       const splitX = (comparePosRef.current / 100) * w;
       ctx.save();
@@ -587,8 +899,10 @@ export default function NailTryOn({ onBookDesign } = {}) {
   useEffect(() => { redraw(); });
   useEffect(() => { redrawRef.current = redraw; });
 
-  // attach the compare-slider drag listeners once (uses redrawRef so it
-  // always calls the latest closure without needing to re-attach)
+  // attach the compare-slider drag listeners (uses redrawRef so it always calls
+  // the latest closure). The handle only mounts once a photo is loaded, so this
+  // must re-run on hasImage -- with [] it ran at mount, found no handle, and the
+  // slider was never draggable.
   useEffect(() => {
     const handle = compareHandleRef.current;
     if (!handle) return;
@@ -618,7 +932,7 @@ export default function NailTryOn({ onBookDesign } = {}) {
       handle.removeEventListener('pointerup', onUp);
       handle.removeEventListener('pointercancel', onUp);
     };
-  }, []);
+  }, [hasImage]);
 
   function showToast(text) {
     clearTimeout(toastTimerRef.current);
@@ -650,6 +964,7 @@ export default function NailTryOn({ onBookDesign } = {}) {
     comparePosRef.current = 50;
     baseImageRef.current = null;
     nailRegionsRef.current = [];
+    nailFramesRef.current = [];
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (compareWrapRef.current) compareWrapRef.current.style.transform = 'scale(1)';
   }
@@ -731,6 +1046,8 @@ export default function NailTryOn({ onBookDesign } = {}) {
 
   async function detectAndRender() {
     setStatusText('กำลังตรวจจับตำแหน่งเล็บ...');
+    setErrorText(null);
+    detectingRef.current = true;
     const blob = await canvasToBlob();
 
     let data;
@@ -742,6 +1059,8 @@ export default function NailTryOn({ onBookDesign } = {}) {
       const known = err.message && !err.message.startsWith('API error') && err.name !== 'TypeError';
       setErrorText(known ? err.message : 'เชื่อมต่อระบบ AI ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
       return;
+    } finally {
+      detectingRef.current = false;
     }
 
     if (!data.nails || data.nails.length === 0) {
@@ -751,14 +1070,18 @@ export default function NailTryOn({ onBookDesign } = {}) {
     }
 
     const { w, h } = workSizeRef.current;
-    // 3 smoothing passes (up from 2) for a noticeably rounder, more natural
-    // nail-tip shape
-    nailRegionsRef.current = data.nails.map((polygon) =>
-      chaikinSmooth(polygon.map(([x, y]) => [x * w, y * h]), 3)
-    );
+    // a nail is convex, so the hull removes dents/jaggies of the pixel-mask
+    // outline; then each outline is rebuilt as a rounded curve in its own frame
+    const hulls = data.nails.map((polygon) => convexHull(polygon.map(([x, y]) => [x * w, y * h])));
+    const pixels = readPixels(baseImageRef.current, w, h);
+    const hullFrames = nailFrames(hulls, pixels);
+    const shapes = hulls.map((hull, i) => roundNailShape(hull, hullFrames[i]));
+    nailRegionsRef.current = shapes;
+    nailFramesRef.current = shapes.map((shape, i) => frameFromAxis(shape, hullFrames[i].ax, hullFrames[i].ay));
     setNailColors(Array.from({ length: nailRegionsRef.current.length }, () => null));
     setSelectedFinger(null);
     setStatusText(null);
+    setErrorText(null);
   }
 
   function processFile(file) {
@@ -815,10 +1138,15 @@ export default function NailTryOn({ onBookDesign } = {}) {
   }
 
   function applyColor(hex) {
+    if (detectingRef.current) {
+      showToast('AI กำลังหาตำแหน่งเล็บ รอสักครู่แล้วค่อยเลือกสี');
+      return;
+    }
     if (nailRegionsRef.current.length === 0) {
       setErrorText('ยังไม่พบตำแหน่งเล็บในรูปนี้ กรุณาอัปโหลดรูปมือให้เห็นเล็บชัดเจนก่อนเลือกสี');
       return;
     }
+    setErrorText(null);
     if (mode === 'single') {
       setNailColors(nailRegionsRef.current.map(() => ({ hex, finish: activeFinish })));
     } else {
