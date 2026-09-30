@@ -42,12 +42,13 @@ const FINISHES = [
 ];
 
 // how far a nail extends past its real detected tip, as a fraction of its own
-// half-length (0 = natural length, no extension)
+// half-length (0 = natural length, no extension) -- 1.6 is a free edge about
+// 80% as long as the nail itself, an extra-long set
 const LENGTH_PRESETS = [
   { key: 'natural', label: 'ธรรมชาติ', frac: 0 },
-  { key: 'medium', label: 'กลาง', frac: 0.45 },
-  { key: 'long', label: 'ยาว', frac: 0.85 },
-  { key: 'veryLong', label: 'ยาวมาก', frac: 1.3 },
+  { key: 'medium', label: 'กลาง', frac: 0.5 },
+  { key: 'long', label: 'ยาว', frac: 1.0 },
+  { key: 'veryLong', label: 'ยาวมาก', frac: 1.6 },
 ];
 
 const TIP_SHAPES = [
@@ -224,12 +225,8 @@ function fingerDirection(imageData, cx, cy, radius) {
     for (const f of [1.5, 1.9, 2.3]) {
       const x = Math.round(cx + ux * radius * f), y = Math.round(cy + uy * radius * f);
       if (x < 0 || y < 0 || x >= width || y >= height) continue;
-      const o = (y * width + x) * 4;
-      const r = data[o], g = data[o + 1], b = data[o + 2];
-      const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-      const cr = (r - lum) * 0.713 + 128, cb = (b - lum) * 0.564 + 128;
       total++;
-      if (cr >= 133 && cr <= 178 && cb >= 77 && cb <= 127) {
+      if (isSkinAt(data, (y * width + x) * 4)) {
         skin++;
         sx += ux;
         sy += uy;
@@ -349,64 +346,289 @@ function fromUV(u, v, frame) {
   return [cx + bx * upx + ax * vpx, cy + by * upx + ay * vpx];
 }
 
-// Half-width of an extension at t (0 = base of the extension, 1 = its very tip),
-// as a fraction of the width where it starts -- the extension's own taper, a
-// natural nail's taper (the polygon rebuilt by roundNailShape) is separate and
-// already applied to the part before it.
-function tipTaper(t, shape) {
-  switch (shape) {
-    case 'square':
-      return t < 0.85 ? 1 : Math.cos(((t - 0.85) / 0.15) * (Math.PI / 2));
-    case 'almond':
-      // narrows the whole way, ending in a soft point (like a classic almond nail)
-      return Math.pow(Math.max(0, 1 - t), 0.55);
-    case 'squoval':
-      // wide with a gently rounded, still-flat-ish tip (between round and square)
-      return t < 0.55 ? 1 - 0.08 * (t / 0.55) : 0.92 * Math.cos(((t - 0.55) / 0.45) * (Math.PI / 2) * 0.85);
-    case 'round':
-    default:
-      // stays close to full width, then a true quarter-circle dome at the very
-      // end -- a blunt rounded cap, not a taper down to a point
-      return t < 0.7 ? 1 - 0.08 * (t / 0.7) : 0.92 * Math.sqrt(Math.max(0, 1 - ((t - 0.7) / 0.3) ** 2));
+// ---------- long nails ----------
+//
+// A real nail plate is close to a rounded rectangle: its sidewalls run straight
+// along the finger, and a long nail simply carries them on past the fingertip
+// before the end is filed to shape. The detected outline is egg-shaped instead
+// (a short nail's free edge follows the round fingertip), so stretching it
+// gives a round blob with a narrower stick stuck on the end. Instead the
+// outline is kept from the cuticle to where it's widest, the sidewalls carry
+// on straight from there, and the tip shape goes on the end -- sized from the
+// nail's real width, the way a nail tech files it, not from its length.
+
+// Where the line at height v crosses an outline given in the nail's (u, v)
+// frame: [leftmost u, rightmost u], or null if the line misses it.
+function crossSection(uv, v) {
+  let lo = Infinity, hi = -Infinity;
+  for (let i = 0, n = uv.length; i < n; i++) {
+    const [u1, v1] = uv[i];
+    const [u2, v2] = uv[(i + 1) % n];
+    if (v1 === v2 || (v1 - v) * (v2 - v) > 0) continue;
+    const u = u1 + ((u2 - u1) * (v - v1)) / (v2 - v1);
+    if (u < lo) lo = u;
+    if (u > hi) hi = u;
   }
+  return lo <= hi ? [lo, hi] : null;
 }
 
-// Extends a nail outline past its detected tip: keeps the shape unchanged from
-// the cuticle up to `seamFrac` of the way to the tip (the part backed by real
-// detected nail), then replaces the rest with a new tip in the chosen shape,
-// tapering from the real width measured right at the seam so there's no visible
-// jump where real nail meets extension.
-function extendNailShape(baseShape, frame, extendFrac, tipShape, seamFrac = 0.55) {
-  if (extendFrac <= 0.001) return baseShape;
+// Tip outlines are [half-width, distance past where the tip starts] in pixels,
+// running from the full-width start (w, 0) to the very end (0, length).
+// round/squoval/square are superellipse caps: n = 2 is a true semicircle, and
+// the higher n, the flatter the end and the tighter its corners. `height` is
+// how far the cap reaches, in half-widths.
+const TIP_CAPS = {
+  round: { n: 2, height: 1.0 },
+  squoval: { n: 3.6, height: 0.55 },
+  square: { n: 9, height: 0.26 },
+};
+
+function capOutline(w, length, n, count = 24) {
+  const pts = [];
+  for (let i = 0; i <= count; i++) {
+    const th = (i / count) * (Math.PI / 2);
+    pts.push([w * Math.pow(Math.cos(th), 2 / n), length * Math.pow(Math.sin(th), 2 / n)]);
+  }
+  pts[count][0] = 0;
+  return pts;
+}
+
+// Almond: two arcs that leave the sidewalls tangentially and meet on the axis
+// (an ogive), with the point rounded off the way a filed almond is.
+function almondOutline(w, length, count = 28) {
+  const R = (w * w + length * length) / (2 * w);
+  const r = 0.28 * Math.min(w, length);
+  const ox = w - R; // centre of the right-hand arc, level with the tip's start
+  if (R - r <= Math.abs(ox) + 1e-6) return capOutline(w, length, 2, count);
+  const yc = Math.sqrt((R - r) ** 2 - ox * ox); // centre of the rounded point
+  const k = R / (R - r);
+  const tx = ox - ox * k, ty = yc * k; // where the arc hands over to the rounded point
+  const arcEnd = Math.atan2(ty, tx - ox);
+  const tipStart = Math.atan2(ty - yc, tx);
+  const nArc = Math.round(count * 0.7);
+  const pts = [];
+  for (let i = 0; i <= nArc; i++) {
+    const a = (arcEnd * i) / nArc;
+    pts.push([ox + R * Math.cos(a), R * Math.sin(a)]);
+  }
+  for (let i = 1; i <= count - nArc; i++) {
+    const a = tipStart + ((Math.PI / 2 - tipStart) * i) / (count - nArc);
+    pts.push([r * Math.cos(a), yc + r * Math.sin(a)]);
+  }
+  // rounding the point shortened it -- stretch back to the length asked for
+  const s = length / (yc + r);
+  return pts.map(([x, y]) => [Math.max(0, x), y * s]);
+}
+
+// Skin test in YCrCb (robust to lighting): shared by the finger-direction and
+// pose checks.
+function isSkinAt(data, o) {
+  const r = data[o], g = data[o + 1], b = data[o + 2];
+  const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+  const cr = (r - lum) * 0.713 + 128, cb = (b - lum) * 0.564 + 128;
+  return cr >= 133 && cr <= 178 && cb >= 77 && cb <= 127;
+}
+
+// A nail seen side-on (usually the thumb) looks narrow for its length, and its
+// long free edge then shows only as a thin band that curves toward the finger
+// pad. The pad is on whichever side of the nail has more skin beside it, since
+// the nail itself sits on the back of the finger.
+function nailPose(imageData, frame) {
+  const sideness = smoothstep(0.62, 0.42, frame.halfWid / frame.halfLen);
+  if (!imageData || sideness <= 0) return { sideness, palmSide: 0 };
+  const { data, width, height } = imageData;
+  let plus = 0, minus = 0, total = 0;
+  for (const v of [-0.5, -0.2, 0.1, 0.4]) {
+    for (const k of [1.6, 2.2, 2.8, 3.4]) {
+      for (const s of [1, -1]) {
+        const [x, y] = fromUV(s * k, v, frame);
+        const xi = Math.round(x), yi = Math.round(y);
+        if (xi < 0 || yi < 0 || xi >= width || yi >= height) continue;
+        total++;
+        if (isSkinAt(data, (yi * width + xi) * 4)) {
+          if (s > 0) plus++;
+          else minus++;
+        }
+      }
+    }
+  }
+  const diff = plus - minus;
+  return { sideness, palmSide: Math.abs(diff) >= Math.max(3, total * 0.15) ? Math.sign(diff) : 0 };
+}
+
+const PROFILE_BINS = 160;
+
+function profileBin(geo, v) {
+  const b = Math.round(((v - geo.vLo) / (geo.vTip - geo.vLo)) * (PROFILE_BINS - 1));
+  return b < 0 ? 0 : b >= PROFILE_BINS ? PROFILE_BINS - 1 : b;
+}
+
+// Builds a long nail from the detected (rounded) outline. Returns the new
+// outline plus what the painter needs to shade it as one continuous nail: its
+// centre line and half-width along its length (uc/hw, per v bin), where the
+// real nail ends (vHi) and where the drawn one ends (vTip). null when there's
+// nothing sensible to build (tiny or degenerate outline).
+function buildExtendedNail(baseShape, frame, extendFrac, tipShape, pose) {
+  const { halfLen, halfWid } = frame;
+  if (extendFrac <= 0.001 || halfLen < 4 || halfWid < 3) return null;
   const uv = baseShape.map((p) => projectUV(p, frame));
+  let vLo = Infinity, vHi = -Infinity;
+  uv.forEach(([, v]) => {
+    if (v < vLo) vLo = v;
+    if (v > vHi) vHi = v;
+  });
+  const span = vHi - vLo;
+  if (!(span > 0.2)) return null;
+  const vCut = vLo + 0.3 * span; // below this the outline (cuticle end) is kept as detected
+  const vTip = vHi + extendFrac;
+
+  const side = pose?.sideness || 0;
+  const palm = pose?.palmSide || 0;
+  const vFree = vHi - 0.35; // about where the stress points are: the free edge leaves the finger there
+  const freeLen = vTip - vFree;
+
+  // Seen from above: the widest extent so far, walking from vCut toward the
+  // tip -- follows the outline while it widens, then holds, i.e. straight
+  // sidewalls from the widest point on. Seen side-on, a nail's outline
+  // narrows as it curves over the fingertip, so there it's followed as
+  // detected up to the stress points and held from there instead.
+  const K = 36;
+  const runV = [], runL = [], runR = [], rawL = [], rawR = [];
+  let lo = Infinity, hi = -Infinity, last = null;
+  for (let k = 0; k <= K; k++) {
+    const v = vCut + ((vHi - vCut) * k) / K;
+    const cs = crossSection(uv, Math.min(v, vHi - 1e-6)) || last;
+    if (cs) {
+      last = cs;
+      if (cs[0] < lo) lo = cs[0];
+      if (cs[1] > hi) hi = cs[1];
+    }
+    runV.push(v);
+    runL.push(lo);
+    runR.push(hi);
+    rawL.push(cs ? cs[0] : lo);
+    rawR.push(cs ? cs[1] : hi);
+  }
+  if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi - lo < 1e-3 || !Number.isFinite(runL[0])) return null;
+  let kWide = K;
+  for (let k = 0; k <= K; k++) {
+    if (runR[k] - runL[k] >= 0.97 * (hi - lo)) {
+      kWide = k;
+      break;
+    }
+  }
+  const vWide = runV[kWide];
+  const lookup = (arr, v) => {
+    const t = Math.min(K, Math.max(0, ((v - vCut) / (vHi - vCut)) * K));
+    const k = Math.min(K - 1, Math.floor(t));
+    return arr[k] + (arr[k + 1] - arr[k]) * (t - k);
+  };
+  const vHold = Math.max(vCut, vFree);
+  const sidewallsAt = (v) => {
+    const top = [lookup(runL, v), lookup(runR, v)];
+    if (side <= 0) return top;
+    const sv = Math.min(v, vHold);
+    const s = [lookup(rawL, sv), lookup(rawR, sv)];
+    return [top[0] + (s[0] - top[0]) * side, top[1] + (s[1] - top[1]) * side];
+  };
+  // a side-on nail's free edge also bends toward the finger pad (a long nail
+  // curves down along its length -- seen from above that's invisible), and
+  // shows only the thin edge of the nail, so it narrows; both grow smoothly
+  // from the fingertip on
+  const bendU = (palm * side * 0.2 * (vTip - vHi) * halfLen) / halfWid;
+  const pastTip = (v) => Math.min(1, Math.max(0, (v - vHi) / (vTip - vHi)));
+  const centreAt = (v) => {
+    const [l, r] = sidewallsAt(v);
+    const q = pastTip(v);
+    return (l + r) / 2 + bendU * q * q;
+  };
+  const halfAt = (v) => {
+    const [l, r] = sidewallsAt(v);
+    const q = Math.min(1, Math.max(0, (v - vFree) / freeLen));
+    // from above: the detected outline takes in the skin folds beside the
+    // nail, and a long nail pinches in slightly along its free edge -- so a
+    // gentle taper from the widest point on
+    const taper = (0.09 * smoothstep(vWide, vHi + 0.6, v) + 0.04 * q) * (1 - side);
+    return ((r - l) / 2) * (1 - taper - 0.3 * side * smoothstep(0, 1, pastTip(v)));
+  };
+
+  const minCap = Math.max(vWide + (vHold - vWide) * side, vCut + 0.05);
+  let vCap, cap;
+  if (tipShape === 'almond') {
+    vCap = Math.min(Math.max(vHi - 0.45, minCap), vTip - 0.15);
+    cap = almondOutline(halfAt(vCap) * halfWid, (vTip - vCap) * halfLen);
+  } else {
+    const spec = TIP_CAPS[tipShape] || TIP_CAPS.round;
+    let wPx = halfAt(vHi) * halfWid;
+    vCap = vTip;
+    // the tip's width depends a little on where it starts; settle it in two passes
+    for (let pass = 0; pass < 2; pass++) {
+      vCap = Math.max(minCap, Math.min(vTip - 0.05, vTip - (spec.height * wPx) / halfLen));
+      wPx = halfAt(vCap) * halfWid;
+    }
+    cap = capOutline(wPx, (vTip - vCap) * halfLen, spec.n);
+  }
+
+  // outline in (u, v): up the right sidewall, round the tip, down the left
+  // one, then back round the cuticle end of the detected outline
+  const right = [], left = [];
+  const nStraight = Math.max(8, Math.ceil((vCap - vCut) / 0.03));
+  for (let k = 0; k <= nStraight; k++) {
+    const v = vCut + ((vCap - vCut) * k) / nStraight;
+    const c = centreAt(v), h = halfAt(v);
+    right.push([c + h, v]);
+    left.push([c - h, v]);
+  }
+  for (let k = 1; k < cap.length; k++) {
+    const v = vCap + cap[k][1] / halfLen;
+    const c = centreAt(v), h = cap[k][0] / halfWid;
+    right.push([c + h, v]);
+    if (k < cap.length - 1) left.push([c - h, v]); // the last point is the tip itself, shared
+  }
   const n = uv.length;
-  let tipIdx = 0;
-  for (let i = 1; i < n; i++) if (uv[i][1] > uv[tipIdx][1]) tipIdx = i;
-
-  let rIdx = tipIdx;
-  while (rIdx > 0 && uv[rIdx][1] > seamFrac) rIdx--;
-  let lIdx = tipIdx;
-  while (lIdx < n - 1 && uv[lIdx][1] > seamFrac) lIdx++;
-  if (rIdx >= lIdx) return baseShape; // degenerate outline, leave it alone
-
-  const [uR, vR] = uv[rIdx];
-  const [uL, vL] = uv[lIdx];
-  const wR = Math.abs(uR) || 0.3, wL = Math.abs(uL) || 0.3;
-  const signR = uR >= 0 ? 1 : -1, signL = uL >= 0 ? 1 : -1;
-  const vMax = 1 + extendFrac;
-  const steps = 16;
-
-  const rightExt = [];
-  for (let s = 1; s <= steps; s++) {
-    const t = s / steps;
-    rightExt.push(fromUV(signR * wR * tipTaper(t, tipShape), vR + t * (vMax - vR), frame));
+  let start = -1;
+  for (let i = 0; i < n; i++) {
+    if (uv[i][1] < vCut && uv[(i - 1 + n) % n][1] >= vCut) {
+      start = i;
+      break;
+    }
   }
-  const leftExt = [];
-  for (let s = steps; s >= 1; s--) {
-    const t = s / steps;
-    leftExt.push(fromUV(signL * wL * tipTaper(t, tipShape), vL + t * (vMax - vL), frame));
+  if (start < 0) return null;
+  const cuticle = [];
+  for (let j = 0; j < n; j++) {
+    const p = uv[(start + j) % n];
+    if (p[1] >= vCut) break;
+    cuticle.push(p);
   }
-  return [...baseShape.slice(0, rIdx + 1), ...rightExt, ...leftExt, ...baseShape.slice(lIdx)];
+  if (cuticle.length && cuticle[0][0] > cuticle[cuticle.length - 1][0]) cuticle.reverse();
+  const polygon = [...right, ...left.reverse(), ...cuticle].map(([u, v]) => fromUV(u, v, frame));
+
+  const uc = new Float32Array(PROFILE_BINS), hw = new Float32Array(PROFILE_BINS);
+  for (let b = 0; b < PROFILE_BINS; b++) {
+    const v = vLo + ((vTip - vLo) * b) / (PROFILE_BINS - 1);
+    if (v < vCut) {
+      const cs = crossSection(uv, Math.max(v, vLo + 1e-4));
+      uc[b] = cs ? (cs[0] + cs[1]) / 2 : centreAt(vCut);
+      hw[b] = cs ? Math.max(0.02, (cs[1] - cs[0]) / 2) : 0.02;
+    } else if (v <= vCap) {
+      uc[b] = centreAt(v);
+      hw[b] = halfAt(v);
+    } else {
+      const y = (v - vCap) * halfLen;
+      let x = 0;
+      for (let k = 1; k < cap.length; k++) {
+        if (cap[k][1] >= y) {
+          const [xa, ya] = cap[k - 1], [xb, yb] = cap[k];
+          x = xa + (xb - xa) * (yb > ya ? (y - ya) / (yb - ya) : 1);
+          break;
+        }
+      }
+      uc[b] = centreAt(v);
+      hw[b] = Math.max(0.02, x / halfWid);
+    }
+  }
+  const freeHalf = Math.max(0.05, halfAt(vCap));
+  return { polygon, basePolygon: baseShape, vLo, vHi, vTip, uc, hw, freeHalf, freeHalfPx: freeHalf * halfWid };
 }
 
 function readPixels(img, w, h) {
@@ -495,7 +717,7 @@ function nailMask(polygon, frame, canvasW, canvasH) {
   return mask;
 }
 
-function drawGlints(ctx, polygon, frame, seed) {
+function drawGlints(ctx, polygon, frame, seed, geo = null) {
   const rand = mulberry32(seed);
   const { cx, cy, ax, ay, bx, by, halfLen, halfWid } = frame;
   ctx.save();
@@ -503,10 +725,20 @@ function drawGlints(ctx, polygon, frame, seed) {
   tracePolygon(ctx, polygon);
   ctx.clip();
   ctx.globalCompositeOperation = 'screen';
-  const count = 5 + Math.round(Math.min(halfLen, halfWid) / 6);
+  // a long nail has more surface, so proportionally more sparkles spread along all of it
+  const lengthScale = geo ? (geo.vTip - geo.vLo) / 2 : 1;
+  const count = Math.round((5 + Math.round(Math.min(halfLen, halfWid) / 6)) * lengthScale);
   for (let k = 0; k < count; k++) {
-    const ang = rand() * Math.PI * 2, rad = Math.sqrt(rand()) * 0.8;
-    const u = Math.cos(ang) * rad, v = Math.sin(ang) * rad;
+    let u, v;
+    if (geo) {
+      v = geo.vLo + (geo.vTip - geo.vLo) * (0.08 + 0.84 * rand());
+      const bin = profileBin(geo, v);
+      u = geo.uc[bin] + (rand() * 2 - 1) * 0.8 * geo.hw[bin];
+    } else {
+      const ang = rand() * Math.PI * 2, rad = Math.sqrt(rand()) * 0.8;
+      u = Math.cos(ang) * rad;
+      v = Math.sin(ang) * rad;
+    }
     const x = cx + bx * u * halfWid + ax * v * halfLen;
     const y = cy + by * u * halfWid + ay * v * halfLen;
     const size = halfWid * (0.12 + rand() * 0.14);
@@ -528,30 +760,176 @@ function drawGlints(ctx, polygon, frame, seed) {
   ctx.restore();
 }
 
+// Soft shadow under the part of a long nail that sticks out past the finger --
+// a free edge is a solid thing held a little above whatever is behind it, and
+// without one it reads as a sticker. Light from the upper left, like the gloss.
+// Cached per outline: only colours change between redraws.
+const nailShadowCache = new WeakMap();
+function nailShadow(polygon, frame, geo) {
+  const cached = nailShadowCache.get(polygon);
+  if (cached) return cached;
+  const size = geo.freeHalfPx;
+  const blur = Math.max(2, size * 0.55);
+  const offX = size * 0.16, offY = size * 0.3;
+  const pad = Math.ceil(blur * 2 + Math.max(offX, offY) + 2);
+  const bb = polygonBBox(polygon);
+  const x0 = Math.floor(bb.minX) - pad, y0 = Math.floor(bb.minY) - pad;
+  const w = Math.ceil(bb.w) + 2 * pad, h = Math.ceil(bb.h) + 2 * pad;
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  const g = c.getContext('2d');
+  // the shape is drawn far off-canvas so only its blurred shadow lands here
+  // (shadowBlur works in every browser; ctx.filter doesn't)
+  const far = 2 * (w + h);
+  g.save();
+  g.shadowColor = 'rgba(70, 42, 52, 1)';
+  g.shadowBlur = blur;
+  g.shadowOffsetX = far + offX;
+  g.shadowOffsetY = offY;
+  g.translate(-x0 - far, -y0);
+  g.fillStyle = '#000';
+  g.beginPath();
+  tracePolygon(g, polygon);
+  g.fill();
+  // restore drops the shadow settings too -- left on, the fade below would
+  // cast its own shadow off-canvas and destination-in would wipe everything
+  g.restore();
+  // none over the real nail (it lies on the finger), full past the fingertip
+  const [p0x, p0y] = fromUV(0, geo.vHi - 0.3, frame);
+  const [p1x, p1y] = fromUV(0, geo.vHi + 0.15, frame);
+  const fade = g.createLinearGradient(p0x - x0, p0y - y0, p1x - x0, p1y - y0);
+  fade.addColorStop(0, 'rgba(0,0,0,0)');
+  fade.addColorStop(1, 'rgba(0,0,0,1)');
+  g.globalCompositeOperation = 'destination-in';
+  g.fillStyle = fade;
+  g.fillRect(0, 0, w, h);
+  const out = { canvas: c, x0, y0 };
+  nailShadowCache.set(polygon, out);
+  return out;
+}
+
+function drawNailShadow(ctx, polygon, frame, geo) {
+  const s = nailShadow(polygon, frame, geo);
+  ctx.save();
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.globalAlpha = 0.28;
+  ctx.drawImage(s.canvas, s.x0, s.y0);
+  ctx.restore();
+}
+
+// What paintNail needs to light a long nail as one piece. Past the fingertip
+// the photo only has background, so the light there comes from the real
+// nail: its average brightness across the width (the curve of the nail, as
+// the camera saw it) is carried on down the whole length. Also the real nail
+// bed's colour, which a see-through polish shows there instead of background.
+const LIGHT_BINS = 17;
+const longNailLightingCache = new WeakMap(); // per geo: depends only on the photo and shape
+function longNailLighting(geo, frame, photo, canvasW, canvasH) {
+  const cached = longNailLightingCache.get(geo);
+  if (cached) return cached;
+  const base = nailMask(geo.basePolygon, frame, canvasW, canvasH);
+  const lumSum = new Float32Array(LIGHT_BINS), lumCnt = new Float32Array(LIGHT_BINS);
+  let lSum = 0, lCount = 0, cr = 0, cg = 0, cb = 0, cCount = 0;
+  const { cx, cy, ax, ay, bx, by, halfLen, halfWid } = frame;
+  // the middle of the nail bed: clear of the cuticle and of the whiter free edge
+  const vA = geo.vLo + 0.25 * (geo.vHi - geo.vLo), vB = geo.vHi - 0.3 * (geo.vHi - geo.vLo);
+  if (base && photo) {
+    const pd = photo.data, pw = photo.width;
+    for (let py = 0; py < base.bh; py++) {
+      for (let px = 0; px < base.bw; px++) {
+        const a = base.alpha[py * base.bw + px];
+        if (a < 0.5) continue;
+        const X = base.x0 + px, Y = base.y0 + py;
+        const o = (Y * pw + X) * 4;
+        const lum = 0.299 * pd[o] + 0.587 * pd[o + 1] + 0.114 * pd[o + 2];
+        lSum += lum;
+        lCount++;
+        if (a < 0.95) continue;
+        const dx = X + 0.5 - cx, dy = Y + 0.5 - cy;
+        const v = (dx * ax + dy * ay) / halfLen;
+        if (v < vA || v > vB) continue;
+        const bin = profileBin(geo, v);
+        const uRel = ((dx * bx + dy * by) / halfWid - geo.uc[bin]) / geo.freeHalf;
+        const k = Math.round(((uRel + 1.2) / 2.4) * (LIGHT_BINS - 1));
+        if (k < 0 || k >= LIGHT_BINS) continue;
+        lumSum[k] += lum;
+        lumCnt[k]++;
+        cr += pd[o];
+        cg += pd[o + 1];
+        cb += pd[o + 2];
+        cCount++;
+      }
+    }
+  }
+  const lMean = lCount ? lSum / lCount : 128;
+  const raw = new Float32Array(LIGHT_BINS);
+  for (let k = 0; k < LIGHT_BINS; k++) {
+    if (lumCnt[k]) {
+      raw[k] = lumSum[k] / lumCnt[k];
+      continue;
+    }
+    // empty bin (past the real nail's edge): borrow the nearest filled one
+    let best = -1;
+    for (let dk = 1; dk < LIGHT_BINS && best < 0; dk++) {
+      if (k - dk >= 0 && lumCnt[k - dk]) best = k - dk;
+      else if (k + dk < LIGHT_BINS && lumCnt[k + dk]) best = k + dk;
+    }
+    raw[k] = best >= 0 ? lumSum[best] / lumCnt[best] : lMean;
+  }
+  const prof = new Float32Array(LIGHT_BINS);
+  for (let k = 0; k < LIGHT_BINS; k++) {
+    prof[k] = 0.25 * raw[Math.max(0, k - 1)] + 0.5 * raw[k] + 0.25 * raw[Math.min(LIGHT_BINS - 1, k + 1)];
+  }
+  // the real nail bed's own colour (paintNail pales it toward the tip)
+  const under = cCount ? [cr / cCount, cg / cCount, cb / cCount] : [226, 190, 180];
+  const out = { base, lMean, prof, under };
+  if (photo) longNailLightingCache.set(geo, out);
+  return out;
+}
+
 // Paints polish over one nail, pixel by pixel in the nail's own frame
 // (u = across the width, v = along the finger): the original nail's light and
 // shadow carry through so the polish sits in the photo's lighting, the sides
 // darken because a nail curves across its width, the edge darkens slightly so
 // the polish looks seated rather than stuck on, and a soft shine streak runs
-// along the nail like on real gloss.
-function paintNail(ctx, polygon, frame, hex, finish, seed) {
+// along the nail like on real gloss. `geo` (from buildExtendedNail) marks a
+// long nail; `photo` is the untouched photo, for the real nail's light.
+function paintNail(ctx, polygon, frame, hex, finish, seed, geo = null, photo = null) {
   const style = FINISH_STYLE[finish] || FINISH_STYLE.creamy;
-  const mask = nailMask(polygon, frame, ctx.canvas.width, ctx.canvas.height);
+  const canvasW = ctx.canvas.width, canvasH = ctx.canvas.height;
+  const mask = nailMask(polygon, frame, canvasW, canvasH);
   if (!mask) return;
   const { x0, y0, bw, bh, alpha, rim } = mask;
   const image = ctx.getImageData(x0, y0, bw, bh);
   const d = image.data;
   const [pr, pg, pb] = hexToRgb(hex);
   const { cx, cy, ax, ay, bx, by, halfLen, halfWid, lightEnd } = frame;
+  const lit = geo ? longNailLighting(geo, frame, photo, canvasW, canvasH) : null;
 
-  let lSum = 0, lCount = 0;
-  for (let i = 0; i < alpha.length; i++) {
-    if (alpha[i] > 0.5) {
-      lSum += 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
-      lCount++;
+  let lMean;
+  if (lit) {
+    lMean = lit.lMean;
+  } else {
+    let lSum = 0, lCount = 0;
+    for (let i = 0; i < alpha.length; i++) {
+      if (alpha[i] > 0.5) {
+        lSum += 0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2];
+        lCount++;
+      }
     }
+    lMean = lCount ? lSum / lCount : 128;
   }
-  const lMean = lCount ? lSum / lCount : 128;
+
+  // long-nail constants: where the real nail ends (vHi) and the drawn one does
+  // (vTip); the shine runs the full length and its hot spot sits on the side of
+  // the nail facing the light, measured along the whole nail
+  const vLo = geo ? geo.vLo : -1, vHi = geo ? geo.vHi : 1, vTip = geo ? geo.vTip : 1;
+  const totalLen = vTip - vLo;
+  const vSpot = geo ? (vLo + vTip) / 2 + 0.3 * lightEnd * (totalLen / 2) : 0.35 * lightEnd;
+  const spotLen = geo ? 0.16 * Math.sqrt(totalLen / 2) : 0.16;
+  const base = lit?.base;
+  const pd = photo?.data, pw = photo?.width;
 
   for (let py = 0; py < bh; py++) {
     for (let px = 0; px < bw; px++) {
@@ -559,16 +937,71 @@ function paintNail(ctx, polygon, frame, hex, finish, seed) {
       const cover = alpha[i];
       if (cover <= 0) continue;
       const o = i * 4;
-      const dx = x0 + px + 0.5 - cx, dy = y0 + py + 0.5 - cy;
+      const X = x0 + px, Y = y0 + py;
+      const dx = X + 0.5 - cx, dy = Y + 0.5 - cy;
       const v = (dx * ax + dy * ay) / halfLen;
       const u = (dx * bx + dy * by) / halfWid;
 
-      // past v=1 there's no real nail under this pixel (it's an extended tip
-      // over skin/background), so its actual luminance means nothing -- light
-      // it the same as the nail's own average instead of sampling the photo
-      const lum = v <= 1 ? 0.299 * d[o] + 0.587 * d[o + 1] + 0.114 * d[o + 2] : lMean;
+      let lum, uShade, uShine, along, endDark, underR = d[o], underG = d[o + 1], underB = d[o + 2];
+      if (!geo) {
+        lum = 0.299 * d[o] + 0.587 * d[o + 1] + 0.114 * d[o + 2];
+        uShade = u;
+        uShine = u;
+        along = 1 - smoothstep(0.35, 0.85, Math.abs(v + 0.1));
+        endDark = 0.05 * Math.min(v, 1.15) ** 4;
+      } else {
+        const bin = profileBin(geo, v);
+        const ucv = geo.uc[bin], hwv = geo.hw[bin];
+        // across-the-nail position relative to the (possibly bent) centre line:
+        // against the full free-edge width (where the nail's curve is) and
+        // against the width right here (so shading follows a narrowing tip).
+        // Over the cuticle half it stays the plain u a natural nail uses.
+        const uRel = (u - ucv) / geo.freeHalf;
+        const uLoc = (u - ucv) / Math.max(hwv, 0.02);
+        const distal = smoothstep(vHi - 0.5, vHi + 0.1, v);
+        uShade = u + ((uRel + uLoc) * 0.5 - u) * distal;
+        uShine = u + ((0.15 * uRel + 0.85 * uLoc) - u) * distal;
+
+        let bAlpha = 0, bRim = 0;
+        if (base) {
+          const bxp = X - base.x0, byp = Y - base.y0;
+          if (bxp >= 0 && byp >= 0 && bxp < base.bw && byp < base.bh) {
+            const j = byp * base.bw + bxp;
+            bAlpha = base.alpha[j];
+            bRim = base.rim[j];
+          }
+        }
+        // the photo's own light, but only well inside the real nail and only
+        // over its cuticle half: its outline and whiter free edge would show
+        // through as a seam across the long nail. Everywhere else the real
+        // nail's carried-on light takes over, smoothly
+        const photoWeight = smoothstep(0.72, 0.98, bRim) * (1 - smoothstep(vHi - 1.0, vHi - 0.4, v));
+        const po = (Y * pw + X) * 4;
+        const photoLum = pd ? 0.299 * pd[po] + 0.587 * pd[po + 1] + 0.114 * pd[po + 2] : lMean;
+        const kb = Math.round(((uRel + 1.2) / 2.4) * (LIGHT_BINS - 1));
+        const carried = lit.prof[kb < 0 ? 0 : kb >= LIGHT_BINS ? LIGHT_BINS - 1 : kb];
+        lum = carried + (photoLum - carried) * photoWeight;
+
+        // under a see-through polish: the real nail bed near the cuticle,
+        // turning gradually into a paler free edge toward the tip -- blended
+        // softly so the real nail's outline doesn't show as a nail inside a nail
+        const realNail = smoothstep(0.55, 0.95, bRim) * (1 - smoothstep(vHi - 0.7, vHi - 0.15, v));
+        const pale = 0.4 * smoothstep(vHi - 0.4, vTip, v);
+        const fr = lit.under[0] + (245 - lit.under[0]) * pale;
+        const fg = lit.under[1] + (236 - lit.under[1]) * pale;
+        const fb = lit.under[2] + (230 - lit.under[2]) * pale;
+        underR = fr + (d[o] - fr) * realNail;
+        underG = fg + (d[o + 1] - fg) * realNail;
+        underB = fb + (d[o + 2] - fb) * realNail;
+
+        along = smoothstep(vLo + 0.1 * totalLen, vLo + 0.3 * totalLen, v) *
+          (1 - smoothstep(vTip - 0.22 * totalLen, vTip - 0.02 * totalLen, v));
+        // the free edge curves down and away toward its end, catching a little less light
+        endDark = 0.05 * Math.min(Math.max(-v, 0), 1) ** 4 + 0.07 * smoothstep(vHi, vTip, v) ** 1.5;
+      }
+
       const light = Math.min(1.35, Math.max(0.65, 1 + style.lightTransfer * (lum - lMean) / 128));
-      const curve = 1 - style.curvature * u * u - 0.05 * Math.min(v, 1.15) ** 4;
+      const curve = 1 - style.curvature * uShade * uShade - endDark;
       const edge = 1 - 0.2 * (1 - rim[i]);
       // polish pools slightly thicker/darker along the cuticle (v -> -1)
       const cuticle = 1 - 0.08 * smoothstep(0.55, 1.0, -v);
@@ -576,19 +1009,19 @@ function paintNail(ctx, polygon, frame, hex, finish, seed) {
       let r = pr * k, g = pg * k, b = pb * k;
 
       if (finish === 'metallic') {
-        const band = 0.8 + 0.3 * Math.cos(u * 2.4 + 0.5);
+        const band = 0.8 + 0.3 * Math.cos(uShade * 2.4 + 0.5);
         r *= band; g *= band; b *= band;
       } else if (finish === 'matte') {
         const grey = 0.3 * r + 0.59 * g + 0.11 * b;
         r = r * 0.85 + grey * 0.15 + 8; g = g * 0.85 + grey * 0.15 + 8; b = b * 0.85 + grey * 0.15 + 8;
       } else if (finish === 'pearl') {
-        const sheen = 0.16 * (0.5 + 0.5 * Math.sin(v * 3.2 + u * 1.8));
+        const sheen = 0.16 * (0.5 + 0.5 * Math.sin(v * 3.2 + uShade * 1.8));
         r += (255 - r) * sheen; g += (236 - g) * sheen; b += (250 - b) * sheen;
       } else if (finish === 'texture') {
-        const grain = 1 + 0.2 * (hash2((x0 + px) >> 1, (y0 + py) >> 1, seed) - 0.5);
+        const grain = 1 + 0.2 * (hash2(X >> 1, Y >> 1, seed) - 0.5);
         r *= grain; g *= grain; b *= grain;
       } else if (finish === 'glitter') {
-        const n = hash2(x0 + px, y0 + py, seed);
+        const n = hash2(X, Y, seed);
         if (n > 0.88) {
           const s = ((n - 0.88) / 0.12) * 0.8;
           r += (255 - r) * s; g += (255 - g) * s; b += (255 - b) * s;
@@ -599,25 +1032,36 @@ function paintNail(ctx, polygon, frame, hex, finish, seed) {
       }
 
       if (style.gloss > 0) {
-        const du = (u + 0.32) / style.glossWidth;
-        const streak = Math.exp(-du * du) * (1 - smoothstep(0.35, 0.85, Math.abs(v + 0.1)));
-        const su = (u + 0.32) / 0.14, sv = (v - 0.35 * lightEnd) / 0.16;
+        const du = (uShine + 0.32) / style.glossWidth;
+        const streak = Math.exp(-du * du) * along;
+        const su = (uShine + 0.32) / 0.14, sv = (v - vSpot) / spotLen;
         const spot = Math.exp(-(su * su + sv * sv));
-        const shine = Math.min(1, style.gloss * (0.5 * streak + 0.55 * spot));
+        // a long nail also shows a crisp core down its shine line (a hard gel
+        // reflects the light source sharply) and a dimmer, broader reflection
+        // on its far side
+        let extra = 0;
+        if (geo) {
+          const dc = (uShine + 0.32) / (style.glossWidth * 0.32);
+          const dv = (uShine - 0.48) / 0.28;
+          extra = 0.3 * Math.exp(-dc * dc) * along + 0.14 * Math.exp(-dv * dv) * along;
+        }
+        const shine = Math.min(1, style.gloss * (0.5 * streak + 0.55 * spot + extra));
         r = 255 - (255 - r) * (1 - shine);
         g = 255 - (255 - g) * (1 - shine);
         b = 255 - (255 - b) * (1 - shine);
       }
 
-      const a = cover * style.opacity;
-      d[o] = d[o] * (1 - a) + clamp255(r) * a;
-      d[o + 1] = d[o + 1] * (1 - a) + clamp255(g) * a;
-      d[o + 2] = d[o + 2] * (1 - a) + clamp255(b) * a;
+      // polish over what's under it (on a long nail's drawn part, a pale nail),
+      // then that layer over the photo by how much of the pixel the nail covers
+      const a = style.opacity;
+      d[o] = d[o] * (1 - cover) + (underR * (1 - a) + clamp255(r) * a) * cover;
+      d[o + 1] = d[o + 1] * (1 - cover) + (underG * (1 - a) + clamp255(g) * a) * cover;
+      d[o + 2] = d[o + 2] * (1 - cover) + (underB * (1 - a) + clamp255(b) * a) * cover;
     }
   }
   ctx.putImageData(image, x0, y0);
 
-  if (finish === 'glitter') drawGlints(ctx, polygon, frame, seed);
+  if (finish === 'glitter') drawGlints(ctx, polygon, frame, seed, geo);
 }
 
 // ---------- skin tone science (approximate, client-side estimate) ----------
@@ -888,7 +1332,10 @@ export default function NailTryOn({ onBookDesign } = {}) {
   const nailRegionsRef = useRef([]); // [[[x,y],...]] real detected pixel-space polygons, kept out of state
   const nailFramesRef = useRef([]); // per-nail axis/size (see nailFrames), computed once per photo
   const renderRegionsRef = useRef([]); // nailRegionsRef stretched to the chosen length/shape (see redraw)
+  const renderGeoRef = useRef([]); // per nail: buildExtendedNail result, or null at natural length
   const renderRegionsSigRef = useRef('');
+  const nailPosesRef = useRef([]); // per nail: side-on or not (see nailPose), computed once per photo
+  const photoPixelsRef = useRef(null); // the untouched photo's pixels, for the real nails' light
   const detectionGenRef = useRef(0); // bumped on every successful detection, to invalidate the cache above
   const videoRef = useRef(null);
   const cameraStreamRef = useRef(null);
@@ -953,26 +1400,36 @@ export default function NailTryOn({ onBookDesign } = {}) {
     ctx.clearRect(0, 0, w, h);
     if (!img) return;
 
+    // outlines at the chosen length/shape -- rebuilt here even before any
+    // colour is on, so tap-to-select and the selection ring match them
+    const frames = nailFramesRef.current;
+    const sig = `${detectionGenRef.current}|${lengthPreset}|${tipShape}`;
+    if (renderRegionsSigRef.current !== sig) {
+      const extendFrac = LENGTH_PRESETS.find((p) => p.key === lengthPreset)?.frac || 0;
+      const geos = nailRegionsRef.current.map((shape, i) =>
+        extendFrac > 0 ? buildExtendedNail(shape, frames[i], extendFrac, tipShape, nailPosesRef.current[i]) : null
+      );
+      renderGeoRef.current = geos;
+      renderRegionsRef.current = geos.map((geo, i) => (geo ? geo.polygon : nailRegionsRef.current[i]));
+      renderRegionsSigRef.current = sig;
+    }
+
     if (!hasAnyColor) {
       ctx.drawImage(img, 0, 0, w, h);
       setCompareVisible(false);
     } else {
       ctx.drawImage(img, 0, 0, w, h);
-      const frames = nailFramesRef.current;
-      const sig = `${detectionGenRef.current}|${lengthPreset}|${tipShape}`;
-      if (renderRegionsSigRef.current !== sig) {
-        const extendFrac = LENGTH_PRESETS.find((p) => p.key === lengthPreset)?.frac || 0;
-        renderRegionsRef.current = nailRegionsRef.current.map((shape, i) =>
-          extendFrac > 0 ? extendNailShape(shape, frames[i], extendFrac, tipShape) : shape
-        );
-        renderRegionsSigRef.current = sig;
-      }
       const regions = renderRegionsRef.current;
+      const geos = renderGeoRef.current;
+      // every shadow before any nail, so no nail ends up under a neighbour's shadow
+      regions.forEach((polygon, i) => {
+        if (nailColors[i] && geos[i]) drawNailShadow(ctx, polygon, frames[i], geos[i]);
+      });
       regions.forEach((polygon, i) => {
         const applied = nailColors[i];
         if (applied) {
           const seed = i * 7919 + parseInt(applied.hex.slice(1), 16);
-          paintNail(ctx, polygon, frames[i], applied.hex, applied.finish, seed);
+          paintNail(ctx, polygon, frames[i], applied.hex, applied.finish, seed, geos[i], photoPixelsRef.current);
         }
       });
       const splitX = (comparePosRef.current / 100) * w;
@@ -1070,7 +1527,10 @@ export default function NailTryOn({ onBookDesign } = {}) {
     baseImageRef.current = null;
     nailRegionsRef.current = [];
     nailFramesRef.current = [];
+    nailPosesRef.current = [];
+    photoPixelsRef.current = null;
     renderRegionsRef.current = [];
+    renderGeoRef.current = [];
     renderRegionsSigRef.current = '';
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (compareWrapRef.current) compareWrapRef.current.style.transform = 'scale(1)';
@@ -1185,6 +1645,8 @@ export default function NailTryOn({ onBookDesign } = {}) {
     const shapes = hulls.map((hull, i) => roundNailShape(hull, hullFrames[i]));
     nailRegionsRef.current = shapes;
     nailFramesRef.current = shapes.map((shape, i) => frameFromAxis(shape, hullFrames[i].ax, hullFrames[i].ay));
+    nailPosesRef.current = nailFramesRef.current.map((frame) => nailPose(pixels, frame));
+    photoPixelsRef.current = pixels;
     detectionGenRef.current += 1;
     setNailColors(Array.from({ length: nailRegionsRef.current.length }, () => null));
     setSelectedFinger(null);
