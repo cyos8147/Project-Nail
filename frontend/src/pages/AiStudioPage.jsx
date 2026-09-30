@@ -50,6 +50,12 @@ export default function AiStudioPage() {
             ลองสี/ลายเล็บบนรูปจริงและวิเคราะห์สีผิวด้วย AI พร้อมรับคำแนะนำลายจากโมเดล Machine Learning
             — ครบในที่เดียว
           </p>
+          <p className="mt-3 text-xs text-gray-400">
+            รูปที่คุณอัปโหลดส่งไปประมวลผลชั่วคราวเท่านั้น ไม่ถูกบันทึกไว้ (เว้นแต่คุณกด &ldquo;จองลายนี้&rdquo;) ·{' '}
+            <Link to="/privacy" className="underline hover:text-rose-600">
+              นโยบายความเป็นส่วนตัว
+            </Link>
+          </p>
         </section>
 
         <NailTryOn onBookDesign={handleBookDesign} />
