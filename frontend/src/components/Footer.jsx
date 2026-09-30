@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { getShopSettings } from '../api/client.js'
 
 export default function Footer() {
@@ -16,7 +17,12 @@ export default function Footer() {
           <img src="/logo.jpg" alt="Lucky Salon" className="w-7 h-7 rounded-full object-cover" />
           Lucky<span className="text-gray-800"> Salon</span>
         </p>
-        <p>© 2026 Lucky Salon. สงวนลิขสิทธิ์.</p>
+        <p className="text-center">
+          © 2026 Lucky Salon. สงวนลิขสิทธิ์. ·{' '}
+          <Link to="/privacy" className="underline decoration-blush-200 underline-offset-2 hover:text-rose-600 transition-colors">
+            นโยบายความเป็นส่วนตัว
+          </Link>
+        </p>
         <div className="flex items-center gap-4">
           {settings?.line_oa_basic_id && <span>Line: {settings.line_oa_basic_id}</span>}
           {settings?.phone && <span>โทร: {settings.phone}</span>}

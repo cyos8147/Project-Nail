@@ -101,7 +101,7 @@ export default function ContactForm({
               type="text"
               value={form.lineId}
               onChange={onChange}
-              placeholder="เช่น nailglow_fan"
+              placeholder="เช่น somying_jaidee"
               className={`w-full rounded-xl border px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-rose-300 transition-shadow ${
                 errors.lineId ? 'border-red-300' : 'border-blush-200'
               }`}

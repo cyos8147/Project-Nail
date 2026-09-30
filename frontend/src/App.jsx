@@ -4,6 +4,8 @@ import BookingPage from './pages/BookingPage.jsx'
 import EditBookingPage from './pages/EditBookingPage.jsx'
 import AiStudioPage from './pages/AiStudioPage.jsx'
 import CustomerHistoryPage from './pages/CustomerHistoryPage.jsx'
+import PrivacyPage from './pages/PrivacyPage.jsx'
+import NotFoundPage from './pages/NotFoundPage.jsx'
 import AdminLoginPage from './pages/admin/AdminLoginPage.jsx'
 import AdminLayout from './pages/admin/AdminLayout.jsx'
 import DashboardPage from './pages/admin/DashboardPage.jsx'
@@ -22,6 +24,7 @@ export default function App() {
       <Route path="/booking/edit" element={<EditBookingPage />} />
       <Route path="/ai" element={<AiStudioPage />} />
       <Route path="/history" element={<CustomerHistoryPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
 
       <Route path="/admin/login" element={<AdminLoginPage />} />
       <Route path="/admin" element={<AdminLayout />}>
@@ -33,6 +36,8 @@ export default function App() {
         <Route path="reviews" element={<AdminReviewsPage />} />
         <Route path="settings" element={<AdminSettingsPage />} />
       </Route>
+
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
 }

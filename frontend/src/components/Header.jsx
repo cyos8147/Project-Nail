@@ -9,6 +9,7 @@ export default function Header() {
     { label: 'บริการ', href: '/#services' },
     { label: 'ลายเล็บยอดนิยม', href: '/#popular' },
     { label: 'รีวิว', href: '/#reviews' },
+    { label: 'ติดต่อ', href: '/#contact' },
   ]
 
   // ไฮไลต์เมนูสีชมพูเฉพาะหน้าที่มีเส้นทางของตัวเอง (ประวัติของฉัน) — ไม่รวมลิงก์แบบ

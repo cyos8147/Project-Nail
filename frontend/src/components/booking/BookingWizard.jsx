@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import ServiceSelector from './ServiceSelector.jsx'
 import ServiceDetails from './ServiceDetails.jsx'
 import DateTimePicker from './DateTimePicker.jsx'
@@ -407,6 +408,14 @@ export default function BookingWizard() {
             </button>
           )}
         </div>
+        {step === totalSteps && (
+          <p className="mt-4 text-center text-xs text-gray-400">
+            การกดยืนยันการจองถือว่ารับทราบ{' '}
+            <Link to="/privacy" target="_blank" className="underline hover:text-rose-600">
+              นโยบายความเป็นส่วนตัว
+            </Link>
+          </p>
+        )}
         {submitError && <p className="text-sm text-red-500 text-center mt-4">{submitError}</p>}
       </div>
     </section>
