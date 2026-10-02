@@ -26,7 +26,7 @@ export default function AdminReviewsPage() {
             </div>
             <p className="text-xs text-gray-400 mb-2">{r.service_name}</p>
             {r.comment && <p className="text-sm text-gray-600">{r.comment}</p>}
-            {r.photo_url && <img src={r.photo_url} alt="ผลงาน" className="mt-3 w-full h-32 rounded-xl object-cover" />}
+            {r.photo_url && <img loading="lazy" decoding="async" src={r.photo_url} alt="ผลงาน" className="mt-3 w-full h-32 rounded-xl object-cover" />}
           </div>
         ))}
         {reviews.length === 0 && <p className="text-sm text-gray-400">ยังไม่มีรีวิว</p>}

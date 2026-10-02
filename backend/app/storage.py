@@ -9,7 +9,7 @@ import os
 import uuid
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageOps
 
 from .config import get_settings
 
@@ -76,6 +76,41 @@ def _get_supabase_client():
 
     _supabase_client = create_client(settings.supabase_url, settings.supabase_service_role_key)
     return _supabase_client
+
+
+# รูปที่ลูกค้า/แอดมินอัปโหลดมักเป็นรูปจากกล้องมือถือ 3-8MB แต่ในเว็บแสดงเป็นรูปเล็ก (ราว 64-400px)
+# เดิมเก็บไฟล์ต้นฉบับตรงๆ ทำให้ทุกคนที่เปิดหน้าแรกต้องโหลดรูปเต็มขนาด (วัดจริง: รูปเดียว 5.5MB ทำให้หน้าแรกหนักขึ้นจาก 0.6MB
+# เป็น 6.1MB) จึงย่อ+บีบอัดก่อนเก็บ และการเซฟใหม่ยังตัดข้อมูลแฝงของรูป (EXIF เช่นพิกัด GPS/รุ่นมือถือ) ออกด้วย
+# เพราะ bucket เป็นสาธารณะ ใครมีลิงก์ก็ดึงไฟล์ไปอ่านได้
+PHOTO_QUALITY = 82
+CATALOG_PHOTO_MAX_SIDE = 1200  # รูปบริการ/ลายเล็บที่โชว์ในหน้าเว็บ (การ์ดใหญ่สุดราว 350px x2 สำหรับจอ retina)
+REVIEW_PHOTO_MAX_SIDE = 1200
+REFERENCE_PHOTO_MAX_SIDE = 1600  # รูปตัวอย่างที่ลูกค้าแนบ ร้านต้องซูมดูลายละเอียด จึงให้ใหญ่กว่า
+
+
+def optimize_photo(raw: bytes, max_side: int) -> tuple[bytes, str, str]:
+    """ย่อรูปให้ด้านยาวไม่เกิน max_side บีบอัด และตัด EXIF ออก คืนค่า (bytes, content-type, นามสกุลไฟล์)
+    หมุนรูปตามที่ถ่ายมาก่อนตัด EXIF (ไม่งั้นรูปแนวตั้งจากมือถือจะกลายเป็นนอนข้าง) รูปที่มีพื้นโปร่งใสเก็บเป็น PNG
+    นอกนั้นเป็น JPEG  ต้องเรียกหลัง validate_image_bytes เท่านั้น"""
+    img = Image.open(io.BytesIO(raw))
+    if img.format == "JPEG":
+        img.draft("RGB", (max_side, max_side))  # ถอดรหัส JPEG แบบย่อส่วน ประหยัดแรมกับรูป 12MP
+    img = ImageOps.exif_transpose(img)
+    has_alpha = img.mode in ("RGBA", "LA") or (img.mode == "P" and "transparency" in img.info)
+    img.thumbnail((max_side, max_side), Image.LANCZOS)  # ย่อเฉพาะรูปที่ใหญ่เกิน ไม่ขยายรูปเล็ก
+
+    out = io.BytesIO()
+    if has_alpha:
+        img.convert("RGBA").save(out, "PNG", optimize=True)
+        return out.getvalue(), "image/png", ".png"
+    img.convert("RGB").save(out, "JPEG", quality=PHOTO_QUALITY, optimize=True, progressive=True)
+    return out.getvalue(), "image/jpeg", ".jpg"
+
+
+def upload_photo(raw: bytes, bucket: str, max_side: int) -> str:
+    """ย่อรูปด้วย optimize_photo แล้วอัปโหลด คืนค่า URL สาธารณะ (ใช้กับรูปที่ผู้ใช้อัปโหลดทุกชนิด)"""
+    data, content_type, ext = optimize_photo(raw, max_side)
+    return upload_bytes(data, f"photo{ext}", bucket, content_type)
 
 
 def upload_bytes(data: bytes, filename: str, bucket: str, content_type: str = "image/png") -> str:

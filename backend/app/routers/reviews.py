@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from .. import models, schemas
 from ..database import get_db
 from ..rate_limit import limiter
-from ..storage import decode_and_validate_image, upload_bytes
+from ..storage import REVIEW_PHOTO_MAX_SIDE, decode_and_validate_image, upload_photo
 
 router = APIRouter(prefix="/reviews", tags=["reviews"])
 
@@ -56,10 +56,10 @@ def create_review(request: Request, payload: schemas.ReviewCreate, db: Session =
     photo_url = None
     if payload.photo_base64:
         try:
-            raw, content_type = decode_and_validate_image(payload.photo_base64)
+            raw, _content_type = decode_and_validate_image(payload.photo_base64)
         except ValueError as e:
             raise HTTPException(400, str(e))
-        photo_url = upload_bytes(raw, "review.jpg", "review-photos", content_type)
+        photo_url = upload_photo(raw, "review-photos", REVIEW_PHOTO_MAX_SIDE)
 
     review = models.Review(
         booking_id=booking.id,

@@ -185,7 +185,7 @@ export default function CustomerHistoryPage() {
                       {b.booking_code} · {b.booking_date} {b.booking_time} น. · {b.price} บาท
                     </p>
                     {b.reference_image_url && (
-                      <img src={b.reference_image_url} alt="รูปที่แนบ" className="mt-2 w-16 h-16 rounded-lg object-cover" />
+                      <img loading="lazy" decoding="async" src={b.reference_image_url} alt="รูปที่แนบ" className="mt-2 w-16 h-16 rounded-lg object-cover" />
                     )}
                     {b.admin_note && (
                       <p className="text-xs text-gray-500 mt-2 pt-2 border-t border-blush-100">
@@ -242,7 +242,7 @@ export default function CustomerHistoryPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {data.tryon_history.map((t) => (
                     <div key={t.id} className="bg-white rounded-xl shadow-card overflow-hidden">
-                      {t.result_image_url && <img src={t.result_image_url} alt="ผลลัพธ์ AI" className="w-full aspect-square object-cover" />}
+                      {t.result_image_url && <img loading="lazy" decoding="async" src={t.result_image_url} alt="ผลลัพธ์ AI" className="w-full aspect-square object-cover" />}
                       <div className="p-2">
                         <p className="text-[11px] text-gray-500">{t.pattern} · {t.nail_shape}</p>
                       </div>

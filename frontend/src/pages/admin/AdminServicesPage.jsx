@@ -105,7 +105,7 @@ export default function AdminServicesPage() {
           <div key={s.id} className="p-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               {s.image_url && (
-                <img src={s.image_url} alt={s.name} className="w-12 h-12 rounded-xl object-cover border border-blush-200 flex-shrink-0" />
+                <img loading="lazy" decoding="async" src={s.image_url} alt={s.name} className="w-12 h-12 rounded-xl object-cover border border-blush-200 flex-shrink-0" />
               )}
               <div className="min-w-0">
                 <p className="text-sm font-medium text-gray-800 truncate">{s.name} {!s.active && <span className="text-[10px] text-gray-400">(ปิดใช้งาน)</span>}</p>

@@ -41,7 +41,7 @@ export default function PopularNails() {
             >
               <div className="aspect-square">
                 {n.image_url ? (
-                  <img src={n.image_url} alt={n.name} className="w-full h-full object-cover" />
+                  <img loading="lazy" decoding="async" src={n.image_url} alt={n.name} className="w-full h-full object-cover" />
                 ) : (
                   <NailThumb label={n.name} accent={n.accent || n.color_hex || '#E8C39E'} />
                 )}

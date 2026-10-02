@@ -60,7 +60,7 @@ export default function Reviews() {
               </div>
               <p className="text-gray-500 text-sm leading-relaxed">{r.text}</p>
               {r.photo_url && (
-                <img src={r.photo_url} alt="ผลงานจากรีวิว" className="mt-3 rounded-xl w-full h-32 object-cover" />
+                <img loading="lazy" decoding="async" src={r.photo_url} alt="ผลงานจากรีวิว" className="mt-3 rounded-xl w-full h-32 object-cover" />
               )}
             </div>
           ))}

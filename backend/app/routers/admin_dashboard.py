@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from .. import models, schemas
 from ..database import get_db
 from ..security import get_current_admin
+from ..timeutil import today_th
 
 router = APIRouter(prefix="/admin", tags=["admin-dashboard"])
 
@@ -24,7 +25,7 @@ def _revenue_between(db: Session, start: date, end: date) -> float:
 
 @router.get("/dashboard/summary", response_model=schemas.DashboardSummary)
 def dashboard_summary(db: Session = Depends(get_db), admin: models.AdminUser = Depends(get_current_admin)):
-    today = date.today()
+    today = today_th()
     month_start = today.replace(day=1)
     year_start = today.replace(month=1, day=1)
 

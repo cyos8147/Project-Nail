@@ -42,6 +42,13 @@ class Settings(BaseSettings):
     # เพราะโค้ดนี้อยู่ใน public repo ใครก็อ่านเห็นได้
     shop_owner_link_phrase: str = "ผูกไลน์เจ้าของร้าน"
 
+    # --- ตัวกันกดถี่ (rate limit) ---
+    # เซิร์ฟเวอร์อยู่หลังระบบกลางของ Render ซึ่งเป็นฝ่ายต่อเข้ามาหาแอปแทนลูกค้า ถ้านับตามผู้ต่อโดยตรง ลูกค้าทุกคนจะถูกนับเป็น
+    # "คนเดียวกัน" แอปเลยอ่าน IP จริงจาก header ที่ระบบกลางใส่มาให้ (ดู rate_limit.py) ปกติไม่ต้องตั้งค่านี้
+    # ถ้าดู Logs แล้วพบว่า IP จริงอยู่ใน X-Forwarded-For (ไม่มี CF-Connecting-IP) ให้ตั้งเลขนี้เป็นตำแหน่งนับจากขวาสุดของ
+    # X-Forwarded-For ที่เป็น IP ลูกค้า (1 = ตัวขวาสุด) 0 = ไม่ใช้
+    trusted_proxy_hops: int = 0
+
     # --- AI ---
     # ONNX ที่แปลงจาก yolov8_nail_seg.pt (รันด้วย onnxruntime แทน PyTorch เพื่อให้พอแรม 512MB ของ Render ฟรี)
     yolo_nail_seg_weights: str = "ml/models/yolov8_nail_seg.onnx"

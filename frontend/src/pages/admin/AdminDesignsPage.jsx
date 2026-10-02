@@ -133,7 +133,7 @@ export default function AdminDesignsPage() {
           <div key={d.id} className="bg-white rounded-2xl shadow-card p-4">
             <div className="flex items-center gap-3">
               {d.image_url ? (
-                <img src={d.image_url} alt={d.name} className="w-10 h-10 rounded-full object-cover border border-black/10 flex-shrink-0" />
+                <img loading="lazy" decoding="async" src={d.image_url} alt={d.name} className="w-10 h-10 rounded-full object-cover border border-black/10 flex-shrink-0" />
               ) : (
                 <span className="w-10 h-10 rounded-full border border-black/10 flex-shrink-0" style={{ backgroundColor: d.color_hex }} />
               )}

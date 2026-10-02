@@ -5,7 +5,7 @@ from .. import models, schemas
 from ..availability import get_shop_settings
 from ..database import get_db
 from ..security import get_current_admin
-from ..storage import decode_and_validate_image, upload_bytes
+from ..storage import CATALOG_PHOTO_MAX_SIDE, decode_and_validate_image, upload_photo
 
 router = APIRouter(prefix="/admin", tags=["admin-catalog"])
 
@@ -18,10 +18,10 @@ def _uploaded_image_url(image_base64: str | None) -> str | None:
     if not image_base64:
         return None
     try:
-        raw, content_type = decode_and_validate_image(image_base64)
+        raw, _content_type = decode_and_validate_image(image_base64)
     except ValueError as e:
         raise HTTPException(400, str(e))
-    return upload_bytes(raw, "catalog.jpg", CATALOG_PHOTOS_BUCKET, content_type)
+    return upload_photo(raw, CATALOG_PHOTOS_BUCKET, CATALOG_PHOTO_MAX_SIDE)
 
 
 # --- Services -----------------------------------------------------------

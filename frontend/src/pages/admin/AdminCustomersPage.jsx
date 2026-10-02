@@ -131,7 +131,7 @@ export default function AdminCustomersPage() {
                   {selected.bookings.map((b) => (
                     <div key={b.id} className="text-xs border-b border-blush-50 pb-2">
                       <p className="text-gray-700">{b.service_name} · {b.booking_date} · {b.status}</p>
-                      {b.reference_image_url && <img src={b.reference_image_url} className="w-12 h-12 rounded mt-1 object-cover" alt="" />}
+                      {b.reference_image_url && <img loading="lazy" decoding="async" src={b.reference_image_url} className="w-12 h-12 rounded mt-1 object-cover" alt="" />}
                     </div>
                   ))}
                   {selected.bookings.length === 0 && <p className="text-xs text-gray-400">ยังไม่มีประวัติ</p>}
@@ -143,7 +143,7 @@ export default function AdminCustomersPage() {
                   <p className="text-xs font-semibold text-gray-500 mb-2">ประวัติทดลองลายเล็บ (AI)</p>
                   <div className="flex flex-wrap gap-2">
                     {selected.tryon_history.map((t) => (
-                      t.result_image_url && <img key={t.id} src={t.result_image_url} className="w-14 h-14 rounded-lg object-cover" alt="" />
+                      t.result_image_url && <img key={t.id} loading="lazy" decoding="async" src={t.result_image_url} className="w-14 h-14 rounded-lg object-cover" alt="" />
                     ))}
                   </div>
                 </div>

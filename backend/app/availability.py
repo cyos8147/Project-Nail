@@ -1,9 +1,10 @@
-from datetime import date, datetime, time, timedelta
+from datetime import date, time
 
 from sqlalchemy import and_, text
 from sqlalchemy.orm import Session
 
 from .models import Booking, ServiceCategory, ShopHoliday, ShopSettings
+from .timeutil import now_th
 
 ACTIVE_STATUSES = ("pending", "confirmed")
 
@@ -79,7 +80,7 @@ def compute_available_slots(
         start = _time_to_minutes(b.booking_time)
         busy_ranges.append((start, start + (b.estimated_duration_minutes or 60)))
 
-    now = datetime.now()
+    now = now_th()  # เวลาไทย ไม่ใช่นาฬิกา UTC ของเซิร์ฟเวอร์ (ดู timeutil.py)
     is_today = target_date == now.date()
     now_minutes = now.hour * 60 + now.minute
 

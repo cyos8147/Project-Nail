@@ -7,7 +7,7 @@ from ..availability import compute_available_slots, is_shop_open, lock_slot
 from ..database import get_db
 from ..rate_limit import limiter
 from ..services import line_notify
-from ..storage import decode_and_validate_image, upload_bytes
+from ..storage import REFERENCE_PHOTO_MAX_SIDE, decode_and_validate_image, upload_photo
 from ..utils import generate_booking_code
 
 router = APIRouter(prefix="/bookings", tags=["bookings"])
@@ -46,10 +46,10 @@ def create_booking(request: Request, payload: schemas.BookingCreate, db: Session
     reference_image_url = None
     if payload.reference_image_base64:
         try:
-            raw, content_type = decode_and_validate_image(payload.reference_image_base64)
+            raw, _content_type = decode_and_validate_image(payload.reference_image_base64)
         except ValueError as e:
             raise HTTPException(400, str(e))
-        reference_image_url = upload_bytes(raw, "reference.jpg", "booking-references", content_type)
+        reference_image_url = upload_photo(raw, "booking-references", REFERENCE_PHOTO_MAX_SIDE)
 
     # ลูกค้าหลายคนกดจองพร้อมกันเป๊ะๆ อาจแย่งช่วงเวลาเดียวกัน (เกินจำนวนช่างของหมวดนั้น) หรือได้รหัสคิว
     # ชนกัน (นับจากจำนวนคิววันนั้น+1 -- ดู utils.generate_booking_code) จึงล็อกช่วงเวลานี้ไว้ก่อน (บน

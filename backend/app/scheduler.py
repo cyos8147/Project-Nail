@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from datetime import date, timedelta, timezone
+from datetime import timedelta
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -16,14 +16,14 @@ from apscheduler.triggers.cron import CronTrigger
 from . import models
 from .database import SessionLocal
 from .services import line_notify
+from .timeutil import THAILAND_TZ, today_th
 
-THAILAND_TZ = timezone(timedelta(hours=7))
 REMINDER_STATUSES = ("confirmed",)
 
 
 def send_appointment_reminders() -> int:
     """หาคิวที่นัดพรุ่งนี้ (สถานะยืนยันแล้ว ยังไม่เคยส่งเตือน) แล้วส่ง LINE เตือน คืนค่าจำนวนที่ส่งสำเร็จ"""
-    tomorrow = date.today() + timedelta(days=1)
+    tomorrow = today_th() + timedelta(days=1)
     db = SessionLocal()
     sent_count = 0
     try:

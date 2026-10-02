@@ -265,7 +265,7 @@ export default function AdminBookingsPage() {
             </div>
 
             {b.reference_image_url && (
-              <img src={b.reference_image_url} alt="รูปที่ลูกค้าแนบ" className="mt-3 w-20 h-20 rounded-lg object-cover" />
+              <img loading="lazy" decoding="async" src={b.reference_image_url} alt="รูปที่ลูกค้าแนบ" className="mt-3 w-20 h-20 rounded-lg object-cover" />
             )}
 
             <div className="mt-3 flex gap-2">
