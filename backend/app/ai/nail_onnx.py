@@ -7,10 +7,15 @@ non_max_suppression, process_mask_native, masks2segments) เพื่อให�
 
 from __future__ import annotations
 
+import ctypes
+import gc
+import logging
 import threading
 
 import cv2
 import numpy as np
+
+log = logging.getLogger("uvicorn.error")  # logger ตัวนี้ uvicorn ตั้งให้พิมพ์ขึ้น Render Logs อยู่แล้ว
 
 INPUT_SIZE = 640
 CONF_THRESHOLD = 0.25
@@ -20,10 +25,20 @@ MAX_NMS = 30000
 MAX_WH = 7680
 NUM_MASK_COEFFS = 32
 # รูปที่ใหญ่กว่านี้จะถูกย่อก่อน (ผลลัพธ์เป็นพิกัดสัดส่วน 0-1 ไม่ขึ้นกับความละเอียด) กันแรมพุ่งตอนขยาย mask
-MAX_SIDE = 1280
+# (โมเดลรับภาพ 640x640 อยู่แล้ว 1024 จึงเหลือเฟือ)
+MAX_SIDE = 1024
+# ตรวจพร้อมกันได้กี่รูป: วัดแล้วแต่ละรูปกินแรมเพิ่มราว 190MB (ตรวจ 3 รูปซ้อนกัน โปรเซสพุ่งไป ~480MB, 4 รูป ~580MB)
+# ขณะที่ Render แผนฟรีมีแรมแค่ 512MB -> เกินแล้วโดนรีสตาร์ต ผู้ใช้เลยเจอ "ใช้ได้บ้างไม่ได้บ้าง" รูปที่เหลือให้รอคิว
+MAX_CONCURRENT_DETECTIONS = 1
+# ถ้าตรวจทั้งรูปแล้วเจอเล็บน้อยกว่านี้ จะลองซูมเข้ากลางรูปแล้วตรวจซ้ำ (มือปกติเห็นเล็บ 4-5 นิ้ว ถ้าเจอน้อยกว่านั้นมักเพราะ
+# มืออยู่ไกล/เล็กในเฟรม โมเดลที่รับภาพ 640 พิกเซลจะมองเล็บเล็กๆ ไม่เห็น) -- วัดกับรูปที่มือเหลือ 25-30% ของเฟรม
+# ตรวจทั้งรูปเจอ 4-13 เล็บจาก 25 แต่ซูมเข้ากลางรูปเจอครบ 25
+MIN_NAILS_BEFORE_ZOOM = 4
+ZOOM_FRACTIONS = (0.5, 0.33)
 
 _session = None
 _session_lock = threading.Lock()
+_gate = threading.BoundedSemaphore(MAX_CONCURRENT_DETECTIONS)
 
 
 def _get_session(weights_path: str):
@@ -136,8 +151,7 @@ def _postprocess(pred: np.ndarray, protos: np.ndarray, orig_h: int, orig_w: int)
     return polygons
 
 
-def detect_nail_polygons(rgb: np.ndarray, weights_path: str) -> list[np.ndarray]:
-    """คืนค่ารายการ polygon ของเล็บแต่ละชิ้น เป็นพิกัดสัดส่วน 0-1 ของความกว้าง/สูงรูป (shape N x 2)"""
+def _detect(rgb: np.ndarray, weights_path: str) -> list[np.ndarray]:
     h, w = rgb.shape[:2]
     scale = min(1.0, MAX_SIDE / max(h, w))
     if scale < 1.0:
@@ -148,3 +162,65 @@ def detect_nail_polygons(rgb: np.ndarray, weights_path: str) -> list[np.ndarray]
     session = _get_session(weights_path)
     pred, protos = session.run(None, {session.get_inputs()[0].name: x})[:2]
     return _postprocess(pred[0], protos[0], h, w)
+
+
+def _detect_center_crop(rgb: np.ndarray, frac: float, weights_path: str) -> list[np.ndarray]:
+    """ตรวจเฉพาะกลางรูป (ซูมเข้า) แล้วแปลงพิกัดกลับเป็นสัดส่วนของรูปเต็ม"""
+    h, w = rgb.shape[:2]
+    ch, cw = max(int(h * frac), 32), max(int(w * frac), 32)
+    y0, x0 = (h - ch) // 2, (w - cw) // 2
+    polygons = _detect(np.ascontiguousarray(rgb[y0 : y0 + ch, x0 : x0 + cw]), weights_path)
+    return [
+        np.stack([(p[:, 0] * cw + x0) / w, (p[:, 1] * ch + y0) / h], axis=1).astype(np.float32) for p in polygons
+    ]
+
+
+def release_memory() -> None:
+    """คืนแรมที่ glibc ยังถือไว้หลังรันโมเดล (Linux เท่านั้น ที่อื่นไม่ทำอะไร)"""
+    gc.collect()
+    try:
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except Exception:
+        pass
+
+
+def rss_mb() -> int:
+    """แรมที่โปรเซสนี้ใช้อยู่ (MB) ไว้ใส่ log ดูว่าใกล้เพดาน 512MB ของ Render แค่ไหน (อ่านไม่ได้ให้คืน 0)"""
+    try:
+        with open("/proc/self/status", encoding="ascii") as f:
+            for line in f:
+                if line.startswith("VmRSS:"):
+                    return int(line.split()[1]) // 1024
+    except Exception:
+        pass
+    return 0
+
+
+def detect_nail_polygons(rgb: np.ndarray, weights_path: str) -> list[np.ndarray]:
+    """คืนค่ารายการ polygon ของเล็บแต่ละชิ้น เป็นพิกัดสัดส่วน 0-1 ของความกว้าง/สูงรูป (shape N x 2)
+
+    ตรวจทีละรูปเท่านั้น (ดู MAX_CONCURRENT_DETECTIONS) และถ้าทั้งรูปเจอเล็บน้อย จะลองซูมเข้ากลางรูปตรวจซ้ำ
+    แล้วเลือกรอบที่เจอมากที่สุด"""
+    with _gate:
+        try:
+            best = _detect(rgb, weights_path)
+            for frac in ZOOM_FRACTIONS:
+                if len(best) >= MIN_NAILS_BEFORE_ZOOM:
+                    break
+                zoomed = _detect_center_crop(rgb, frac, weights_path)
+                if len(zoomed) > len(best):
+                    log.info("nail detection: zoom %.2f found %d nails (whole photo: %d)", frac, len(zoomed), len(best))
+                    best = zoomed
+            return best
+        finally:
+            release_memory()
+
+
+def warm_up(weights_path: str) -> None:
+    """โหลดโมเดลและรันเปล่าหนึ่งรอบตอนเซิร์ฟเวอร์เริ่ม ให้ผู้ใช้คนแรกไม่ต้องรอโหลด และไม่ต้องให้การโหลดโมเดลมาชนกับ
+    คำขออื่นตอนที่แรมกำลังพุ่ง"""
+    with _gate:
+        try:
+            _detect(np.full((480, 640, 3), 127, dtype=np.uint8), weights_path)
+        finally:
+            release_memory()

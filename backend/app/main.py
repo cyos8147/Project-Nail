@@ -1,3 +1,5 @@
+import logging
+import threading
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -6,6 +8,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
 
+from .ai import segmentation
 from .config import get_settings
 from .database import Base, SessionLocal, engine
 from .rate_limit import limiter
@@ -61,6 +64,13 @@ app.include_router(admin_catalog.router, prefix="/api")
 app.include_router(admin_dashboard.router, prefix="/api")
 
 
+def _warm_up_detector():
+    try:
+        segmentation.warm_up_detector()
+    except Exception:
+        logging.getLogger("uvicorn.error").exception("โหลดโมเดลตรวจเล็บล่วงหน้าไม่สำเร็จ (จะโหลดตอนมีคนใช้ครั้งแรกแทน)")
+
+
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
@@ -70,6 +80,8 @@ def on_startup():
     finally:
         db.close()
     app.state.scheduler = start_scheduler()
+    # โหลดโมเดลตรวจเล็บทิ้งไว้ก่อนใน thread แยก (เซิร์ฟเวอร์ไม่ต้องเริ่มช้าลง) ผู้ใช้คนแรกจะได้ไม่ต้องรอโหลดโมเดล
+    threading.Thread(target=_warm_up_detector, daemon=True).start()
 
 
 @app.on_event("shutdown")

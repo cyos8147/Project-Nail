@@ -4,6 +4,10 @@ import './NailTryOn.css';
 const API_URL = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}/ai/detect-nails`;
 // เผื่อเวลาเซิร์ฟเวอร์ฟรีตื่นจากหลับ + โหลดโมเดลครั้งแรก แต่ไม่ให้หน้าเว็บรอไม่รู้จบถ้าเซิร์ฟเวอร์ไม่ตอบ
 const DETECT_TIMEOUT_MS = 60000;
+// เซิร์ฟเวอร์ฟรีจะรีสตาร์ตตัวเองเมื่อแรมเต็ม/เพิ่งตื่นจากหลับ ช่วงนั้นคำขอแรกล้มเหลวแต่ลองซ้ำแล้วผ่านได้ --
+// เลยให้หน้าเว็บลองซ้ำเองสูงสุดเท่านี้ครั้ง (รอนานขึ้นทุกครั้ง) แทนที่จะให้ลูกค้าเห็นข้อความ error ทันที
+const DETECT_ATTEMPTS = 3;
+const DETECT_RETRY_DELAYS_MS = [3500, 9000];
 
 async function postImageForNails(blob, filename) {
   const formData = new FormData();
@@ -14,15 +18,29 @@ async function postImageForNails(blob, filename) {
     const resp = await fetch(API_URL, { method: 'POST', body: formData, signal: controller.signal });
     if (!resp.ok) {
       const detail = await resp.json().catch(() => null);
-      throw new Error(detail?.detail || `API error ${resp.status}`);
+      const err = new Error(typeof detail?.detail === 'string' ? detail.detail : `API error ${resp.status}`);
+      err.status = resp.status;
+      throw err;
     }
     return await resp.json();
   } catch (err) {
-    if (err.name === 'AbortError') throw new Error('ระบบ AI ใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง');
+    if (err.name === 'AbortError') throw new Error('ระบบ AI ใช้เวลานานเกินไป รอสักครู่แล้วกดตรวจจับอีกครั้ง');
     throw err;
   } finally {
     clearTimeout(timer);
   }
+}
+
+// ล้มเหลวแบบชั่วคราวที่ลองซ้ำแล้วมีโอกาสผ่าน: เน็ตหลุด (fetch โยน TypeError) หรือเซิร์ฟเวอร์ตอบ 5xx
+// (หมดเวลารอ 60 วินาทีไม่นับ เพราะรอมานานแล้ว ให้ผู้ใช้กดลองเองดีกว่า)
+function isTransientDetectError(err) {
+  return err.name === 'TypeError' || err.status >= 500;
+}
+
+function detectErrorMessage(err) {
+  if (err.name === 'TypeError') return 'เชื่อมต่อระบบ AI ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วกดตรวจจับอีกครั้ง';
+  if (err.message && !err.message.startsWith('API error')) return err.message;
+  return 'ระบบ AI ไม่ตอบสนองชั่วคราว รอสักครู่แล้วกดตรวจจับอีกครั้ง';
 }
 
 const PALETTE = [
@@ -240,44 +258,200 @@ function fingerDirection(imageData, cx, cy, radius) {
   return [sx / len, sy / len];
 }
 
-// Long axis (along the finger, +a toward the fingertip) and size of every nail.
-// The finger direction comes from the skin around each nail; the nail's own
-// outline can't be trusted for it because short nails are often wider than
-// they are long. Nails where that fails borrow the average direction of the
-// others, and only if none worked fall back to the outline's PCA axis.
-function nailFrames(polygons, imageData) {
-  const base = polygons.map((poly) => {
-    const pts = resampleClosed(poly, 48);
-    let mx = 0, my = 0;
-    pts.forEach(([x, y]) => { mx += x; my += y; });
-    mx /= pts.length;
-    my /= pts.length;
-    let sxx = 0, syy = 0, sxy = 0;
-    pts.forEach(([x, y]) => {
-      const dx = x - mx, dy = y - my;
-      sxx += dx * dx; syy += dy * dy; sxy += dx * dy;
-    });
-    const theta = 0.5 * Math.atan2(2 * sxy, sxx - syy);
-    const pca = frameFromAxis(pts, Math.cos(theta), Math.sin(theta));
-    const dir = imageData ? fingerDirection(imageData, pca.cx, pca.cy, Math.max(pca.halfLen, pca.halfWid)) : null;
-    return { pts, theta, dir };
+// The nail outline's own principal axis, as a unit vector with no direction.
+// Only a fallback: short nails are often wider than they are long.
+function outlineAxis(points) {
+  let mx = 0, my = 0;
+  points.forEach(([x, y]) => { mx += x; my += y; });
+  mx /= points.length;
+  my /= points.length;
+  let sxx = 0, syy = 0, sxy = 0;
+  points.forEach(([x, y]) => {
+    const dx = x - mx, dy = y - my;
+    sxx += dx * dx; syy += dy * dy; sxy += dx * dy;
   });
+  const theta = 0.5 * Math.atan2(2 * sxy, sxx - syy);
+  return [Math.cos(theta), Math.sin(theta)];
+}
 
-  let sx = 0, sy = 0;
-  base.forEach(({ dir }) => {
-    if (dir) {
-      const t = Math.atan2(dir[1], dir[0]);
-      sx += Math.cos(2 * t);
-      sy += Math.sin(2 * t);
+// The finger's long axis as a line (which end is the tip comes later). A
+// finger's silhouette edges run along the finger, so the dominant edge
+// direction in a ring around the nail gives its axis -- for a short round nail
+// too, and on any background colour (a fixed skin-colour test is fooled by
+// wood, skin-toned and dark surfaces). Null when the ring holds no real edges.
+function edgeAxis(imageData, polygon, cx, cy, rMax) {
+  const { data, width, height } = imageData;
+  const R = Math.ceil(3.4 * rMax);
+  const x0 = Math.max(1, Math.floor(cx - R)), x1 = Math.min(width - 2, Math.ceil(cx + R));
+  const y0 = Math.max(1, Math.floor(cy - R)), y1 = Math.min(height - 2, Math.ceil(cy + R));
+  const row = 4 * width;
+  let jxx = 0, jyy = 0, jxy = 0, energy = 0;
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      const d = Math.hypot(x - cx, y - cy);
+      if (d < 1.15 * rMax || d > 3.4 * rMax) continue;
+      if (pointInPolygon(x, y, polygon)) continue;
+      // weight peaks about 1.9 nail-radii out: past the nail, before the neighbouring fingers
+      const wgt = Math.exp(-((d - 1.9 * rMax) ** 2) / (2 * (0.9 * rMax) ** 2));
+      for (let c = 0; c < 3; c++) {
+        const i = (y * width + x) * 4 + c;
+        const gx = (data[i + 4 - row] + 2 * data[i + 4] + data[i + 4 + row]) - (data[i - 4 - row] + 2 * data[i - 4] + data[i - 4 + row]);
+        const gy = (data[i - 4 + row] + 2 * data[i + row] + data[i + 4 + row]) - (data[i - 4 - row] + 2 * data[i - row] + data[i + 4 - row]);
+        const m = gx * gx + gy * gy;
+        if (m < 900) continue; // texture noise, not an edge
+        jxx += wgt * gx * gx; jyy += wgt * gy * gy; jxy += wgt * gx * gy; energy += wgt * m;
+      }
     }
-  });
-  const consensus = sx || sy ? 0.5 * Math.atan2(sy, sx) : null;
+  }
+  if (energy < 1) return null;
+  // the gradient points across an edge, so the finger runs 90deg from it
+  const theta = 0.5 * Math.atan2(2 * jxy, jxx - jyy) + Math.PI / 2;
+  const coherence = Math.hypot(jxx - jyy, 2 * jxy) / (jxx + jyy + 1e-9);
+  return { dx: Math.cos(theta), dy: Math.sin(theta), coherence };
+}
 
-  return base.map(({ pts, theta, dir }) => {
-    if (dir) return frameFromAxis(pts, -dir[0], -dir[1]);
-    const t = consensus ?? theta;
-    let ax = Math.cos(t), ay = Math.sin(t);
-    if (ax + ay < 0) { ax = -ax; ay = -ay; }
+// How sharp an edge ACROSS the finger lies just past one end of the nail
+// (sgn = +1 / -1 along the axis). Where the finger ends there is one coherent
+// step from finger to background; toward the knuckle there is only more skin.
+function stepEdge(imageData, frame, ax, ay, sgn) {
+  const { data, width, height } = imageData;
+  const { cx, cy, halfLen, halfWid } = frame;
+  const bx = -ay, by = ax;
+  const at = (x, y, c) => data[(Math.round(y) * width + Math.round(x)) * 4 + c];
+  const profile = [];
+  for (let d = halfLen * 0.9; d <= halfLen * 3.6; d += 1) {
+    const sum = [0, 0, 0];
+    let n = 0;
+    for (let t = -0.85; t <= 0.86; t += 0.17) {
+      const px = cx + sgn * ax * d + bx * t * halfWid, py = cy + sgn * ay * d + by * t * halfWid;
+      const fx = px + sgn * ax * 2.5, fy = py + sgn * ay * 2.5, gx = px - sgn * ax * 2.5, gy = py - sgn * ay * 2.5;
+      if (Math.min(fx, fy, gx, gy) < 1 || fx >= width - 1 || gx >= width - 1 || fy >= height - 1 || gy >= height - 1) continue;
+      for (let c = 0; c < 3; c++) sum[c] += at(fx, fy, c) - at(gx, gy, c);
+      n++;
+    }
+    profile.push(n >= 4 ? Math.hypot(sum[0] / n, sum[1] / n, sum[2] / n) : 0);
+  }
+  let best = 0;
+  for (let i = 1; i < profile.length - 1; i++) best = Math.max(best, (profile[i - 1] + profile[i] + profile[i + 1]) / 3);
+  return best;
+}
+
+// Least-squares point where lines [{cx, cy, dx, dy, w}] meet: the palm, which
+// the finger axes fan out from. Null when the lines are (nearly) parallel.
+function meetingPoint(lines) {
+  let a11 = 0, a12 = 0, a22 = 0, b1 = 0, b2 = 0;
+  lines.forEach(({ cx, cy, dx, dy, w }) => {
+    const m11 = 1 - dx * dx, m12 = -dx * dy, m22 = 1 - dy * dy;
+    a11 += w * m11; a12 += w * m12; a22 += w * m22;
+    b1 += w * (m11 * cx + m12 * cy);
+    b2 += w * (m12 * cx + m22 * cy);
+  });
+  const det = a11 * a22 - a12 * a12;
+  if (Math.abs(det) < 1e-6) return null;
+  return [(a22 * b1 - a12 * b2) / det, (-a12 * b1 + a11 * b2) / det];
+}
+
+// Same, but a line that misses the common point (one finger measured badly) is
+// progressively down-weighted so it can't drag the palm away from the others.
+function robustMeetingPoint(lines, weights) {
+  let w = weights.slice();
+  let point = null;
+  for (let pass = 0; pass < 6; pass++) {
+    point = meetingPoint(lines.map((l, i) => ({ ...l, w: w[i] })));
+    if (!point) return null;
+    w = lines.map((l, i) => {
+      const vx = point[0] - l.cx, vy = point[1] - l.cy;
+      const miss = Math.abs(vx * l.dy - vy * l.dx) / (Math.hypot(vx, vy) + 1); // sine of the angle by which the line misses
+      return weights[i] / (1 + (miss / 0.18) ** 2);
+    });
+  }
+  return point;
+}
+
+// Long axis (along the finger, +a toward the fingertip) and size of every nail.
+// The axis line comes from the edges around the nail (edgeAxis). Which end is
+// the fingertip is decided by several weak clues added together, none of which
+// is reliable alone: the fingers fan out from the palm so the tips are on the
+// far side of it; skin on the finger side against background past the tip; the
+// step where the finger ends (stepEdge); and hands in photos mostly point up.
+// With near-parallel fingers or only a few nails, the clues of all the nails
+// are pooled, since they all point the same way. On a plain background the
+// skin ring is the most exact measure of the angle, but on wood, skin-toned or
+// dark surfaces it can be wildly wrong -- so it only fine-tunes the answer
+// where it agrees with the edge-based one (see SKIN_TRUST_ANGLE).
+const SKIN_TRUST_ANGLE = 25 * (Math.PI / 180);
+
+function nailFrames(polygons, imageData) {
+  const n = polygons.length;
+  if (!n) return [];
+  const deg = Math.PI / 180;
+  const nails = polygons.map((poly) => {
+    const pts = resampleClosed(poly, 48);
+    const box = frameFromAxis(pts, 1, 0);
+    const edge = imageData && edgeAxis(imageData, poly, box.cx, box.cy, Math.max(box.halfLen, box.halfWid));
+    const [dx, dy] = edge ? [edge.dx, edge.dy] : outlineAxis(pts);
+    return { pts, frame: frameFromAxis(pts, dx, dy), coherence: edge ? edge.coherence : 0.1 };
+  });
+
+  // one shared reference direction (circular mean of the doubled angles), and
+  // every axis oriented to point along it so they can be compared
+  let sx = 0, sy = 0;
+  nails.forEach(({ frame }) => {
+    const t = Math.atan2(frame.ay, frame.ax);
+    sx += Math.cos(2 * t);
+    sy += Math.sin(2 * t);
+  });
+  const meanAngle = 0.5 * Math.atan2(sy, sx);
+  const mean = [Math.cos(meanAngle), Math.sin(meanAngle)];
+  const axes = nails.map(({ frame }) => (frame.ax * mean[0] + frame.ay * mean[1] < 0 ? [-frame.ax, -frame.ay] : [frame.ax, frame.ay]));
+
+  // how far apart the finger directions are: fanned-out fingers give a palm
+  // point worth trusting, near-parallel ones do not
+  let spread = 0;
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const dot = Math.max(-1, Math.min(1, axes[i][0] * axes[j][0] + axes[i][1] * axes[j][1]));
+      spread = Math.max(spread, Math.acos(dot));
+    }
+  }
+  const palm = n >= 3 && spread > 18 * deg
+    ? robustMeetingPoint(
+      nails.map(({ frame }, i) => ({ cx: frame.cx, cy: frame.cy, dx: axes[i][0], dy: axes[i][1] })),
+      nails.map(({ coherence }) => Math.min(1, coherence * 2))
+    )
+    : null;
+  const palmWeight = palm ? 1.5 * Math.min(1, spread / (30 * deg)) : 0;
+
+  // score > 0: the fingertip is on the + side of this nail's axis
+  const skinTips = []; // per nail: the fingertip direction according to the skin ring, or null
+  const scores = nails.map(({ frame }, i) => {
+    const [ax, ay] = axes[i];
+    let score = 0;
+    if (palm) {
+      const awayX = frame.cx - palm[0], awayY = frame.cy - palm[1];
+      score += palmWeight * ((awayX * ax + awayY * ay) / (Math.hypot(awayX, awayY) || 1));
+    }
+    if (imageData) {
+      const towardBase = fingerDirection(imageData, frame.cx, frame.cy, Math.max(frame.halfLen, frame.halfWid));
+      skinTips[i] = towardBase ? [-towardBase[0], -towardBase[1]] : null;
+      if (towardBase) score -= 0.6 * (towardBase[0] * ax + towardBase[1] * ay);
+      const tip = stepEdge(imageData, frame, ax, ay, 1);
+      const knuckle = stepEdge(imageData, frame, ax, ay, -1);
+      score += 0.85 * (tip - knuckle) / (tip + knuckle + 12);
+    }
+    score -= 0.15 * ay; // y grows downward, so a positive ay points down the photo
+    return score;
+  });
+
+  // no palm point: fingers that (nearly) agree share one verdict, otherwise
+  // (e.g. thumb + finger) each nail decides for itself
+  const pooled = !palm && spread < 80 * deg;
+  const total = scores.reduce((a, b) => a + b, 0);
+  return nails.map(({ pts }, i) => {
+    const sign = (pooled ? total : scores[i]) >= 0 ? 1 : -1;
+    let ax = sign * axes[i][0], ay = sign * axes[i][1];
+    const skin = skinTips[i];
+    if (skin && ax * skin[0] + ay * skin[1] > Math.cos(SKIN_TRUST_ANGLE)) [ax, ay] = skin;
     return frameFromAxis(pts, ax, ay);
   });
 }
@@ -1258,6 +1432,7 @@ const Icon = {
   Palm: () => <svg viewBox="0 0 48 48" fill="none"><path d="M24 6C14 6 8 16 8 24s6 18 16 18 16-8 16-18S34 6 24 6z" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" /><circle cx="24" cy="24" r="6" stroke="currentColor" strokeWidth="2.2" /></svg>,
   Expand: () => <svg viewBox="0 0 24 24" fill="none"><path d="M9 3H3v6M15 3h6v6M21 15v6h-6M3 15v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>,
   CompareArrows: () => <svg viewBox="0 0 24 24" fill="none"><path d="M8 7l-4 5 4 5M16 7l4 5-4 5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>,
+  Swap: () => <svg viewBox="0 0 24 24" fill="none"><path d="M7 4v16M7 4L3.5 7.5M7 4l3.5 3.5M17 20V4M17 20l-3.5-3.5M17 20l3.5-3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>,
   Check: () => <svg viewBox="0 0 24 24" fill="none"><path d="M5 12l4 4L19 6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>,
 };
 
@@ -1345,6 +1520,8 @@ export default function NailTryOn({ onBookDesign } = {}) {
   const comparePosRef = useRef(50); // 0-100, kept in a ref so dragging doesn't re-render every pixel
   const isDraggingCompareRef = useRef(false);
   const detectingRef = useRef(false);
+  const detectRunRef = useRef(0); // bumped when a photo is replaced/closed, so a slow answer for the old photo is ignored
+  const detectFailureRef = useRef(null); // why the last detection found nothing (server trouble vs no nails in the photo)
   const redrawRef = useRef(() => {});
   const pendingUploadActionRef = useRef(null); // 'file' | 'camera'
   const toastTimerRef = useRef(null);
@@ -1357,6 +1534,8 @@ export default function NailTryOn({ onBookDesign } = {}) {
   const [activeFinish, setActiveFinish] = useState('creamy');
   const [lengthPreset, setLengthPreset] = useState('natural');
   const [tipShape, setTipShape] = useState('round');
+  const [lengthFlipped, setLengthFlipped] = useState(false); // the user swapped which end of each nail is the tip
+  const [detectFailed, setDetectFailed] = useState(false); // the photo is up but no nails were found on it
   const [selectedFinger, setSelectedFinger] = useState(null);
   const [selectedHex, setSelectedHex] = useState(null);
   const [zoom, setZoom] = useState(1);
@@ -1524,6 +1703,11 @@ export default function NailTryOn({ onBookDesign } = {}) {
     setBookHintVisible(false);
     setZoom(1);
     comparePosRef.current = 50;
+    detectRunRef.current += 1;
+    detectingRef.current = false;
+    detectFailureRef.current = null;
+    setDetectFailed(false);
+    setLengthFlipped(false);
     baseImageRef.current = null;
     nailRegionsRef.current = [];
     nailFramesRef.current = [];
@@ -1612,27 +1796,42 @@ export default function NailTryOn({ onBookDesign } = {}) {
   }
 
   async function detectAndRender() {
+    if (!canvasRef.current) return;
+    const run = ++detectRunRef.current;
+    const replaced = () => run !== detectRunRef.current; // another photo (or closing the tool) took over meanwhile
     setStatusText('กำลังตรวจจับตำแหน่งเล็บ...');
     setErrorText(null);
+    setDetectFailed(false);
     detectingRef.current = true;
     const blob = await canvasToBlob();
 
-    let data;
-    try {
-      data = await postImageForNails(blob, 'photo.jpg');
-    } catch (err) {
-      console.error(err);
-      setStatusText(null);
-      const known = err.message && !err.message.startsWith('API error') && err.name !== 'TypeError';
-      setErrorText(known ? err.message : 'เชื่อมต่อระบบ AI ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง');
-      return;
-    } finally {
-      detectingRef.current = false;
+    let data = null;
+    let failure = null;
+    for (let attempt = 1; attempt <= DETECT_ATTEMPTS && !data; attempt++) {
+      try {
+        data = await postImageForNails(blob, 'photo.jpg');
+      } catch (err) {
+        console.error(err);
+        failure = err;
+        if (replaced() || attempt === DETECT_ATTEMPTS || !isTransientDetectError(err)) break;
+        setStatusText(`ระบบ AI กำลังเตรียมตัว รอสักครู่... (ครั้งที่ ${attempt + 1}/${DETECT_ATTEMPTS})`);
+        await new Promise((resolve) => setTimeout(resolve, DETECT_RETRY_DELAYS_MS[attempt - 1]));
+        if (replaced()) break;
+      }
     }
+    if (replaced()) return;
+    detectingRef.current = false;
+    setStatusText(null);
 
-    if (!data.nails || data.nails.length === 0) {
-      setStatusText(null);
-      setErrorText('ไม่พบมือในภาพ กรุณาอัปโหลดรูปที่เห็นมือและเล็บครบทุกนิ้ว แสงสว่างเพียงพอ');
+    const message = !data
+      ? detectErrorMessage(failure)
+      : data.nails?.length
+        ? null
+        : 'ไม่พบเล็บในรูปนี้ ลองถ่ายให้เห็นมือและเล็บชัดขึ้น (ใกล้ขึ้น แสงสว่าง พื้นหลังเรียบ) แล้วกดตรวจจับอีกครั้ง หรือเลือกรูปใหม่';
+    detectFailureRef.current = message;
+    if (message) {
+      setDetectFailed(true);
+      setErrorText(message);
       return;
     }
 
@@ -1648,10 +1847,21 @@ export default function NailTryOn({ onBookDesign } = {}) {
     nailPosesRef.current = nailFramesRef.current.map((frame) => nailPose(pixels, frame));
     photoPixelsRef.current = pixels;
     detectionGenRef.current += 1;
+    setLengthFlipped(false);
     setNailColors(Array.from({ length: nailRegionsRef.current.length }, () => null));
     setSelectedFinger(null);
-    setStatusText(null);
     setErrorText(null);
+  }
+
+  // The AI can't always tell which end of a finger is the tip from the photo
+  // alone, and the extended part of a nail grows toward it. This swaps every
+  // nail's direction (the button is only shown once a length is chosen).
+  function flipNailDirection() {
+    const pixels = photoPixelsRef.current;
+    nailFramesRef.current = nailFramesRef.current.map((f, i) => frameFromAxis(nailRegionsRef.current[i], -f.ax, -f.ay));
+    nailPosesRef.current = nailFramesRef.current.map((frame) => nailPose(pixels, frame));
+    detectionGenRef.current += 1;
+    setLengthFlipped((v) => !v);
   }
 
   function processFile(file) {
@@ -1697,6 +1907,7 @@ export default function NailTryOn({ onBookDesign } = {}) {
 
   function onFileInputChange(e) {
     const f = e.target.files?.[0];
+    e.target.value = ''; // so picking the same file again still counts as a change
     if (f) processFile(f);
   }
 
@@ -1713,7 +1924,8 @@ export default function NailTryOn({ onBookDesign } = {}) {
       return;
     }
     if (nailRegionsRef.current.length === 0) {
-      setErrorText('ยังไม่พบตำแหน่งเล็บในรูปนี้ กรุณาอัปโหลดรูปมือให้เห็นเล็บชัดเจนก่อนเลือกสี');
+      // say why (server trouble vs. no nails in the photo) instead of blaming the photo every time
+      setErrorText(detectFailureRef.current || 'ยังไม่พบตำแหน่งเล็บในรูปนี้ กรุณาอัปโหลดรูปมือให้เห็นเล็บชัดเจนก่อนเลือกสี');
       return;
     }
     setErrorText(null);
@@ -2085,6 +2297,12 @@ export default function NailTryOn({ onBookDesign } = {}) {
                     </button>
                   ))}
                 </div>
+                {hasImage && nailColors.length > 0 && (
+                  <button type="button" className={`flip-btn ${lengthFlipped ? 'active' : ''}`} onClick={flipNailDirection}>
+                    <Icon.Swap />
+                    เล็บที่ต่อชี้ผิดทิศ? กดสลับ
+                  </button>
+                )}
               </>
             )}
 
@@ -2149,9 +2367,9 @@ export default function NailTryOn({ onBookDesign } = {}) {
                     <button className="btn-primary" type="button" onClick={() => requestUploadAction('tryon', 'file')}>เลือกรูปภาพ</button>
                     <button className="btn-secondary" type="button" onClick={() => requestUploadAction('tryon', 'camera')}><Icon.CameraSmall />ถ่ายรูป</button>
                   </div>
-                  <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={onFileInputChange} />
                 </div>
               )}
+              <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={onFileInputChange} />
 
               {cameraOpen && (
                 <div className="camera-view">
@@ -2185,9 +2403,16 @@ export default function NailTryOn({ onBookDesign } = {}) {
               {errorText && (
                 <div className="error-banner">
                   <p>{errorText}</p>
-                  <button className="btn-secondary" type="button" onClick={() => { setErrorText(null); fileInputRef.current.click(); }}>
-                    ลองใหม่อีกครั้ง
-                  </button>
+                  <div className="error-actions">
+                    {hasImage && detectFailed && (
+                      <button className="btn-primary" type="button" onClick={detectAndRender}>
+                        ตรวจจับอีกครั้ง
+                      </button>
+                    )}
+                    <button className="btn-secondary" type="button" onClick={() => { setErrorText(null); fileInputRef.current.click(); }}>
+                      เลือกรูปใหม่
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

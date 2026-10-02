@@ -69,6 +69,15 @@ def detect_nail_polygons(rgb: np.ndarray) -> list[np.ndarray]:
     return nail_onnx.detect_nail_polygons(rgb, settings.yolo_nail_seg_weights)
 
 
+def warm_up_detector() -> None:
+    """โหลดโมเดลตรวจเล็บล่วงหน้าตอนเซิร์ฟเวอร์เริ่ม (เรียกจาก thread แยก ไม่ให้เซิร์ฟเวอร์เริ่มช้าลง)"""
+    if not yolo_weights_available():
+        return
+    from . import nail_onnx
+
+    nail_onnx.warm_up(settings.yolo_nail_seg_weights)
+
+
 def decode_base64_image(image_base64: str) -> np.ndarray:
     from ..storage import decode_and_validate_image
 

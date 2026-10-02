@@ -1,22 +1,34 @@
+import asyncio
 import base64
 import io
+import logging
+import time
 import uuid
 
 import cv2
 import numpy as np
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import JSONResponse
 from PIL import Image
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
+from ..ai import nail_onnx
 from ..ai import recommend as recommend_ai
 from ..ai import segmentation, tryon
 from ..database import get_db
 from ..rate_limit import limiter
-from ..storage import upload_bytes, validate_image_bytes
+from ..storage import MAX_IMAGE_BYTES, upload_bytes, validate_image_bytes
 
 router = APIRouter(prefix="/ai", tags=["ai"])
+log = logging.getLogger("uvicorn.error")  # logger ตัวนี้ uvicorn ตั้งให้พิมพ์ขึ้น Render Logs อยู่แล้ว
+
+# ตรวจเล็บทีละรูป (เหตุผลดูที่ nail_onnx.MAX_CONCURRENT_DETECTIONS) คนที่มาพร้อมกันรอคิวอยู่ในนี้โดยไม่ต้องกดใหม่เอง
+# แต่ถ้าคิวยาวเกินก็ตอบว่าระบบยุ่งทันที ดีกว่าปล่อยให้หน้าเว็บนั่งรอจนหมดเวลา
+_detect_slots = asyncio.Semaphore(nail_onnx.MAX_CONCURRENT_DETECTIONS)
+_detect_waiting = 0
+DETECT_MAX_WAITING = 8
 
 STYLE_EXTRA_MINUTES = {"minimal": 0, "classic": 15, "bold": 30}
 COMPLEXITY_EXTRA_MINUTES = {"simple": 0, "medium": 15, "complex": 30}
@@ -53,15 +65,26 @@ def segment(request: Request, payload: schemas.SegmentRequest):
     )
 
 
+def _load_rgb(image_bytes: bytes) -> np.ndarray:
+    """เปิดรูปเป็น RGB โดยย่อให้ไม่เกิน MAX_SIDE ตั้งแต่ตอนถอดรหัส (JPEG ถอดแบบย่อได้เลย) รูปถ่ายมือถือ 12MP จะได้ไม่ต้อง
+    แบก array ขนาด 36MB หลายชุดในแรม ซึ่งรูปเดียวก็พอทำให้ Render แผนฟรี (512MB) ล้มได้"""
+    img = Image.open(io.BytesIO(image_bytes))
+    img.draft("RGB", (nail_onnx.MAX_SIDE, nail_onnx.MAX_SIDE))
+    img = img.convert("RGB")
+    img.thumbnail((nail_onnx.MAX_SIDE, nail_onnx.MAX_SIDE))
+    return np.array(img)
+
+
 @router.post("/detect-nails")
 @limiter.limit("20/minute")
 async def detect_nails(request: Request, file: UploadFile = File(...)):
     """หาตำแหน่งเล็บแบบ polygon (ขอบเขตจริงของเล็บ ไม่ใช่แค่กรอบสี่เหลี่ยม) ด้วย YOLOv8-Seg โดยเฉพาะ
     -- ใช้กับหน้า AI ลองเล็บ (components/NailTryOn) ที่วาดผลลัพธ์บน canvas ตามรูปทรงเล็บจริง ไม่มี
     fallback ไป mediapipe+opencv เหมือน /segment เพราะ mediapipe ให้แค่กรอบสี่เหลี่ยม ไม่ใช่ polygon"""
+    global _detect_waiting
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(400, "ไฟล์ต้องเป็นรูปภาพ")
-    image_bytes = await file.read()
+    image_bytes = await file.read(MAX_IMAGE_BYTES + 1)  # อ่านเกินเพดานไปหนึ่งไบต์พอให้ validate จับได้ ไม่โหลดไฟล์ยักษ์เข้าแรม
     try:
         validate_image_bytes(image_bytes)
     except ValueError as e:
@@ -70,13 +93,34 @@ async def detect_nails(request: Request, file: UploadFile = File(...)):
     if not segmentation.yolo_weights_available():
         raise HTTPException(503, "ยังไม่พร้อมใช้งานฟีเจอร์นี้ กรุณาลองใหม่ภายหลัง")
 
+    if _detect_waiting >= DETECT_MAX_WAITING:
+        log.warning("detect-nails: %d requests already waiting, rejecting one", _detect_waiting)
+        raise HTTPException(503, "ตอนนี้มีคนใช้ AI พร้อมกันเยอะ กรุณาลองใหม่อีกครั้งในอีกสักครู่")
+    _detect_waiting += 1
     try:
-        rgb = np.array(Image.open(io.BytesIO(image_bytes)).convert("RGB"))
-        # รันโมเดลใน threadpool: งานหนัก CPU ใน async def ตรงๆ จะบล็อกทั้งเซิร์ฟเวอร์ (worker เดียว)
-        # ระหว่างนั้นคำขออื่นๆ เช่น จองคิว/health check จะค้างตามไปด้วย
-        polygons = await run_in_threadpool(segmentation.detect_nail_polygons, rgb)
-    except Exception:
-        raise HTTPException(503, "ประมวลผลรูปภาพไม่สำเร็จ กรุณาลองใหม่ภายหลัง")
+        await _detect_slots.acquire()
+    finally:
+        _detect_waiting -= 1
+    try:
+        if await request.is_disconnected():
+            # คนส่งปิดหน้าหรือหมดเวลารอไปแล้ว ไม่ต้องเสียแรมกับรูปนี้
+            return JSONResponse(status_code=499, content={"detail": "client closed request"})
+        started = time.perf_counter()
+        try:
+            rgb = _load_rgb(image_bytes)
+            # รันโมเดลใน threadpool: งานหนัก CPU ใน async def ตรงๆ จะบล็อกทั้งเซิร์ฟเวอร์ (worker เดียว)
+            # ระหว่างนั้นคำขออื่นๆ เช่น จองคิว/health check จะค้างตามไปด้วย
+            polygons = await run_in_threadpool(segmentation.detect_nail_polygons, rgb)
+        except Exception:
+            # เดิมกลืน error เงียบๆ เลยไม่เหลือร่องรอยใน Render Logs ให้ไล่ว่าทำไม "บางรูปใช้ไม่ได้"
+            log.exception("detect-nails failed (rss %d MB)", nail_onnx.rss_mb())
+            raise HTTPException(503, "ประมวลผลรูปภาพไม่สำเร็จ กรุณาลองใหม่ภายหลัง")
+        log.info(
+            "detect-nails: %d nails, photo %dx%d, %.1fs, rss %d MB",
+            len(polygons), rgb.shape[1], rgb.shape[0], time.perf_counter() - started, nail_onnx.rss_mb(),
+        )
+    finally:
+        _detect_slots.release()
 
     nails = [poly.tolist() for poly in polygons]
     return {"nails": nails, "count": len(nails)}
