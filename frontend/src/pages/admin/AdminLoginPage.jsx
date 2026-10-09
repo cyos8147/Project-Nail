@@ -35,8 +35,10 @@ export default function AdminLoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">ชื่อผู้ใช้</label>
+            <label htmlFor="admin-username" className="block text-sm font-medium text-gray-700 mb-1.5">ชื่อผู้ใช้</label>
             <input
+              id="admin-username"
+              autoComplete="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full rounded-xl border border-blush-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-rose-300"
@@ -44,8 +46,10 @@ export default function AdminLoginPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">รหัสผ่าน</label>
+            <label htmlFor="admin-password" className="block text-sm font-medium text-gray-700 mb-1.5">รหัสผ่าน</label>
             <input
+              id="admin-password"
+              autoComplete="current-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

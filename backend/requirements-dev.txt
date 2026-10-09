@@ -1,0 +1,3 @@
+# ไลบรารีที่ใช้เฉพาะตอนรันชุดทดสอบ (pip install -r requirements-dev.txt แล้วรัน: python -m pytest)
+-r requirements.txt
+pytest==8.3.3

@@ -3,7 +3,9 @@ import { Link, useSearchParams } from 'react-router-dom'
 import Header from '../components/Header.jsx'
 import Footer from '../components/Footer.jsx'
 import DateTimePicker from '../components/booking/DateTimePicker.jsx'
-import { getBookingStatus, getSavedPhone, rescheduleBooking, savePhone } from '../api/client.js'
+import CancelPolicyNote from '../components/CancelPolicyNote.jsx'
+import { getBookingStatus, getSavedPhone, getShopSettings, rescheduleBooking, savePhone } from '../api/client.js'
+import { isTooLateToChange } from '../utils/cancelPolicy.js'
 
 export default function EditBookingPage() {
   const [searchParams] = useSearchParams()
@@ -18,6 +20,11 @@ export default function EditBookingPage() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
   const [saved, setSaved] = useState(false)
+  const [shop, setShop] = useState(null) // เวลาล่วงหน้าที่ร้านกำหนด + เบอร์ร้าน (ไม่ได้ก็ข้ามไป เซิร์ฟเวอร์ยังตรวจให้อยู่ดี)
+
+  useEffect(() => {
+    getShopSettings().then(setShop).catch(() => {})
+  }, [])
 
   async function lookup(code, ph) {
     setStatus('loading')
@@ -77,8 +84,9 @@ export default function EditBookingPage() {
         {!booking && (
           <form onSubmit={handleSearch} className="bg-white rounded-3xl shadow-card p-6 sm:p-8 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">รหัสคิว</label>
+              <label htmlFor="edit-code" className="block text-sm font-medium text-gray-700 mb-1.5">รหัสคิว</label>
               <input
+                id="edit-code"
                 value={bookingCode}
                 onChange={(e) => setBookingCode(e.target.value)}
                 placeholder="เช่น NG-20260807-0001"
@@ -87,8 +95,9 @@ export default function EditBookingPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">เบอร์โทรศัพท์</label>
+              <label htmlFor="edit-phone" className="block text-sm font-medium text-gray-700 mb-1.5">เบอร์โทรศัพท์</label>
               <input
+                id="edit-phone"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="0812345678"
@@ -107,7 +116,22 @@ export default function EditBookingPage() {
           </form>
         )}
 
-        {booking && !saved && (
+        {booking && !saved && isTooLateToChange(booking, shop?.cancel_cutoff_hours) && (
+          <div className="bg-white rounded-3xl shadow-card p-6 sm:p-8 text-center space-y-3">
+            <div className="text-4xl">⏳</div>
+            <h2 className="font-display text-xl font-bold text-gray-800">ใกล้เวลานัดแล้ว เลื่อนคิวผ่านเว็บไม่ได้</h2>
+            <p className="text-sm text-gray-500">
+              คิว {booking.booking_code} นัดวันที่ {booking.booking_date} เวลา {booking.booking_time} น.
+              ร้านกำหนดให้เลื่อนหรือยกเลิกผ่านเว็บได้ล่วงหน้าอย่างน้อย {shop.cancel_cutoff_hours} ชั่วโมง
+            </p>
+            <p className="text-sm text-gray-700 font-medium">
+              กรุณาติดต่อร้านโดยตรง{shop.phone ? ` โทร ${shop.phone}` : ' ทาง LINE หรือโทรหาร้าน'}
+            </p>
+            <Link to="/history" className="inline-block text-sm font-semibold text-rose-600 hover:underline">ดูประวัติของฉัน</Link>
+          </div>
+        )}
+
+        {booking && !saved && !isTooLateToChange(booking, shop?.cancel_cutoff_hours) && (
           <div className="bg-white rounded-3xl shadow-card p-6 sm:p-8">
             <div className="flex items-center justify-between mb-6 pb-6 border-b border-blush-100">
               <div>
@@ -119,6 +143,8 @@ export default function EditBookingPage() {
                 <p>{booking.booking_time} น.</p>
               </div>
             </div>
+
+            <CancelPolicyNote hours={shop?.cancel_cutoff_hours || 0} className="mb-6" />
 
             <DateTimePicker
               selectedDate={selectedDate}

@@ -19,7 +19,7 @@ const STATUS_LABEL = {
 // ว่าควรตามเรื่อง ไม่ได้เปลี่ยนสถานะให้อัตโนมัติ (แอดมินเป็นคนตัดสินใจเองว่าลูกค้ามาจริงหรือไม่มา)
 function isOverdue(b) {
   if (!['pending', 'confirmed'].includes(b.status)) return false
-  const start = new Date(`${b.booking_date}T${b.booking_time}:00`)
+  const start = new Date(`${b.booking_date}T${b.booking_time}:00+07:00`) // เวลานัดเป็นเวลาไทยเสมอ ไม่ขึ้นกับเขตเวลาของเครื่องที่เปิดหน้านี้
   const end = new Date(start.getTime() + (b.estimated_duration_minutes || 60) * 60000)
   return end < new Date()
 }
@@ -142,21 +142,78 @@ function CreateBookingForm({ onCreated, onCancel }) {
   )
 }
 
+// วันที่ตามเวลาไทย (YYYY-MM-DD) offsetDays วันจากวันนี้ -- บวก 7 ชม. แล้วอ่านเป็น UTC จึงไม่ขึ้นกับเขตเวลาของเครื่อง
+function thaiDate(offsetDays = 0) {
+  return new Date(Date.now() + 7 * 3600 * 1000 + offsetDays * 86400000).toISOString().slice(0, 10)
+}
+
+function dateHeading(dateStr) {
+  const text = new Date(`${dateStr}T12:00:00+07:00`).toLocaleDateString('th-TH', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Bangkok',
+  })
+  if (dateStr === thaiDate(0)) return `วันนี้ · ${text}`
+  if (dateStr === thaiDate(1)) return `พรุ่งนี้ · ${text}`
+  return text
+}
+
+// ปุ่มลัดดูคิวตามช่วงวัน: ช่วงวันจะเรียงตามเวลานัด (เช้า -> เย็น) ส่วน "ทั้งหมด" เรียงตามเวลาที่ลูกค้ากดจอง (ใหม่สุดก่อน) เหมือนเดิม
+const QUICK_FILTERS = [
+  { key: 'today', label: 'วันนี้', range: () => [thaiDate(0), thaiDate(0)] },
+  { key: 'tomorrow', label: 'พรุ่งนี้', range: () => [thaiDate(1), thaiDate(1)] },
+  { key: 'week', label: '7 วันข้างหน้า', range: () => [thaiDate(0), thaiDate(6)] },
+  { key: 'all', label: 'ทั้งหมด', range: () => ['', ''] },
+]
+
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState([])
-  const [filters, setFilters] = useState({ status: '', search: '', date_from: '', date_to: '' })
+  const [quick, setQuick] = useState('week') // ปุ่มลัดที่เลือกอยู่ ('custom' = กำหนดวันที่เอง)
+  const [filters, setFilters] = useState(() => {
+    const [from, to] = QUICK_FILTERS.find((f) => f.key === 'week').range()
+    return { status: '', search: '', date_from: from, date_to: to }
+  })
   const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState(null)
   const [noteDraft, setNoteDraft] = useState({})
   const [showCreateForm, setShowCreateForm] = useState(false)
 
-  function load() {
+  // มีช่วงวันที่ -> เรียงตามเวลานัด, ไม่มี -> ใหม่สุดก่อน
+  const byAppointment = Boolean(filters.date_from || filters.date_to)
+
+  function load(next = filters) {
     setLoading(true)
-    adminListBookings(filters)
+    setLoadError(null)
+    adminListBookings({ ...next, sort: next.date_from || next.date_to ? 'appointment' : 'created' })
       .then(setBookings)
+      .catch((err) => setLoadError(err.message || 'โหลดรายการจองไม่สำเร็จ'))
       .finally(() => setLoading(false))
   }
 
-  useEffect(load, [])
+  useEffect(() => load(), [])
+
+  function applyQuick(key) {
+    const [from, to] = QUICK_FILTERS.find((f) => f.key === key).range()
+    const next = { ...filters, date_from: from, date_to: to }
+    setQuick(key)
+    setFilters(next)
+    load(next)
+  }
+
+  function handleSearch() {
+    // ค้นหาด้วยชื่อ/เบอร์/รหัสคิว ต้องค้นทุกวัน ไม่งั้นลูกค้าเก่าที่นัดไว้นอกช่วงที่เลือกอยู่จะหาไม่เจอ
+    if (filters.search.trim() && quick !== 'custom') {
+      const next = { ...filters, date_from: '', date_to: '' }
+      setQuick('all')
+      setFilters(next)
+      load(next)
+    } else {
+      load()
+    }
+  }
+
+  function setDateFilter(field, value) {
+    setQuick('custom')
+    setFilters({ ...filters, [field]: value })
+  }
 
   async function handleStatusChange(booking, status) {
     const updated = await adminUpdateBooking(booking.id, { status })
@@ -197,40 +254,75 @@ export default function AdminBookingsPage() {
         <CreateBookingForm
           onCreated={() => {
             setShowCreateForm(false)
-            load()
+            applyQuick('all') // ดูทั้งหมด (ใหม่สุดก่อน) คิวที่เพิ่งเพิ่มจะขึ้นบนสุดเสมอ ไม่ว่าวันนัดจะอยู่นอกช่วงที่เลือกอยู่หรือไม่
           }}
           onCancel={() => setShowCreateForm(false)}
         />
       )}
 
-      <div className="bg-white rounded-2xl shadow-card p-4 flex flex-wrap gap-3 items-end">
-        <div>
-          <label className="text-xs text-gray-500 block mb-1">ค้นหา (ชื่อ/เบอร์/รหัสคิว)</label>
-          <input value={filters.search} onChange={(e) => setFilters({ ...filters, search: e.target.value })} className="rounded-xl border border-blush-200 px-3 py-2 text-sm" />
+      <div className="bg-white rounded-2xl shadow-card p-4 space-y-4">
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="เลือกช่วงวันที่ของคิว">
+          {QUICK_FILTERS.map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              onClick={() => applyQuick(f.key)}
+              aria-pressed={quick === f.key}
+              className={`text-sm font-semibold px-4 py-2 rounded-full border transition-colors ${
+                quick === f.key ? 'bg-rose-500 text-white border-rose-500' : 'bg-white text-rose-600 border-blush-200 hover:bg-blush-100'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+          {quick === 'custom' && <span className="text-xs text-gray-400">กำหนดวันที่เอง</span>}
         </div>
-        <div>
-          <label className="text-xs text-gray-500 block mb-1">สถานะ</label>
-          <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} className="rounded-xl border border-blush-200 px-3 py-2 text-sm">
-            <option value="">ทั้งหมด</option>
-            {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
-          </select>
+        <div className="flex flex-wrap gap-3 items-end">
+          <div>
+            <label htmlFor="bk-search" className="text-xs text-gray-500 block mb-1">ค้นหา (ชื่อ/เบอร์/รหัสคิว)</label>
+            <input
+              id="bk-search"
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className="rounded-xl border border-blush-200 px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label htmlFor="bk-status" className="text-xs text-gray-500 block mb-1">สถานะ</label>
+            <select id="bk-status" value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })} className="rounded-xl border border-blush-200 px-3 py-2 text-sm">
+              <option value="">ทั้งหมด</option>
+              {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="bk-from" className="text-xs text-gray-500 block mb-1">จากวันที่</label>
+            <input id="bk-from" type="date" value={filters.date_from} onChange={(e) => setDateFilter('date_from', e.target.value)} className="rounded-xl border border-blush-200 px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label htmlFor="bk-to" className="text-xs text-gray-500 block mb-1">ถึงวันที่</label>
+            <input id="bk-to" type="date" value={filters.date_to} onChange={(e) => setDateFilter('date_to', e.target.value)} className="rounded-xl border border-blush-200 px-3 py-2 text-sm" />
+          </div>
+          <button type="button" onClick={handleSearch} className="bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-5 py-2 rounded-xl">ค้นหา</button>
         </div>
-        <div>
-          <label className="text-xs text-gray-500 block mb-1">จากวันที่</label>
-          <input type="date" value={filters.date_from} onChange={(e) => setFilters({ ...filters, date_from: e.target.value })} className="rounded-xl border border-blush-200 px-3 py-2 text-sm" />
-        </div>
-        <div>
-          <label className="text-xs text-gray-500 block mb-1">ถึงวันที่</label>
-          <input type="date" value={filters.date_to} onChange={(e) => setFilters({ ...filters, date_to: e.target.value })} className="rounded-xl border border-blush-200 px-3 py-2 text-sm" />
-        </div>
-        <button onClick={load} className="bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-5 py-2 rounded-xl">ค้นหา</button>
       </div>
 
       {loading && <p className="text-gray-400 text-sm">กำลังโหลด...</p>}
+      {loadError && <p className="text-sm text-red-500">{loadError}</p>}
+      {!loading && !loadError && bookings.length > 0 && <p className="text-sm text-gray-500">พบ {bookings.length} คิว</p>}
 
       <div className="space-y-3">
-        {bookings.map((b) => (
-          <div key={b.id} className={`bg-white rounded-2xl shadow-card p-5 ${isOverdue(b) ? 'ring-1 ring-amber-300' : ''}`}>
+        {bookings.map((b, index) => (
+          <div key={b.id} className="space-y-3">
+          {byAppointment && (index === 0 || bookings[index - 1].booking_date !== b.booking_date) && (
+            <h2 className="pt-2 font-display text-base font-bold text-gray-700">
+              {dateHeading(b.booking_date)}
+              <span className="ml-2 text-xs font-normal text-gray-400">
+                {bookings.filter((x) => x.booking_date === b.booking_date).length} คิว
+              </span>
+            </h2>
+          )}
+          <div className={`bg-white rounded-2xl shadow-card p-5 ${isOverdue(b) ? 'ring-1 ring-amber-300' : ''}`}>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="font-medium text-gray-800">
@@ -278,8 +370,20 @@ export default function AdminBookingsPage() {
               <button onClick={() => handleSaveNote(b)} className="text-xs font-semibold text-rose-600 hover:bg-blush-100 px-3 rounded-xl">บันทึก</button>
             </div>
           </div>
+          </div>
         ))}
-        {!loading && bookings.length === 0 && <p className="text-sm text-gray-400 text-center py-10">ไม่พบรายการจอง</p>}
+        {!loading && !loadError && bookings.length === 0 && (
+          <div className="text-center py-10 space-y-3">
+            <p className="text-sm text-gray-400">
+              {quick === 'today' ? 'วันนี้ยังไม่มีคิว' : quick === 'tomorrow' ? 'พรุ่งนี้ยังไม่มีคิว' : quick === 'week' ? 'ยังไม่มีคิวในช่วง 7 วันข้างหน้า' : 'ไม่พบรายการจอง'}
+            </p>
+            {quick !== 'all' && (
+              <button type="button" onClick={() => applyQuick('all')} className="text-sm font-semibold text-rose-600 hover:underline">
+                ดูคิวทั้งหมด
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

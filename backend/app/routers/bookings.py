@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from .. import models, schemas
 from ..availability import compute_available_slots, is_shop_open, lock_slot
 from ..database import get_db
+from ..policy import ensure_online_change_allowed, get_cancel_cutoff_hours
 from ..rate_limit import limiter
 from ..services import line_notify
 from ..storage import REFERENCE_PHOTO_MAX_SIDE, decode_and_validate_image, upload_photo
@@ -96,7 +97,7 @@ def create_booking(request: Request, payload: schemas.BookingCreate, db: Session
     else:
         raise HTTPException(409, SLOT_TAKEN_MESSAGE)
 
-    line_notify.notify_booking_created(booking, customer.line_user_id)
+    line_notify.notify_booking_created(booking, customer.line_user_id, get_cancel_cutoff_hours(db))
     line_notify.notify_shop_new_booking(booking, _shop_recipient_ids(db))
     return booking
 
@@ -186,6 +187,7 @@ def reschedule_booking(
         raise HTTPException(404, "ไม่พบข้อมูลการจอง")
     if booking.status not in ("pending", "confirmed"):
         raise HTTPException(400, "ไม่สามารถแก้ไขคิวนี้ได้แล้ว")
+    ensure_online_change_allowed(db, booking)  # ใกล้เวลานัดเกินกว่าที่ร้านกำหนด -> ให้ติดต่อร้านโดยตรง
     if not is_shop_open(db, payload.booking_date):
         raise HTTPException(400, "ร้านปิดในวันที่เลือก กรุณาเลือกวันอื่น")
 
@@ -222,6 +224,7 @@ def cancel_booking(request: Request, booking_id: str, phone: str, db: Session = 
         raise HTTPException(404, "ไม่พบข้อมูลการจอง")
     if booking.status in ("completed", "cancelled"):
         raise HTTPException(400, "ไม่สามารถยกเลิกคิวนี้ได้แล้ว")
+    ensure_online_change_allowed(db, booking)
     booking.status = "cancelled"
     db.commit()
     db.refresh(booking)

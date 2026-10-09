@@ -379,17 +379,35 @@ function robustMeetingPoint(lines, weights) {
 // skin ring is the most exact measure of the angle, but on wood, skin-toned or
 // dark surfaces it can be wildly wrong -- so it only fine-tunes the answer
 // where it agrees with the edge-based one (see SKIN_TRUST_ANGLE).
+//
+// hints (optional, from the server's direction model -- see backend
+// app/ai/nail_direction.py): per nail [dx, dy, confidence], the way to the
+// fingertip as the model sees it in a close crop of that nail. Measured on
+// real photos it is more exact than the clues above (median error ~5deg vs
+// ~21deg on cluttered photos, wrong end 2-3% vs 20-25%), so a sure hint
+// (confidence >= HINT_SURE) decides its own nail: its line replaces the
+// edge-based one and the nail takes the side it points to, without being pooled
+// with the others. An unsure hint (two-way doubt makes it short) only adds its
+// vote and the clues decide as before.
 const SKIN_TRUST_ANGLE = 25 * (Math.PI / 180);
+const HINT_WEIGHT = 4;
+const HINT_SURE = 0.5;
 
-function nailFrames(polygons, imageData) {
+function nailFrames(polygons, imageData, hints = null) {
   const n = polygons.length;
   if (!n) return [];
   const deg = Math.PI / 180;
-  const nails = polygons.map((poly) => {
+  const hintAt = (i) => {
+    const h = hints && hints[i];
+    return h && h.length === 3 && h.every(Number.isFinite) && h[2] > 0 ? h : null;
+  };
+  const nails = polygons.map((poly, i) => {
     const pts = resampleClosed(poly, 48);
     const box = frameFromAxis(pts, 1, 0);
     const edge = imageData && edgeAxis(imageData, poly, box.cx, box.cy, Math.max(box.halfLen, box.halfWid));
-    const [dx, dy] = edge ? [edge.dx, edge.dy] : outlineAxis(pts);
+    let [dx, dy] = edge ? [edge.dx, edge.dy] : outlineAxis(pts);
+    const hint = hintAt(i);
+    if (hint && hint[2] >= HINT_SURE) [dx, dy] = [hint[0], hint[1]];
     return { pts, frame: frameFromAxis(pts, dx, dy), coherence: edge ? edge.coherence : 0.1 };
   });
 
@@ -440,6 +458,8 @@ function nailFrames(polygons, imageData) {
       score += 0.85 * (tip - knuckle) / (tip + knuckle + 12);
     }
     score -= 0.15 * ay; // y grows downward, so a positive ay points down the photo
+    const hint = hintAt(i);
+    if (hint) score += HINT_WEIGHT * Math.min(hint[2], 1) * (hint[0] * ax + hint[1] * ay);
     return score;
   });
 
@@ -448,10 +468,12 @@ function nailFrames(polygons, imageData) {
   const pooled = !palm && spread < 80 * deg;
   const total = scores.reduce((a, b) => a + b, 0);
   return nails.map(({ pts }, i) => {
-    const sign = (pooled ? total : scores[i]) >= 0 ? 1 : -1;
+    const hint = hintAt(i);
+    const sure = hint && hint[2] >= HINT_SURE;
+    const sign = (pooled && !sure ? total : scores[i]) >= 0 ? 1 : -1;
     let ax = sign * axes[i][0], ay = sign * axes[i][1];
     const skin = skinTips[i];
-    if (skin && ax * skin[0] + ay * skin[1] > Math.cos(SKIN_TRUST_ANGLE)) [ax, ay] = skin;
+    if (!sure && skin && ax * skin[0] + ay * skin[1] > Math.cos(SKIN_TRUST_ANGLE)) [ax, ay] = skin;
     return frameFromAxis(pts, ax, ay);
   });
 }
@@ -992,6 +1014,41 @@ function drawNailShadow(ctx, polygon, frame, geo) {
   ctx.restore();
 }
 
+// While the customer fixes directions nail by nail: an arrow on every nail
+// pointing where its extra length grows, so a wrong one stands out.
+function drawTipArrows(ctx, frames, canvasSize) {
+  const lw = Math.max(2, canvasSize / 320);
+  frames.forEach(({ cx, cy, ax, ay, bx, by, halfLen }) => {
+    const len = Math.max(halfLen * 1.9, lw * 9);
+    const head = Math.max(lw * 3.2, len * 0.32);
+    const tx = cx + ax * len, ty = cy + ay * len;
+    const sx = cx - ax * len * 0.35, sy = cy - ay * len * 0.35;
+    const path = new Path2D();
+    path.moveTo(sx, sy);
+    path.lineTo(tx - ax * head * 0.6, ty - ay * head * 0.6);
+    const tip = new Path2D();
+    tip.moveTo(tx, ty);
+    tip.lineTo(tx - ax * head + bx * head * 0.55, ty - ay * head + by * head * 0.55);
+    tip.lineTo(tx - ax * head - bx * head * 0.55, ty - ay * head - by * head * 0.55);
+    tip.closePath();
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(40, 10, 25, 0.55)';
+    ctx.lineWidth = lw * 2.6;
+    ctx.stroke(path);
+    ctx.stroke(tip);
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = lw * 1.3;
+    ctx.stroke(path);
+    ctx.fillStyle = '#FF4B82';
+    ctx.fill(tip);
+    ctx.lineWidth = lw * 0.8;
+    ctx.stroke(tip);
+    ctx.restore();
+  });
+}
+
 // What paintNail needs to light a long nail as one piece. Past the fingertip
 // the photo only has background, so the light there comes from the real
 // nail: its average brightness across the width (the curve of the nail, as
@@ -1480,7 +1537,7 @@ const TIPS_CONTENT = {
     items: [
       'วางมือให้ราบขนานกับพื้น ถ่ายจากมุมตั้งฉากกับมือ',
       'แสงสว่างเพียงพอ หลีกเลี่ยงเงาบังเล็บ',
-      'กางนิ้วให้เห็นเล็บครบทุกนิ้วชัดเจน',
+      'ถ่ายหลังมือ กางนิ้วให้เห็นเล็บอย่างน้อย 3 นิ้ว (ครบทั้งมือยิ่งดี) AI จะรู้ทิศปลายเล็บได้แม่นขึ้น',
       'พื้นหลังเรียบ สีทึบ ไม่รกตา',
     ],
   },
@@ -1523,18 +1580,22 @@ export default function NailTryOn({ onBookDesign } = {}) {
   const detectRunRef = useRef(0); // bumped when a photo is replaced/closed, so a slow answer for the old photo is ignored
   const detectFailureRef = useRef(null); // why the last detection found nothing (server trouble vs no nails in the photo)
   const redrawRef = useRef(() => {});
+  const hideOverlaysRef = useRef(false); // true while the canvas is captured for a download/save, so no UI marks end up in it
   const pendingUploadActionRef = useRef(null); // 'file' | 'camera'
   const toastTimerRef = useRef(null);
+  const newPhotoUrlRef = useRef(null); // object URL of a photo that just loaded and still has to be put on the canvas
 
   const [page, setPage] = useState('tryon'); // 'tryon' | 'skin'
   const [hasImage, setHasImage] = useState(false);
+  const [photoSeq, setPhotoSeq] = useState(0); // bumped per loaded photo (see the effect after processFile)
   const [statusText, setStatusText] = useState(null);
   const [errorText, setErrorText] = useState(null);
   const [mode, setMode] = useState('single');
   const [activeFinish, setActiveFinish] = useState('creamy');
   const [lengthPreset, setLengthPreset] = useState('natural');
   const [tipShape, setTipShape] = useState('round');
-  const [lengthFlipped, setLengthFlipped] = useState(false); // the user swapped which end of each nail is the tip
+  const [flippedNails, setFlippedNails] = useState([]); // per nail: the user swapped which end is the tip
+  const [flipPick, setFlipPick] = useState(false); // tapping a nail flips just that one; arrows show where each tip points
   const [detectFailed, setDetectFailed] = useState(false); // the photo is up but no nails were found on it
   const [selectedFinger, setSelectedFinger] = useState(null);
   const [selectedHex, setSelectedHex] = useState(null);
@@ -1558,8 +1619,10 @@ export default function NailTryOn({ onBookDesign } = {}) {
   const skinWorkSizeRef = useRef({ w: 0, h: 0 });
   const skinVideoRef = useRef(null);
   const skinCameraStreamRef = useRef(null);
+  const skinNewPhotoUrlRef = useRef(null);
 
   const [skinHasImage, setSkinHasImage] = useState(false);
+  const [skinPhotoSeq, setSkinPhotoSeq] = useState(0);
   const [skinCameraOpen, setSkinCameraOpen] = useState(false);
   const [skinStatusText, setSkinStatusText] = useState(null);
   const [skinErrorText, setSkinErrorText] = useState(null);
@@ -1573,8 +1636,13 @@ export default function NailTryOn({ onBookDesign } = {}) {
   function redraw() {
     const canvas = canvasRef.current;
     if (!canvas || !hasImage) return;
-    const ctx = canvas.getContext('2d');
     const { w, h } = workSizeRef.current;
+    // a canvas that has just mounted is still the default 300x150, which shows only a corner of the photo
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+    }
+    const ctx = canvas.getContext('2d');
     const img = baseImageRef.current;
     ctx.clearRect(0, 0, w, h);
     if (!img) return;
@@ -1623,6 +1691,8 @@ export default function NailTryOn({ onBookDesign } = {}) {
       if (compareDividerRef.current) compareDividerRef.current.style.left = `${comparePosRef.current}%`;
     }
 
+    if (hideOverlaysRef.current) return;
+
     if (mode === 'multi' && selectedFinger !== null) {
       const polygon = renderRegionsRef.current[selectedFinger] || nailRegionsRef.current[selectedFinger];
       if (polygon) {
@@ -1635,6 +1705,8 @@ export default function NailTryOn({ onBookDesign } = {}) {
         ctx.restore();
       }
     }
+
+    if (flipPick && lengthPreset !== 'natural') drawTipArrows(ctx, frames, Math.max(w, h));
   }
 
   useEffect(() => { redraw(); });
@@ -1691,24 +1763,14 @@ export default function NailTryOn({ onBookDesign } = {}) {
     }
   }
 
-  function resetToUpload() {
-    stopCamera();
-    setCameraOpen(false);
-    setHasImage(false);
-    setErrorText(null);
-    setStatusText(null);
+  // forget the nails found on the current photo and the colours put on them
+  function clearNails() {
     setNailColors([]);
     setSelectedFinger(null);
-    setSelectedHex(null);
-    setBookHintVisible(false);
-    setZoom(1);
-    comparePosRef.current = 50;
-    detectRunRef.current += 1;
-    detectingRef.current = false;
     detectFailureRef.current = null;
     setDetectFailed(false);
-    setLengthFlipped(false);
-    baseImageRef.current = null;
+    setFlippedNails([]);
+    setFlipPick(false);
     nailRegionsRef.current = [];
     nailFramesRef.current = [];
     nailPosesRef.current = [];
@@ -1716,6 +1778,22 @@ export default function NailTryOn({ onBookDesign } = {}) {
     renderRegionsRef.current = [];
     renderGeoRef.current = [];
     renderRegionsSigRef.current = '';
+  }
+
+  function resetToUpload() {
+    stopCamera();
+    setCameraOpen(false);
+    setHasImage(false);
+    setErrorText(null);
+    setStatusText(null);
+    clearNails();
+    setSelectedHex(null);
+    setBookHintVisible(false);
+    setZoom(1);
+    comparePosRef.current = 50;
+    detectRunRef.current += 1;
+    detectingRef.current = false;
+    baseImageRef.current = null;
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (compareWrapRef.current) compareWrapRef.current.style.transform = 'scale(1)';
   }
@@ -1840,29 +1918,51 @@ export default function NailTryOn({ onBookDesign } = {}) {
     // outline; then each outline is rebuilt as a rounded curve in its own frame
     const hulls = data.nails.map((polygon) => convexHull(polygon.map(([x, y]) => [x * w, y * h])));
     const pixels = readPixels(baseImageRef.current, w, h);
-    const hullFrames = nailFrames(hulls, pixels);
+    // directions: the server's per-nail fingertip direction (null when its model isn't available)
+    const hullFrames = nailFrames(hulls, pixels, Array.isArray(data.directions) && data.directions.length === hulls.length ? data.directions : null);
     const shapes = hulls.map((hull, i) => roundNailShape(hull, hullFrames[i]));
     nailRegionsRef.current = shapes;
     nailFramesRef.current = shapes.map((shape, i) => frameFromAxis(shape, hullFrames[i].ax, hullFrames[i].ay));
     nailPosesRef.current = nailFramesRef.current.map((frame) => nailPose(pixels, frame));
     photoPixelsRef.current = pixels;
     detectionGenRef.current += 1;
-    setLengthFlipped(false);
+    setFlippedNails(nailRegionsRef.current.map(() => false));
+    setFlipPick(false);
     setNailColors(Array.from({ length: nailRegionsRef.current.length }, () => null));
     setSelectedFinger(null);
     setErrorText(null);
   }
 
   // The AI can't always tell which end of a finger is the tip from the photo
-  // alone, and the extended part of a nail grows toward it. This swaps every
-  // nail's direction (the button is only shown once a length is chosen).
-  function flipNailDirection() {
+  // alone, and the extended part of a nail grows toward it. These swap the
+  // direction of the given nails (the buttons only show once a length is chosen).
+  function flipNails(indices) {
     const pixels = photoPixelsRef.current;
-    nailFramesRef.current = nailFramesRef.current.map((f, i) => frameFromAxis(nailRegionsRef.current[i], -f.ax, -f.ay));
-    nailPosesRef.current = nailFramesRef.current.map((frame) => nailPose(pixels, frame));
+    const flip = new Set(indices);
+    nailFramesRef.current = nailFramesRef.current.map((f, i) => (flip.has(i) ? frameFromAxis(nailRegionsRef.current[i], -f.ax, -f.ay) : f));
+    nailPosesRef.current = nailFramesRef.current.map((frame, i) => (flip.has(i) ? nailPose(pixels, frame) : nailPosesRef.current[i]));
     detectionGenRef.current += 1;
-    setLengthFlipped((v) => !v);
+    setFlippedNails((prev) => nailFramesRef.current.map((_, i) => (flip.has(i) ? !prev[i] : !!prev[i])));
   }
+
+  function flipAllNails() {
+    flipNails(nailFramesRef.current.map((_, i) => i));
+  }
+
+  // on a phone the controls sit below the photo: bring the photo (and its arrows) into view to tap on
+  function toggleFlipPick() {
+    const entering = !flipPick;
+    setFlipPick(entering);
+    const canvas = canvasRef.current;
+    if (!entering || !canvas) return;
+    const r = canvas.getBoundingClientRect();
+    if (r.top < 0 || r.bottom > window.innerHeight) {
+      const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      canvas.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'center' });
+    }
+  }
+
+  const allFlipped = flippedNails.length > 0 && flippedNails.every(Boolean);
 
   function processFile(file) {
     if (!file.type.startsWith('image/')) {
@@ -1879,31 +1979,41 @@ export default function NailTryOn({ onBookDesign } = {}) {
       const w = Math.round(img.naturalWidth * scale);
       const h = Math.round(img.naturalHeight * scale);
       workSizeRef.current = { w, h };
+      clearNails(); // the last photo's nails mustn't be painted on this one while it's being checked
       setZoom(1);
       comparePosRef.current = 50;
       setBookHintVisible(false);
       setHasImage(true);
-      // the canvas only mounts once hasImage flips true above -- defer
-      // touching canvasRef until after that render has committed. setTimeout
-      // (a macrotask) rather than requestAnimationFrame, since rAF can be
-      // suspended entirely in a backgrounded/hidden tab
-      setTimeout(async () => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        canvas.width = w;
-        canvas.height = h;
-        if (compareWrapRef.current) compareWrapRef.current.style.transform = 'scale(1)';
-        // draw immediately so the photo is visible while detection runs
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, w, h);
-        ctx.drawImage(img, 0, 0, w, h);
-        await detectAndRender();
-        URL.revokeObjectURL(url);
-      }, 0);
+      newPhotoUrlRef.current = url;
+      setPhotoSeq((n) => n + 1);
     };
-    img.onerror = () => setErrorText('เปิดไฟล์รูปภาพไม่ได้ ลองใหม่อีกครั้ง');
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      setErrorText('เปิดไฟล์รูปภาพไม่ได้ ลองใหม่อีกครั้ง');
+    };
     img.src = url;
   }
+
+  // Puts a just-loaded photo on the canvas and asks the AI for its nails. An
+  // effect runs once the render showing the photo is on the page, so the
+  // canvas is guaranteed to be there. (This used to be a setTimeout, which on
+  // an iPad -- and sometimes a computer -- ran before the first photo's canvas
+  // existed: the canvas stayed at its default 300x150, showing only the photo's
+  // top-left corner, and detection never started.)
+  useEffect(() => {
+    const url = newPhotoUrlRef.current;
+    const canvas = canvasRef.current;
+    const img = baseImageRef.current;
+    if (!url || !canvas || !img) return;
+    newPhotoUrlRef.current = null;
+    const { w, h } = workSizeRef.current;
+    canvas.width = w;
+    canvas.height = h;
+    if (compareWrapRef.current) compareWrapRef.current.style.transform = 'scale(1)';
+    // the clean photo, drawn right before detectAndRender reads the canvas for the AI
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    detectAndRender().finally(() => URL.revokeObjectURL(url));
+  }, [photoSeq]);
 
   function onFileInputChange(e) {
     const f = e.target.files?.[0];
@@ -1947,7 +2057,22 @@ export default function NailTryOn({ onBookDesign } = {}) {
   }
 
   function onCanvasClick(e) {
-    if (mode !== 'multi' || nailRegionsRef.current.length === 0) return;
+    if (nailRegionsRef.current.length === 0) return;
+    if (flipPick) {
+      const i = nailAt(e);
+      if (i !== null) {
+        flipNails([i]);
+        showToast('สลับทิศเล็บนี้แล้ว');
+      }
+      return;
+    }
+    if (mode !== 'multi') return;
+    const i = nailAt(e);
+    if (i !== null) setSelectedFinger(i);
+  }
+
+  // index of the nail under a tap on the canvas, or null
+  function nailAt(e) {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
@@ -1965,7 +2090,19 @@ export default function NailTryOn({ onBookDesign } = {}) {
         closest = i;
       }
     });
-    if (closest !== null) setSelectedFinger(closest);
+    return closest;
+  }
+
+  // run fn on the canvas as it should be saved: photo + nails, no selection ring or arrows
+  function withCleanCanvas(fn) {
+    hideOverlaysRef.current = true;
+    redraw();
+    try {
+      return fn();
+    } finally {
+      hideOverlaysRef.current = false;
+      redraw();
+    }
   }
 
   function handleReset() {
@@ -1994,16 +2131,17 @@ export default function NailTryOn({ onBookDesign } = {}) {
   }
 
   function handleDownload() {
-    canvasRef.current.toBlob((blob) => {
+    // toBlob copies the pixels when called, so the clean frame is what gets encoded
+    withCleanCanvas(() => canvasRef.current.toBlob((blob) => {
       if (!blob) return;
       downloadDataUrl(URL.createObjectURL(blob), 'nail-tryon-result.png', true);
-    });
+    }));
     showToast('ดาวน์โหลดรูปแล้ว');
   }
 
   function saveCurrentDesign() {
     if (!baseImageRef.current) return null;
-    const dataUrl = canvasRef.current.toDataURL('image/png');
+    const dataUrl = withCleanCanvas(() => canvasRef.current.toDataURL('image/png'));
     setSavedDesigns((prev) => [...prev, { dataUrl }]);
     return dataUrl;
   }
@@ -2167,25 +2305,29 @@ export default function NailTryOn({ onBookDesign } = {}) {
       skinWorkSizeRef.current = { w, h };
       setSkinAnalysis(null);
       setSkinHasImage(true);
-      // the canvas only mounts once skinHasImage flips true above -- defer
-      // touching skinCanvasRef until after that render has committed.
-      // setTimeout rather than requestAnimationFrame, since rAF can be
-      // suspended entirely in a backgrounded/hidden tab
-      setTimeout(async () => {
-        const canvas = skinCanvasRef.current;
-        if (!canvas) return;
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, w, h);
-        ctx.drawImage(img, 0, 0, w, h);
-        await analyzeSkinAndRender();
-        URL.revokeObjectURL(url);
-      }, 0);
+      skinNewPhotoUrlRef.current = url;
+      setSkinPhotoSeq((n) => n + 1);
     };
-    img.onerror = () => setSkinErrorText('เปิดไฟล์รูปภาพไม่ได้ ลองใหม่อีกครั้ง');
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      setSkinErrorText('เปิดไฟล์รูปภาพไม่ได้ ลองใหม่อีกครั้ง');
+    };
     img.src = url;
   }
+
+  // same as the try-on photo: wait until the canvas is on the page
+  useEffect(() => {
+    const url = skinNewPhotoUrlRef.current;
+    const canvas = skinCanvasRef.current;
+    const img = skinBaseImageRef.current;
+    if (!url || !canvas || !img) return;
+    skinNewPhotoUrlRef.current = null;
+    const { w, h } = skinWorkSizeRef.current;
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    analyzeSkinAndRender().finally(() => URL.revokeObjectURL(url));
+  }, [skinPhotoSeq]);
 
   function onSkinFileInputChange(e) {
     const f = e.target.files?.[0];
@@ -2273,7 +2415,7 @@ export default function NailTryOn({ onBookDesign } = {}) {
                   key={key}
                   type="button"
                   className={`length-chip ${lengthPreset === key ? 'active' : ''}`}
-                  onClick={() => setLengthPreset(key)}
+                  onClick={() => { setLengthPreset(key); if (key === 'natural') setFlipPick(false); }}
                 >
                   <span className="length-preview"><span className={`length-nail len-${i}`} /></span>
                   <span className="length-label">{label}</span>
@@ -2298,10 +2440,20 @@ export default function NailTryOn({ onBookDesign } = {}) {
                   ))}
                 </div>
                 {hasImage && nailColors.length > 0 && (
-                  <button type="button" className={`flip-btn ${lengthFlipped ? 'active' : ''}`} onClick={flipNailDirection}>
-                    <Icon.Swap />
-                    เล็บที่ต่อชี้ผิดทิศ? กดสลับ
-                  </button>
+                  <div className="flip-box">
+                    <p className="flip-title">เล็บที่ต่อชี้ผิดทิศ?</p>
+                    <div className="flip-row">
+                      <button type="button" className={`flip-btn ${flipPick ? 'active' : ''}`} aria-pressed={flipPick} onClick={toggleFlipPick}>
+                        <Icon.Swap />
+                        {flipPick ? 'เสร็จแล้ว' : 'แก้ทีละเล็บ'}
+                      </button>
+                      <button type="button" className={`flip-btn ${allFlipped ? 'active' : ''}`} onClick={flipAllNails}>
+                        <Icon.Swap />
+                        สลับทุกเล็บ
+                      </button>
+                    </div>
+                    {flipPick && <p className="flip-hint">ลูกศรในรูปคือทิศที่เล็บยาวออกไป แตะเล็บที่ชี้ผิดเพื่อสลับ</p>}
+                  </div>
                 )}
               </>
             )}
@@ -2353,6 +2505,13 @@ export default function NailTryOn({ onBookDesign } = {}) {
                 <button className="expand-btn" title="ขยายเต็มจอ" type="button" onClick={toggleFullscreen}><Icon.Expand /></button>
               )}
 
+              {hasImage && flipPick && lengthPreset !== 'natural' && (
+                <div className="pick-banner" role="status">
+                  <span>แตะเล็บที่ลูกศรชี้ผิดทิศ</span>
+                  <button type="button" onClick={() => setFlipPick(false)}>เสร็จ</button>
+                </div>
+              )}
+
               {!hasImage && !cameraOpen && (
                 <div
                   className={`upload-zone ${isDragging ? 'dragging' : ''}`}
@@ -2362,7 +2521,7 @@ export default function NailTryOn({ onBookDesign } = {}) {
                 >
                   <div className="upload-icon"><Icon.Camera /></div>
                   <p className="upload-title">อัปโหลดรูปมือของคุณ</p>
-                  <p className="upload-hint">ถ่ายรูปฝ่ามือหรือหลังมือให้เห็นเล็บครบ แสงสว่างเพียงพอ พื้นหลังไม่รก</p>
+                  <p className="upload-hint">ถ่ายหลังมือให้เห็นเล็บอย่างน้อย 3 นิ้ว แสงสว่างเพียงพอ พื้นหลังไม่รก</p>
                   <div className="upload-actions">
                     <button className="btn-primary" type="button" onClick={() => requestUploadAction('tryon', 'file')}>เลือกรูปภาพ</button>
                     <button className="btn-secondary" type="button" onClick={() => requestUploadAction('tryon', 'camera')}><Icon.CameraSmall />ถ่ายรูป</button>
@@ -2382,7 +2541,7 @@ export default function NailTryOn({ onBookDesign } = {}) {
               {hasImage && (
                 <div className="canvas-wrap">
                   <div className="compare-wrap" ref={compareWrapRef}>
-                    <canvas className="result-canvas" ref={canvasRef} onClick={onCanvasClick} />
+                    <canvas className={`result-canvas ${flipPick ? 'picking' : ''}`} ref={canvasRef} onClick={onCanvasClick} />
                     <div className="compare-label label-before" hidden={!compareVisible}>BEFORE</div>
                     <div className="compare-label label-after" hidden={!compareVisible}>AFTER</div>
                     <div className="compare-divider" ref={compareDividerRef} hidden={!compareVisible} />

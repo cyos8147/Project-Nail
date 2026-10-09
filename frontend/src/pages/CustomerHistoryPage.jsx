@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header.jsx'
 import Footer from '../components/Footer.jsx'
@@ -9,9 +9,11 @@ import {
   getCustomerHistory,
   getSavedBookingCode,
   getSavedPhone,
+  getShopSettings,
   saveBookingCode,
   savePhone,
 } from '../api/client.js'
+import { isTooLateToChange } from '../utils/cancelPolicy.js'
 
 const STATUS_LABEL = {
   pending: 'รอยืนยัน', confirmed: 'ยืนยันแล้ว', completed: 'เสร็จสิ้น', cancelled: 'ยกเลิกแล้ว', no_show: 'ไม่มาตามนัด',
@@ -82,6 +84,11 @@ export default function CustomerHistoryPage() {
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState(null)
   const [reviewingBookingId, setReviewingBookingId] = useState(null)
+  const [shop, setShop] = useState(null) // เวลาล่วงหน้าที่ร้านกำหนดสำหรับยกเลิก/เลื่อนคิว + เบอร์ร้าน
+
+  useEffect(() => {
+    getShopSettings().then(setShop).catch(() => {})
+  }, [])
 
   async function load(p, code) {
     setStatus('loading')
@@ -131,6 +138,8 @@ export default function CustomerHistoryPage() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="เบอร์โทรศัพท์"
+            aria-label="เบอร์โทรศัพท์"
+            inputMode="tel"
             className="flex-1 rounded-xl border border-blush-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-rose-300"
             required
           />
@@ -138,6 +147,7 @@ export default function CustomerHistoryPage() {
             value={bookingCode}
             onChange={(e) => setBookingCode(e.target.value)}
             placeholder="รหัสคิว (ไม่บังคับ) เช่น NG-20260807-0001"
+            aria-label="รหัสคิว (ไม่บังคับ)"
             className="flex-1 rounded-xl border border-blush-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-rose-300"
           />
           <button
@@ -193,7 +203,13 @@ export default function CustomerHistoryPage() {
                       </p>
                     )}
 
-                    {['pending', 'confirmed'].includes(b.status) && (
+                    {['pending', 'confirmed'].includes(b.status) && isTooLateToChange(b, shop?.cancel_cutoff_hours) && (
+                      <p className="mt-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                        ใกล้เวลานัดแล้ว (ร้านให้ยกเลิก/เลื่อนผ่านเว็บได้ล่วงหน้าอย่างน้อย {shop.cancel_cutoff_hours} ชั่วโมง)
+                        หากไม่สะดวกมา กรุณาติดต่อร้านโดยตรง{shop.phone ? ` โทร ${shop.phone}` : ''}
+                      </p>
+                    )}
+                    {['pending', 'confirmed'].includes(b.status) && !isTooLateToChange(b, shop?.cancel_cutoff_hours) && (
                       <div className="mt-3 flex items-center gap-4">
                         <Link
                           to={`/booking/edit?code=${encodeURIComponent(b.booking_code)}&phone=${encodeURIComponent(phone.trim())}`}

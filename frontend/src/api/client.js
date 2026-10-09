@@ -159,6 +159,47 @@ export const adminDeleteHoliday = (id) => request(`/admin/holidays/${id}`, { met
 
 // --- Admin dashboard ------------------------------------------------------
 export const adminDashboardSummary = () => request('/admin/dashboard/summary', { auth: true })
+
+// --- Admin export / backup (เฉพาะ owner) ---------------------------------------
+const LAST_BACKUP_KEY = 'luckysalon_last_backup'
+export function getLastBackupAt() {
+  try {
+    const value = Number(localStorage.getItem(LAST_BACKUP_KEY))
+    return value > 0 ? value : null
+  } catch {
+    return null
+  }
+}
+
+// ดาวน์โหลดไฟล์จาก endpoint ที่ต้องใช้ token (ลิงก์ธรรมดาส่ง header ไม่ได้ จึงดึงด้วย fetch แล้วสั่งบันทึกไฟล์เอง)
+export async function adminDownloadFile(path, filename) {
+  const token = getAdminToken()
+  const res = await fetch(`${API_BASE_URL}${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+  if (!res.ok) {
+    let detail = `ดาวน์โหลดไม่สำเร็จ (${res.status})`
+    try {
+      detail = (await res.json()).detail || detail
+    } catch {
+      /* ignore */
+    }
+    throw new ApiError(detail, res.status)
+  }
+  const url = URL.createObjectURL(await res.blob())
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 10000)
+  if (filename.endsWith('.zip')) {
+    try {
+      localStorage.setItem(LAST_BACKUP_KEY, String(Date.now()))
+    } catch {
+      /* ignore */
+    }
+  }
+}
 export const adminListExpenses = (params) => request('/admin/expenses', { auth: true, params })
 export const adminCreateExpense = (payload) => request('/admin/expenses', { method: 'POST', auth: true, body: payload })
 export const adminDeleteExpense = (id) => request(`/admin/expenses/${id}`, { method: 'DELETE', auth: true })

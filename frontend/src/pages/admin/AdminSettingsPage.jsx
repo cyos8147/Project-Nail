@@ -6,10 +6,12 @@ import {
   adminCreateUser,
   adminDeleteHoliday,
   adminDeleteUser,
+  adminDownloadFile,
   adminListHolidays,
   adminListUsers,
   adminUpdateCategoryStaffCount,
   adminUpdateShopSettings,
+  getLastBackupAt,
   getServiceCategories,
   getShopSettings,
 } from '../../api/client.js'
@@ -20,6 +22,88 @@ const WEEKDAYS = [
 ]
 
 const ROLE_LABEL = { owner: 'เจ้าของร้าน', staff: 'พนักงาน' }
+
+const CANCEL_CUTOFF_OPTIONS = [0, 1, 2, 3, 6, 12, 24, 48]
+
+// สำรองข้อมูล: ฐานข้อมูล Supabase แผนฟรีไม่มีสำรองอัตโนมัติ จึงให้เจ้าของร้านโหลดสำเนาเก็บไว้เองเป็นระยะ (เฉพาะ owner)
+const BACKUP_TABLES = [
+  { name: 'bookings', label: 'คิวทั้งหมด' },
+  { name: 'customers', label: 'ลูกค้า' },
+  { name: 'expenses', label: 'ค่าใช้จ่าย' },
+  { name: 'reviews', label: 'รีวิว' },
+  { name: 'services', label: 'บริการและราคา' },
+  { name: 'nail-designs', label: 'ลายเล็บ' },
+]
+
+function backupFileName(name, extension) {
+  const today = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10)
+  return `luckysalon-${name}-${today}.${extension}`
+}
+
+function BackupSection() {
+  const [busy, setBusy] = useState(null)
+  const [message, setMessage] = useState(null)
+  const [lastBackup, setLastBackup] = useState(() => getLastBackupAt())
+
+  async function download(path, filename, label) {
+    setBusy(filename)
+    setMessage(null)
+    try {
+      await adminDownloadFile(path, filename)
+      setLastBackup(getLastBackupAt())
+      setMessage({ ok: true, text: `ดาวน์โหลด${label}แล้ว ดูในโฟลเดอร์ Downloads ของเครื่อง` })
+    } catch (err) {
+      setMessage({ ok: false, text: err.message })
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  return (
+    <div id="backup" className="bg-white rounded-2xl shadow-card p-6 space-y-4">
+      <div>
+        <p className="font-medium text-gray-700">สำรองข้อมูลร้าน</p>
+        <p className="text-sm text-gray-500 mt-1">
+          ข้อมูลคิว ลูกค้า และรายรับทั้งหมดอยู่ในฐานข้อมูลออนไลน์ที่ไม่มีระบบสำรองให้อัตโนมัติ แนะนำให้ดาวน์โหลดเดือนละครั้งเก็บไว้ในที่ปลอดภัย
+          (เช่น Google Drive ส่วนตัว) ไฟล์เปิดด้วย Excel หรือ Google Sheets ได้ และใช้ทำบัญชีรายเดือนได้ด้วย
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          disabled={busy !== null}
+          onClick={() => download('/admin/export/all.zip', backupFileName('backup', 'zip'), 'ไฟล์สำรองข้อมูลทั้งหมด')}
+          className="bg-rose-500 hover:bg-rose-600 disabled:bg-blush-200 text-white text-sm font-semibold px-6 py-2.5 rounded-xl"
+        >
+          {busy?.endsWith('.zip') ? 'กำลังเตรียมไฟล์...' : '⬇ ดาวน์โหลดสำรองข้อมูลทั้งหมด (.zip)'}
+        </button>
+        <span className="text-xs text-gray-400">
+          {lastBackup
+            ? `ดาวน์โหลดล่าสุดจากเครื่องนี้: ${new Date(lastBackup).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })}`
+            : 'เครื่องนี้ยังไม่เคยดาวน์โหลดไฟล์สำรอง'}
+        </span>
+      </div>
+      <div>
+        <p className="text-xs text-gray-500 mb-2">หรือเลือกดาวน์โหลดทีละอย่าง (เป็นไฟล์ CSV)</p>
+        <div className="flex flex-wrap gap-2">
+          {BACKUP_TABLES.map((t) => (
+            <button
+              key={t.name}
+              type="button"
+              disabled={busy !== null}
+              onClick={() => download(`/admin/export/${t.name}.csv`, backupFileName(t.name, 'csv'), t.label)}
+              className="text-xs font-medium px-3.5 py-2 rounded-full border border-blush-200 text-gray-600 hover:bg-blush-100 disabled:opacity-50"
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {message && <p className={`text-sm ${message.ok ? 'text-green-600' : 'text-red-500'}`}>{message.ok ? '✅ ' : ''}{message.text}</p>}
+      <p className="text-xs text-gray-400">ไฟล์มีชื่อและเบอร์โทรลูกค้า ห้ามส่งต่อหรือโพสต์ที่สาธารณะ</p>
+    </div>
+  )
+}
 
 function CategoryStaffSection() {
   const [categories, setCategories] = useState(null)
@@ -162,6 +246,11 @@ export default function AdminSettingsPage() {
   }
   useEffect(load, [])
 
+  // มาจากลิงก์เตือนสำรองข้อมูล (#backup) -> เลื่อนไปที่การ์ดสำรองข้อมูลหลังหน้าโหลดเสร็จ
+  useEffect(() => {
+    if (form && window.location.hash === '#backup') document.getElementById('backup')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [form])
+
   function toggleClosedDay(dayId) {
     const set = new Set(form.closed_weekdays)
     if (set.has(dayId)) set.delete(dayId)
@@ -297,6 +386,24 @@ export default function AdminSettingsPage() {
         </div>
 
         <div>
+          <label htmlFor="cancel-cutoff" className="text-xs text-gray-500 block mb-1">ลูกค้ายกเลิก/เลื่อนคิวผ่านเว็บได้ล่วงหน้าอย่างน้อย</label>
+          <select
+            id="cancel-cutoff"
+            value={form.cancel_cutoff_hours ?? 0}
+            onChange={(e) => setForm({ ...form, cancel_cutoff_hours: Number(e.target.value) })}
+            className="w-full sm:w-64 rounded-xl border border-blush-200 px-3 py-2 text-sm"
+          >
+            {[...new Set([...CANCEL_CUTOFF_OPTIONS, form.cancel_cutoff_hours ?? 0])].sort((a, b) => a - b).map((h) => (
+              <option key={h} value={h}>{h === 0 ? 'ไม่จำกัด (ยกเลิกได้ตลอด)' : `${h} ชั่วโมงก่อนเวลานัด`}</option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-400 mt-1">
+            ช่วยลดคนเบี้ยวนัด: ถ้าใกล้เวลานัดกว่านี้ ลูกค้าต้องติดต่อร้านเอง ส่วนแอดมินจัดการคิวได้ตลอด
+            ข้อความนี้จะขึ้นให้ลูกค้าเห็นตอนจองและในข้อความ LINE ด้วย
+          </p>
+        </div>
+
+        <div>
           <label className="text-xs text-gray-500 block mb-2">วันหยุดประจำสัปดาห์</label>
           <div className="flex flex-wrap gap-2">
             {WEEKDAYS.map((d) => (
@@ -340,6 +447,8 @@ export default function AdminSettingsPage() {
       </div>
 
       <CategoryStaffSection />
+
+      {admin?.role === 'owner' && <BackupSection />}
 
       {admin?.role === 'owner' && <AdminUsersSection />}
     </div>

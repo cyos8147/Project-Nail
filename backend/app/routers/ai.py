@@ -14,7 +14,7 @@ from PIL import Image
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
-from ..ai import nail_onnx
+from ..ai import nail_direction, nail_onnx
 from ..ai import recommend as recommend_ai
 from ..ai import segmentation, tryon
 from ..database import get_db
@@ -115,15 +115,21 @@ async def detect_nails(request: Request, file: UploadFile = File(...)):
             # เดิมกลืน error เงียบๆ เลยไม่เหลือร่องรอยใน Render Logs ให้ไล่ว่าทำไม "บางรูปใช้ไม่ได้"
             log.exception("detect-nails failed (rss %d MB)", nail_onnx.rss_mb())
             raise HTTPException(503, "ประมวลผลรูปภาพไม่สำเร็จ กรุณาลองใหม่ภายหลัง")
+        # ทิศปลายเล็บ (สำหรับต่อเล็บยาว) -- ถ้าไม่สำเร็จได้ None แล้ว frontend เดาทิศเองแบบเดิม ไม่ทำให้ทั้งคำขอล้ม
+        directions = await run_in_threadpool(
+            nail_direction.predict_directions, rgb, polygons, segmentation.settings.nail_direction_weights
+        )
         log.info(
-            "detect-nails: %d nails, photo %dx%d, %.1fs, rss %d MB",
-            len(polygons), rgb.shape[1], rgb.shape[0], time.perf_counter() - started, nail_onnx.rss_mb(),
+            "detect-nails: %d nails, directions %s, photo %dx%d, %.1fs, rss %d MB",
+            len(polygons), "ok" if directions is not None else "-", rgb.shape[1], rgb.shape[0],
+            time.perf_counter() - started, nail_onnx.rss_mb(),
         )
     finally:
         _detect_slots.release()
 
     nails = [poly.tolist() for poly in polygons]
-    return {"nails": nails, "count": len(nails)}
+    # directions[i] = [dx, dy, ความมั่นใจ] ของ nails[i] (ดู ai/nail_direction.py) หรือ null ถ้าไม่มีโมเดล
+    return {"nails": nails, "count": len(nails), "directions": directions}
 
 
 @router.post("/tryon", response_model=schemas.TryOnResponse)

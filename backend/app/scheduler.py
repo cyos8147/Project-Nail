@@ -15,6 +15,7 @@ from apscheduler.triggers.cron import CronTrigger
 
 from . import models
 from .database import SessionLocal
+from .policy import get_cancel_cutoff_hours
 from .services import line_notify
 from .timeutil import THAILAND_TZ, today_th
 
@@ -36,10 +37,11 @@ def send_appointment_reminders() -> int:
             )
             .all()
         )
+        cutoff_hours = get_cancel_cutoff_hours(db)
         for booking in bookings:
             customer = db.get(models.Customer, booking.customer_id)
             line_user_id = customer.line_user_id if customer else None
-            if line_notify.notify_appointment_reminder(booking, line_user_id):
+            if line_notify.notify_appointment_reminder(booking, line_user_id, cutoff_hours):
                 sent_count += 1
             # ทำเครื่องหมายว่าประมวลผลคิวนี้แล้วเสมอ ไม่ว่าจะส่งสำเร็จหรือไม่ (เช่น ลูกค้ายังไม่ผูก LINE)
             # ป้องกันไม่ให้ระบบพยายามส่งซ้ำคิวเดิมทุกวันจนกว่าจะถึงวันนัดจริง

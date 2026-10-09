@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from .. import models, schemas
 from ..availability import compute_available_slots, get_shop_settings
 from ..database import get_db
+from ..policy import shop_settings_out
 
 router = APIRouter(tags=["meta"])
 
@@ -33,7 +34,7 @@ def list_nail_designs(style_tag: str | None = None, db: Session = Depends(get_db
 
 @router.get("/shop-settings", response_model=schemas.ShopSettingsOut)
 def shop_settings(db: Session = Depends(get_db)):
-    return get_shop_settings(db)
+    return shop_settings_out(db, get_shop_settings(db))
 
 
 @router.get("/availability", response_model=schemas.AvailabilityOut)

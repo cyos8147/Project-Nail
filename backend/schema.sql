@@ -33,6 +33,10 @@ create table if not exists shop_settings (
   closing_time time not null default '19:00',
   slot_interval_minutes int not null default 60,
   closed_weekdays int[] not null default '{}', -- 0=อาทิตย์ .. 6=เสาร์
+  -- ลูกค้ายกเลิก/เลื่อนคิวผ่านเว็บได้ล่วงหน้าอย่างน้อยกี่ชั่วโมงก่อนเวลานัด (0 = ไม่จำกัด) -- ฐานข้อมูลเก่าไม่ต้องรันเอง:
+  -- เซิร์ฟเวอร์เพิ่มคอลัมน์นี้ให้อัตโนมัติตอนเริ่ม (app/migrations.py) ถ้าเพิ่มไม่สำเร็จให้รัน
+  -- "alter table shop_settings add column if not exists cancel_cutoff_hours int not null default 0;" เอง
+  cancel_cutoff_hours int not null default 0,
   updated_at timestamptz not null default now(),
   constraint single_row check (id = 1)
 );

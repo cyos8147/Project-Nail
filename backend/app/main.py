@@ -11,6 +11,7 @@ from slowapi.errors import RateLimitExceeded
 from .ai import segmentation
 from .config import get_settings
 from .database import Base, SessionLocal, engine
+from .migrations import ensure_columns
 from .rate_limit import limiter
 from .scheduler import start_scheduler
 from .routers import (
@@ -19,6 +20,7 @@ from .routers import (
     admin_catalog,
     admin_customers,
     admin_dashboard,
+    admin_export,
     ai,
     bookings,
     line,
@@ -62,6 +64,7 @@ app.include_router(admin_bookings.router, prefix="/api")
 app.include_router(admin_customers.router, prefix="/api")
 app.include_router(admin_catalog.router, prefix="/api")
 app.include_router(admin_dashboard.router, prefix="/api")
+app.include_router(admin_export.router, prefix="/api")
 
 
 def _warm_up_detector():
@@ -74,6 +77,7 @@ def _warm_up_detector():
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
+    ensure_columns(engine)  # คอลัมน์ใหม่ของตารางเดิม (create_all ไม่เพิ่มให้) -- ดู migrations.py
     db = SessionLocal()
     try:
         run_seed(db)
@@ -81,7 +85,8 @@ def on_startup():
         db.close()
     app.state.scheduler = start_scheduler()
     # โหลดโมเดลตรวจเล็บทิ้งไว้ก่อนใน thread แยก (เซิร์ฟเวอร์ไม่ต้องเริ่มช้าลง) ผู้ใช้คนแรกจะได้ไม่ต้องรอโหลดโมเดล
-    threading.Thread(target=_warm_up_detector, daemon=True).start()
+    if settings.ai_warm_up:
+        threading.Thread(target=_warm_up_detector, daemon=True).start()
 
 
 @app.on_event("shutdown")

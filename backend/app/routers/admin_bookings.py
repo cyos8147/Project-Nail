@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from .. import models, schemas
 from ..availability import compute_available_slots, is_shop_open, lock_slot
 from ..database import get_db
+from ..policy import get_cancel_cutoff_hours
 from ..security import get_current_admin
 from ..services import line_notify
 from ..utils import generate_booking_code
@@ -24,6 +25,7 @@ def list_bookings(
     date_to: date | None = None,
     status: str | None = None,
     search: str | None = Query(None, description="ค้นหาจากชื่อ เบอร์โทร หรือรหัสคิว"),
+    sort: str = Query("created", pattern="^(created|appointment)$", description="created = ใหม่สุดก่อน (ตามเวลาที่ลูกค้ากดจอง), appointment = เรียงตามวันเวลานัด"),
     db: Session = Depends(get_db),
     admin: models.AdminUser = Depends(get_current_admin),
 ):
@@ -43,6 +45,8 @@ def list_bookings(
                 models.Booking.booking_code.ilike(like),
             )
         )
+    if sort == "appointment":
+        return q.order_by(models.Booking.booking_date.asc(), models.Booking.booking_time.asc(), models.Booking.created_at.asc()).all()
     return q.order_by(models.Booking.created_at.desc()).all()
 
 
@@ -101,7 +105,7 @@ def create_booking_by_admin(
     else:
         raise HTTPException(409, SLOT_TAKEN_MESSAGE)
 
-    line_notify.notify_booking_created(booking, customer.line_user_id)
+    line_notify.notify_booking_created(booking, customer.line_user_id, get_cancel_cutoff_hours(db))
     return booking
 
 

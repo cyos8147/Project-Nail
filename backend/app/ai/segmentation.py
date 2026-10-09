@@ -73,9 +73,10 @@ def warm_up_detector() -> None:
     """โหลดโมเดลตรวจเล็บล่วงหน้าตอนเซิร์ฟเวอร์เริ่ม (เรียกจาก thread แยก ไม่ให้เซิร์ฟเวอร์เริ่มช้าลง)"""
     if not yolo_weights_available():
         return
-    from . import nail_onnx
+    from . import nail_direction, nail_onnx
 
     nail_onnx.warm_up(settings.yolo_nail_seg_weights)
+    nail_direction.warm_up(settings.nail_direction_weights)
 
 
 def decode_base64_image(image_base64: str) -> np.ndarray:

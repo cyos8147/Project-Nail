@@ -11,6 +11,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -44,6 +45,10 @@ class ShopSettings(Base):
     closing_time: Mapped[str] = mapped_column(String(8), default="19:00")
     slot_interval_minutes: Mapped[int] = mapped_column(Integer, default=60)
     closed_weekdays: Mapped[list] = mapped_column(JSON, default=list)
+    # ลูกค้ายกเลิก/เลื่อนคิวผ่านเว็บได้ล่วงหน้าอย่างน้อยกี่ชั่วโมงก่อนเวลานัด (0 = ไม่จำกัด) -- คอลัมน์ใหม่ที่เพิ่มทีหลัง จึงเพิ่มเข้า
+    # ตารางเดิมให้เองตอนเริ่มเซิร์ฟเวอร์ (migrations.py) และตั้งเป็น deferred: query ปกติไม่ดึงคอลัมน์นี้ ถ้าเพิ่มไม่สำเร็จเว็บส่วนอื่นยังใช้ได้
+    # (อ่านค่าผ่าน policy.get_cancel_cutoff_hours เท่านั้น)
+    cancel_cutoff_hours: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"), deferred=True)
     # เก็บไว้เผื่อข้อมูลเก่า — ของจริงย้ายไปตาราง ShopLineRecipient ด้านล่างแล้ว (รองรับผูกได้หลายคน)
     owner_line_user_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

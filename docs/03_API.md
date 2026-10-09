@@ -13,16 +13,17 @@ GET	/health	เช็คสถานะเซิร์ฟเวอร์
 GET	/service-categories	รายการหมวดหมู่บริการ (ทำผม/ทำเล็บ)
 GET	/services?category_id=	รายการบริการ (กรองตามหมวดหมู่ได้)
 GET	/nail-designs?style_tag=	แคตตาล็อกลายเล็บ
-GET	/shop-settings	เวลาทำการ, วันหยุดประจำสัปดาห์, LINE OA Basic ID
+GET	/shop-settings	เวลาทำการ, วันหยุดประจำสัปดาห์, LINE OA Basic ID, cancel_cutoff_hours (ล่วงหน้ากี่ชั่วโมงที่ลูกค้ายกเลิก/เลื่อนคิวผ่านเว็บได้ 0 = ไม่จำกัด)
 GET	/availability?date=YYYY-MM-DD&duration_minutes=&category_id=	ช่วงเวลาว่างของวันนั้น (นับแยกตามหมวดหมู่ที่ระบุ)
 POST	/bookings	สร้างการจองใหม่ → คืนรหัสคิว (limit 10/นาที, กันจองซ้อน/รหัสชนกันอัตโนมัติ)
 GET	/bookings/status?booking_code=&phone=	ตรวจสอบสถานะคิว
 GET	/bookings/history?phone=&booking_code=	ประวัติการจอง — ใส่แค่ phone ได้สรุปแบบย่อ (ไม่มี id/เวลา/ราคา) ต้องใส่ booking_code ที่ตรงกับคิวจริงด้วยถึงจะเห็นประวัติ/รีวิว/AI try-on แบบเต็ม
-PATCH	/bookings/{id}/reschedule	ลูกค้าแก้ไขวันเวลาคิวของตัวเอง (body: phone, booking_date, booking_time)
-PATCH	/bookings/{id}/cancel?phone=	ลูกค้ายกเลิกคิวของตัวเอง
+PATCH	/bookings/{id}/reschedule	ลูกค้าแก้ไขวันเวลาคิวของตัวเอง (body: phone, booking_date, booking_time) -- ถ้าใกล้เวลานัดกว่า cancel_cutoff_hours ได้ HTTP 400 ให้ติดต่อร้านโดยตรง
+PATCH	/bookings/{id}/cancel?phone=	ลูกค้ายกเลิกคิวของตัวเอง (กฎเวลาล่วงหน้าเดียวกับด้านบน แอดมินไม่ติดกฎนี้)
 GET	/reviews?limit=	รีวิวล่าสุด (แสดงหน้าแรก)
 POST	/reviews	ส่งรีวิว (ต้องเป็นคิวที่สถานะ completed แล้ว และยังไม่เคยรีวิวคิวนี้มาก่อน)
 POST	/ai/segment	อัปโหลดรูปมือ → ตำแหน่ง/ขนาดเล็บแต่ละนิ้ว + โทนผิว
+POST	/ai/detect-nails	อัปโหลดรูปมือ (multipart field "file") → {"nails": [polygon ขอบเล็บ พิกัดสัดส่วน 0-1], "count", "directions": [[dx, dy, ความมั่นใจ] ต่อเล็บ ชี้ไปทางปลายนิ้ว พิกัดพิกเซล แกน y ชี้ลง] หรือ null ถ้าไม่มีโมเดลทิศเล็บ} — ใช้ในหน้า AI ลองเล็บ
 POST	/ai/tryon	ทดลองสี/ลายเล็บบนรูปจริง (บันทึกประวัติได้ถ้า save: true)
 POST	/ai/analyze-style	วิเคราะห์สไตล์จากรูปอ้างอิง + ประเมินเวลาทำเพิ่ม
 POST	/ai/recommend	แนะนำลายเล็บด้วยโมเดล XGBoost จาก 5 ปัจจัย
@@ -36,7 +37,7 @@ PUT	/admin/password	เปลี่ยนรหัสผ่านของตั
 GET	/admin/users	รายชื่อบัญชีแอดมินทั้งหมด (เฉพาะ role owner)
 POST	/admin/users	สร้างบัญชีแอดมินใหม่ ระบุ role owner/staff ได้ (เฉพาะ role owner)
 DELETE	/admin/users/{id}	ลบบัญชีแอดมิน (เฉพาะ role owner, ลบตัวเองไม่ได้, ต้องเหลือ owner อย่างน้อย 1 คนเสมอ)
-GET	/admin/bookings?status=&search=&date_from=&date_to=	รายการจองทั้งหมด (กรองได้)
+GET	/admin/bookings?status=&search=&date_from=&date_to=&sort=	รายการจองทั้งหมด (กรองได้) sort=created (ค่าเริ่มต้น) ใหม่สุดก่อนตามเวลาที่ลูกค้ากดจอง, sort=appointment เรียงตามวันเวลานัด (ใช้กับปุ่มลัด วันนี้/พรุ่งนี้/7 วันข้างหน้า)
 POST	/admin/bookings	แอดมินสร้างคิวแทนลูกค้า (โทรจอง/walk-in) เลือกสถานะเริ่มต้นได้เอง กันจองซ้อนแบบเดียวกับฝั่งลูกค้า
 GET	/admin/bookings/{id}	รายละเอียดการจอง
 PATCH	/admin/bookings/{id}	เปลี่ยนสถานะ/หมายเหตุ
@@ -46,7 +47,9 @@ GET	/admin/customers/{id}	ประวัติเต็มของลูกค
 PATCH	/admin/service-categories/{id}	ตั้งจำนวนช่างของหมวดหมู่นั้น (staff_count)
 GET/POST/PUT/DELETE	/admin/services	จัดการบริการ
 GET/POST/PUT/DELETE	/admin/nail-designs	จัดการแคตตาล็อกลายเล็บ
-PUT	/admin/shop-settings	แก้ชื่อร้าน/เบอร์โทร/LINE OA Basic ID/เวลาทำการ/วันหยุดประจำสัปดาห์
+PUT	/admin/shop-settings	แก้ชื่อร้าน/เบอร์โทร/LINE OA Basic ID/เวลาทำการ/วันหยุดประจำสัปดาห์/cancel_cutoff_hours (0-168)
+GET	/admin/export/{bookings|customers|expenses|reviews|services|nail-designs}.csv	ส่งออกข้อมูลเป็น CSV (UTF-8 + BOM เปิดใน Excel ได้, เฉพาะ role owner, ข้อความที่ขึ้นต้นด้วย = + - @ ถูกนำหน้าด้วย ' กันสูตร Excel)
+GET	/admin/export/all.zip	สำรองข้อมูลทุกตารางเป็นไฟล์ zip เดียว + README.txt (เฉพาะ role owner)
 GET/POST/DELETE	/admin/holidays	จัดการวันหยุดพิเศษ
 GET	/admin/dashboard/summary	สรุป Dashboard การเงินทั้งหมด
 GET/POST/DELETE	/admin/expenses	บันทึกค่าใช้จ่ายของร้าน

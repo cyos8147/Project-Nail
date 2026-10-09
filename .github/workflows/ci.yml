@@ -1,0 +1,53 @@
+# ตรวจงานอัตโนมัติทุกครั้งที่มีการ push หรือเปิด pull request:
+#   backend  = ชุดทดสอบ pytest (backend/tests)
+#   frontend = ทดสอบฟังก์ชันที่ไม่ต้องใช้เบราว์เซอร์ + build เว็บให้ผ่าน
+# ถ้ามี ❌ แปลว่ามีอะไรพัง ดูรายละเอียดที่แท็บ Actions บน GitHub (ยังไม่ได้ deploy อะไร Vercel/Render ทำงานแยกกันเอง)
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+      - name: Install system libraries used by OpenCV
+        run: sudo apt-get update && sudo apt-get install -y libgl1
+        working-directory: .
+      - name: Install Python packages
+        run: pip install -r requirements-dev.txt
+      - name: Run tests
+        run: python -m pytest
+
+  frontend:
+    name: Frontend tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build

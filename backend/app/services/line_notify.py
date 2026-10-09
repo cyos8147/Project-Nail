@@ -42,14 +42,21 @@ def push_text_message(line_user_id: str, text: str) -> bool:
     return True
 
 
-def build_booking_confirmation_text(booking) -> str:
+def _cancel_policy_line(cutoff_hours: int) -> str:
+    """ข้อความนโยบายยกเลิก/เลื่อนคิวของร้าน (ว่างถ้าร้านยังไม่ได้ตั้งเวลาล่วงหน้า)"""
+    if cutoff_hours > 0:
+        return f"\nยกเลิก/เลื่อนคิวผ่านเว็บได้ล่วงหน้าอย่างน้อย {cutoff_hours} ชั่วโมงก่อนเวลานัด หลังจากนั้นรบกวนติดต่อร้านโดยตรงนะคะ"
+    return ""
+
+
+def build_booking_confirmation_text(booking, cutoff_hours: int = 0) -> str:
     return (
         f"✅ จองคิว {STATUS_LABEL_TH.get(booking.status, booking.status)}\n"
         f"รหัสคิว: {booking.booking_code}\n"
         f"บริการ: {booking.service_name}\n"
         f"วันที่: {booking.booking_date}  เวลา: {booking.booking_time} น.\n"
         f"ราคา: {booking.price:.0f} บาท\n"
-        f"ตรวจสอบสถานะได้ที่หน้าเว็บด้วยรหัสคิวนี้ได้ตลอดเวลา"
+        f"ตรวจสอบสถานะได้ที่หน้าเว็บด้วยรหัสคิวนี้ได้ตลอดเวลา" + _cancel_policy_line(cutoff_hours)
     )
 
 
@@ -61,9 +68,9 @@ def build_status_update_text(booking) -> str:
     )
 
 
-def notify_booking_created(booking, line_user_id: str | None) -> None:
+def notify_booking_created(booking, line_user_id: str | None, cutoff_hours: int = 0) -> None:
     if line_user_id:
-        push_text_message(line_user_id, build_booking_confirmation_text(booking))
+        push_text_message(line_user_id, build_booking_confirmation_text(booking, cutoff_hours))
 
 
 def notify_status_changed(booking, line_user_id: str | None) -> None:
@@ -77,20 +84,26 @@ def notify_status_changed(booking, line_user_id: str | None) -> None:
         )
 
 
-def build_reminder_text(booking) -> str:
+def build_reminder_text(booking, cutoff_hours: int = 0) -> str:
+    if cutoff_hours > 0:
+        ending = (
+            f"อย่าลืมมาตามนัดนะคะ 🌸 หากไม่สะดวก ยกเลิก/เลื่อนคิวผ่านเว็บได้ล่วงหน้าอย่างน้อย {cutoff_hours} ชั่วโมงก่อนเวลานัด "
+            f"หลังจากนั้นรบกวนติดต่อร้านโดยตรงค่ะ"
+        )
+    else:
+        ending = "อย่าลืมมาตามนัดนะคะ 🌸 หากไม่สะดวกกรุณาแจ้งยกเลิก/เลื่อนคิวล่วงหน้าที่หน้าเว็บได้เลยค่ะ"
     return (
         f"⏰ แจ้งเตือนคิวพรุ่งนี้!\n"
         f"รหัสคิว: {booking.booking_code}\n"
         f"บริการ: {booking.service_name}\n"
-        f"วันที่: {booking.booking_date}  เวลา: {booking.booking_time} น.\n"
-        f"อย่าลืมมาตามนัดนะคะ 🌸 หากไม่สะดวกกรุณาแจ้งยกเลิก/เลื่อนคิวล่วงหน้าที่หน้าเว็บได้เลยค่ะ"
+        f"วันที่: {booking.booking_date}  เวลา: {booking.booking_time} น.\n" + ending
     )
 
 
-def notify_appointment_reminder(booking, line_user_id: str | None) -> bool:
+def notify_appointment_reminder(booking, line_user_id: str | None, cutoff_hours: int = 0) -> bool:
     if not line_user_id:
         return False
-    return push_text_message(line_user_id, build_reminder_text(booking))
+    return push_text_message(line_user_id, build_reminder_text(booking, cutoff_hours))
 
 
 def build_shop_new_booking_text(booking) -> str:

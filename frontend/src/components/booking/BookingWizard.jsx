@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ServiceSelector from './ServiceSelector.jsx'
 import ServiceDetails from './ServiceDetails.jsx'
+import CancelPolicyNote from '../CancelPolicyNote.jsx'
 import DateTimePicker from './DateTimePicker.jsx'
 import ContactForm from './ContactForm.jsx'
 import StepIndicator from './StepIndicator.jsx'
@@ -59,6 +60,7 @@ export default function BookingWizard() {
   const [servicesLoaded, setServicesLoaded] = useState(false)
   const [closedWeekdays, setClosedWeekdays] = useState(null)
   const [shopLineId, setShopLineId] = useState('')
+  const [cancelCutoffHours, setCancelCutoffHours] = useState(0)
 
   // โหลดหมวดหมู่/บริการ/เวลาทำการจริงจาก backend (ถ้าเรียกไม่สำเร็จ ตัวคอมโพเนนต์ลูกจะ fallback
   // ไปใช้ src/data/bookingData.js เอง — เว็บยังใช้งานได้แม้ backend ยังไม่พร้อม)
@@ -83,6 +85,7 @@ export default function BookingWizard() {
       .then((s) => {
         setClosedWeekdays(s.closed_weekdays)
         setShopLineId(s.line_oa_basic_id || '')
+        setCancelCutoffHours(s.cancel_cutoff_hours || 0)
       })
       .catch(() => {})
 
@@ -292,6 +295,7 @@ export default function BookingWizard() {
               </div>
             )}
           </div>
+          <CancelPolicyNote hours={cancelCutoffHours} className="mt-4 max-w-xs mx-auto" />
           <div className="flex flex-wrap justify-center gap-3 mt-6">
             <a href="/history" className="bg-white hover:bg-blush-100 text-rose-600 text-sm font-semibold px-6 py-3 rounded-full border border-blush-200 transition-colors">
               ดูประวัติของฉัน
@@ -408,6 +412,7 @@ export default function BookingWizard() {
             </button>
           )}
         </div>
+        {step === totalSteps && <CancelPolicyNote hours={cancelCutoffHours} className="mt-6" />}
         {step === totalSteps && (
           <p className="mt-4 text-center text-xs text-gray-400">
             การกดยืนยันการจองถือว่ารับทราบ{' '}

@@ -3,6 +3,7 @@
 (src/data/bookingData.js, src/data/nailCatalog.js) เพื่อให้ผลลัพธ์หน้าเว็บตรงกันตั้งแต่วันแรกที่เชื่อม API
 """
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from .models import AdminUser, NailDesign, Service, ServiceCategory, ShopLineRecipient, ShopSettings
@@ -62,7 +63,7 @@ def run_seed(db: Session) -> None:
         for d in NAIL_DESIGNS:
             db.add(NailDesign(**d))
 
-    if db.query(ShopSettings).count() == 0:
+    if db.query(func.count(ShopSettings.id)).scalar() == 0:  # นับจาก id ตรงๆ (count() ของ entity จะดึงทุกคอลัมน์ รวมคอลัมน์ใหม่ที่อาจยังไม่มี)
         db.add(ShopSettings(id=1, closed_weekdays=[2]))  # ร้านหยุดทุกวันอังคาร
         db.flush()
 

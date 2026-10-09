@@ -50,8 +50,12 @@ class Settings(BaseSettings):
     trusted_proxy_hops: int = 0
 
     # --- AI ---
+    # โหลดโมเดลตรวจเล็บล่วงหน้าตอนเริ่มเซิร์ฟเวอร์ (ผู้ใช้คนแรกไม่ต้องรอโหลดโมเดล) -- ตั้ง AI_WARM_UP=false เพื่อปิด (ใช้ตอนรันชุดทดสอบ)
+    ai_warm_up: bool = True
     # ONNX ที่แปลงจาก yolov8_nail_seg.pt (รันด้วย onnxruntime แทน PyTorch เพื่อให้พอแรม 512MB ของ Render ฟรี)
     yolo_nail_seg_weights: str = "ml/models/yolov8_nail_seg.onnx"
+    # โมเดลบอกทิศปลายเล็บ (ใช้ตอนต่อเล็บยาวในหน้า AI ลองเล็บ) ไม่มีไฟล์ก็ยังใช้งานได้ frontend จะเดาทิศแบบเดิมแทน
+    nail_direction_weights: str = "ml/models/nail_direction.onnx"
     xgboost_model_path: str = "ml/models/nail_recommender.json"
     xgboost_encoders_path: str = "ml/models/nail_recommender_encoders.json"
 

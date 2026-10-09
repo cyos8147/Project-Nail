@@ -1,0 +1,299 @@
+{
+ "model": "nail_direction.onnx",
+ "input": "4x96x96 (RGB 0-1 + nail mask), crop side = 4 x nail diameter",
+ "output": "2-vector toward the fingertip (image coords, y down); length = confidence",
+ "training_data": "Open Images (CC BY 2.0) hand photos, labels from MediaPipe Hands on the whole photo",
+ "nails": {
+  "train": 3568,
+  "validation": 511,
+  "test": 439
+ },
+ "photos": 2327,
+ "best_epoch": 34,
+ "epochs": 40,
+ "results": [
+  {
+   "set": "validation (Open Images)",
+   "nails": 511,
+   "median_error_deg": 5.1,
+   "within_20deg": 0.888,
+   "wrong_end": 15,
+   "wrong_end_rate": 0.0294
+  },
+  {
+   "set": "test (Open Images, not used for training or model choice)",
+   "nails": 439,
+   "median_error_deg": 5.4,
+   "within_20deg": 0.868,
+   "wrong_end": 21,
+   "wrong_end_rate": 0.0478
+  },
+  {
+   "set": "hand-labelled photos (5 hands x 6 rotations/mirrors, whole photo)",
+   "nails": 150,
+   "median_error_deg": 3.2,
+   "within_20deg": 1.0,
+   "wrong_end": 0,
+   "wrong_end_rate": 0.0
+  },
+  {
+   "set": "hand-labelled close-ups (photo cut to 4x the nail size)",
+   "nails": 174,
+   "median_error_deg": 3.4,
+   "within_20deg": 1.0,
+   "wrong_end": 0,
+   "wrong_end_rate": 0.0
+  },
+  {
+   "set": "hand-labelled close-ups (photo cut to 7x the nail size)",
+   "nails": 348,
+   "median_error_deg": 3.0,
+   "within_20deg": 1.0,
+   "wrong_end": 0,
+   "wrong_end_rate": 0.0
+  }
+ ],
+ "history": [
+  {
+   "epoch": 1,
+   "loss": 0.4739,
+   "val_median": 84.19,
+   "val_wrong_end": 0.4658
+  },
+  {
+   "epoch": 2,
+   "loss": 0.4034,
+   "val_median": 45.37,
+   "val_wrong_end": 0.1898
+  },
+  {
+   "epoch": 3,
+   "loss": 0.3698,
+   "val_median": 48.27,
+   "val_wrong_end": 0.227
+  },
+  {
+   "epoch": 4,
+   "loss": 0.3515,
+   "val_median": 38.41,
+   "val_wrong_end": 0.1957
+  },
+  {
+   "epoch": 5,
+   "loss": 0.3374,
+   "val_median": 39.12,
+   "val_wrong_end": 0.1526
+  },
+  {
+   "epoch": 6,
+   "loss": 0.2964,
+   "val_median": 23.32,
+   "val_wrong_end": 0.1037
+  },
+  {
+   "epoch": 7,
+   "loss": 0.221,
+   "val_median": 19.62,
+   "val_wrong_end": 0.1194
+  },
+  {
+   "epoch": 8,
+   "loss": 0.1742,
+   "val_median": 11.95,
+   "val_wrong_end": 0.0744
+  },
+  {
+   "epoch": 9,
+   "loss": 0.1517,
+   "val_median": 10.97,
+   "val_wrong_end": 0.0626
+  },
+  {
+   "epoch": 10,
+   "loss": 0.1388,
+   "val_median": 12.82,
+   "val_wrong_end": 0.0802
+  },
+  {
+   "epoch": 11,
+   "loss": 0.1361,
+   "val_median": 10.76,
+   "val_wrong_end": 0.0489
+  },
+  {
+   "epoch": 12,
+   "loss": 0.1246,
+   "val_median": 9.62,
+   "val_wrong_end": 0.0665
+  },
+  {
+   "epoch": 13,
+   "loss": 0.1257,
+   "val_median": 10.27,
+   "val_wrong_end": 0.0568
+  },
+  {
+   "epoch": 14,
+   "loss": 0.117,
+   "val_median": 7.55,
+   "val_wrong_end": 0.0489
+  },
+  {
+   "epoch": 15,
+   "loss": 0.1181,
+   "val_median": 9.21,
+   "val_wrong_end": 0.0568
+  },
+  {
+   "epoch": 16,
+   "loss": 0.1154,
+   "val_median": 10.29,
+   "val_wrong_end": 0.0646
+  },
+  {
+   "epoch": 17,
+   "loss": 0.1132,
+   "val_median": 9.42,
+   "val_wrong_end": 0.0528
+  },
+  {
+   "epoch": 18,
+   "loss": 0.1122,
+   "val_median": 7.53,
+   "val_wrong_end": 0.0489
+  },
+  {
+   "epoch": 19,
+   "loss": 0.105,
+   "val_median": 8.98,
+   "val_wrong_end": 0.0391
+  },
+  {
+   "epoch": 20,
+   "loss": 0.103,
+   "val_median": 7.52,
+   "val_wrong_end": 0.0391
+  },
+  {
+   "epoch": 21,
+   "loss": 0.1007,
+   "val_median": 7.08,
+   "val_wrong_end": 0.0431
+  },
+  {
+   "epoch": 22,
+   "loss": 0.099,
+   "val_median": 7.47,
+   "val_wrong_end": 0.045
+  },
+  {
+   "epoch": 23,
+   "loss": 0.093,
+   "val_median": 7.45,
+   "val_wrong_end": 0.0528
+  },
+  {
+   "epoch": 24,
+   "loss": 0.0947,
+   "val_median": 7.29,
+   "val_wrong_end": 0.0391
+  },
+  {
+   "epoch": 25,
+   "loss": 0.0991,
+   "val_median": 7.11,
+   "val_wrong_end": 0.0333
+  },
+  {
+   "epoch": 26,
+   "loss": 0.0943,
+   "val_median": 5.72,
+   "val_wrong_end": 0.0411
+  },
+  {
+   "epoch": 27,
+   "loss": 0.09,
+   "val_median": 6.37,
+   "val_wrong_end": 0.0391
+  },
+  {
+   "epoch": 28,
+   "loss": 0.086,
+   "val_median": 6.52,
+   "val_wrong_end": 0.0372
+  },
+  {
+   "epoch": 29,
+   "loss": 0.088,
+   "val_median": 6.98,
+   "val_wrong_end": 0.0391
+  },
+  {
+   "epoch": 30,
+   "loss": 0.0816,
+   "val_median": 6.21,
+   "val_wrong_end": 0.0391
+  },
+  {
+   "epoch": 31,
+   "loss": 0.0869,
+   "val_median": 5.94,
+   "val_wrong_end": 0.0372
+  },
+  {
+   "epoch": 32,
+   "loss": 0.0837,
+   "val_median": 5.86,
+   "val_wrong_end": 0.0411
+  },
+  {
+   "epoch": 33,
+   "loss": 0.0787,
+   "val_median": 6.25,
+   "val_wrong_end": 0.0294
+  },
+  {
+   "epoch": 34,
+   "loss": 0.0817,
+   "val_median": 5.69,
+   "val_wrong_end": 0.0294
+  },
+  {
+   "epoch": 35,
+   "loss": 0.0765,
+   "val_median": 6.08,
+   "val_wrong_end": 0.0352
+  },
+  {
+   "epoch": 36,
+   "loss": 0.0769,
+   "val_median": 5.63,
+   "val_wrong_end": 0.0313
+  },
+  {
+   "epoch": 37,
+   "loss": 0.0795,
+   "val_median": 5.78,
+   "val_wrong_end": 0.0333
+  },
+  {
+   "epoch": 38,
+   "loss": 0.0741,
+   "val_median": 5.79,
+   "val_wrong_end": 0.0313
+  },
+  {
+   "epoch": 39,
+   "loss": 0.076,
+   "val_median": 5.73,
+   "val_wrong_end": 0.0313
+  },
+  {
+   "epoch": 40,
+   "loss": 0.0763,
+   "val_median": 5.62,
+   "val_wrong_end": 0.0313
+  }
+ ],
+ "note": "Open Images validation/test labels come from MediaPipe and are not perfect: looking at the test-set disagreements by eye, the model was right in a good part of them"
+}

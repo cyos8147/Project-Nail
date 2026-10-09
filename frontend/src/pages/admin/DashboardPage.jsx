@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { adminCreateExpense, adminDashboardSummary, adminDeleteExpense, adminListExpenses } from '../../api/client.js'
+import { Link, useOutletContext } from 'react-router-dom'
+import { adminCreateExpense, adminDashboardSummary, adminDeleteExpense, adminListExpenses, getLastBackupAt } from '../../api/client.js'
 
 function StatTile({ label, value, accent = 'text-gray-800' }) {
   return (
@@ -38,7 +39,29 @@ function RevenueChart({ trend }) {
   )
 }
 
+const BACKUP_REMINDER_DAYS = 30
+
+// เตือนเจ้าของร้านให้สำรองข้อมูล (นับจากไฟล์สำรองล่าสุดที่ดาวน์โหลดจากเครื่อง/เบราว์เซอร์นี้)
+function BackupReminder() {
+  const last = getLastBackupAt()
+  const days = last ? Math.floor((Date.now() - last) / 86400000) : null
+  if (days !== null && days < BACKUP_REMINDER_DAYS) return null
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4">
+      <p className="text-sm text-amber-800">
+        {days === null
+          ? '💾 ยังไม่เคยสำรองข้อมูลร้านจากเครื่องนี้ ฐานข้อมูลออนไลน์ไม่มีระบบสำรองให้อัตโนมัติ'
+          : `💾 ไม่ได้สำรองข้อมูลร้านมา ${days} วันแล้ว`}
+      </p>
+      <Link to="/admin/settings#backup" className="text-sm font-semibold text-amber-900 underline whitespace-nowrap">
+        สำรองข้อมูลเลย
+      </Link>
+    </div>
+  )
+}
+
 export default function DashboardPage() {
+  const { admin } = useOutletContext()
   const [summary, setSummary] = useState(null)
   const [expenses, setExpenses] = useState([])
   const [expenseForm, setExpenseForm] = useState({ expense_date: new Date().toISOString().slice(0, 10), category: 'อื่นๆ', amount: '', note: '' })
@@ -75,6 +98,8 @@ export default function DashboardPage() {
         <h1 className="font-display text-2xl font-bold text-gray-800">ภาพรวมร้าน</h1>
         <p className="text-gray-500 text-sm mt-1">สรุปรายได้ ค่าใช้จ่าย และผลประกอบการ</p>
       </div>
+
+      {admin?.role === 'owner' && <BackupReminder />}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatTile label="รายได้วันนี้" value={`${summary.revenue_today.toLocaleString()} ฿`} accent="text-rose-600" />

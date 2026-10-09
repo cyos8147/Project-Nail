@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
 from ..availability import get_shop_settings
 from ..database import get_db
+from ..policy import get_cancel_cutoff_hours, shop_settings_out
 from ..security import get_current_admin
 from ..storage import CATALOG_PHOTO_MAX_SIDE, decode_and_validate_image, upload_photo
 
@@ -156,10 +158,17 @@ def update_shop_settings(
 ):
     settings = get_shop_settings(db)
     for key, value in payload.model_dump(exclude_unset=True).items():
+        if key == "cancel_cutoff_hours" and value == get_cancel_cutoff_hours(db):
+            continue  # หน้าตั้งค่าส่งทุกช่องมาเสมอ ไม่แตะคอลัมน์ใหม่ถ้าค่าไม่เปลี่ยน (ฐานข้อมูลที่ยังไม่มีคอลัมน์นี้จะยังบันทึกช่องอื่นได้)
         setattr(settings, key, value)
-    db.commit()
+    try:
+        db.commit()
+    except (OperationalError, ProgrammingError):
+        # คอลัมน์ที่เพิ่มใหม่ยังไม่มีในฐานข้อมูล (migrations.py เพิ่มให้ไม่สำเร็จ) -- ดู Render Logs หา "migration:"
+        db.rollback()
+        raise HTTPException(503, "บันทึกการตั้งค่านี้ไม่ได้ เพราะฐานข้อมูลยังไม่รองรับ (ดูวิธีแก้ใน Render Logs ที่ขึ้นต้นว่า migration)")
     db.refresh(settings)
-    return settings
+    return shop_settings_out(db, settings)
 
 
 @router.get("/holidays", response_model=list[schemas.HolidayOut])
