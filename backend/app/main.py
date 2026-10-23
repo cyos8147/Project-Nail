@@ -2,16 +2,18 @@ import logging
 import threading
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from .ai import recommend as recommend_ai
 from .ai import segmentation
 from .config import get_settings
-from .database import Base, SessionLocal, engine
+from .database import Base, SessionLocal, engine, get_db
 from .migrations import ensure_columns
 from .rate_limit import limiter
 from .scheduler import start_scheduler
@@ -109,5 +111,13 @@ def on_shutdown():
 # รับที่ "/" ด้วย เผื่อตั้ง monitor ไว้ที่ที่อยู่หลักของเซิร์ฟเวอร์ ซึ่งเดิมตอบ 404
 @app.api_route("/api/health", methods=["GET", "HEAD"])
 @app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
-def health():
+def health(db: Session = Depends(get_db)):
+    # แตะฐานข้อมูลทุกครั้งที่ UptimeRobot เรียก (ทุก 5 นาที) เพราะ Supabase รุ่นฟรีพักโปรเจกต์ที่ฐานข้อมูลไม่ถูกใช้
+    # ราว 1 สัปดาห์ แล้วเซิร์ฟเวอร์จะเริ่มทำงานไม่ได้ (Render แจ้ง "Exited with status 3") -- ถ้าต่อฐานข้อมูลไม่ได้
+    # ตอบ 503 ให้ UptimeRobot แจ้งเตือน แทนที่จะขึ้นว่าปกติ
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception:
+        logging.getLogger("uvicorn.error").exception("health check: ต่อฐานข้อมูลไม่ได้")
+        return JSONResponse(status_code=503, content={"status": "database_unavailable", "app": settings.app_name})
     return {"status": "ok", "app": settings.app_name, "environment": settings.environment}
