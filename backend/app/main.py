@@ -105,6 +105,9 @@ def on_shutdown():
         scheduler.shutdown(wait=False)
 
 
-@app.get("/api/health")
+# UptimeRobot รุ่นฟรีเรียกด้วย HEAD (ไม่ใช่ GET) ถ้ารับแค่ GET จะตอบ 405 แล้ว UptimeRobot ขึ้นว่าเซิร์ฟเวอร์ล่ม
+# รับที่ "/" ด้วย เผื่อตั้ง monitor ไว้ที่ที่อยู่หลักของเซิร์ฟเวอร์ ซึ่งเดิมตอบ 404
+@app.api_route("/api/health", methods=["GET", "HEAD"])
+@app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
 def health():
     return {"status": "ok", "app": settings.app_name, "environment": settings.environment}
