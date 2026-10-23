@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi.errors import RateLimitExceeded
 
+from .ai import recommend as recommend_ai
 from .ai import segmentation
 from .config import get_settings
 from .database import Base, SessionLocal, engine
@@ -67,11 +68,18 @@ app.include_router(admin_dashboard.router, prefix="/api")
 app.include_router(admin_export.router, prefix="/api")
 
 
-def _warm_up_detector():
+def _warm_up_models():
+    log = logging.getLogger("uvicorn.error")
     try:
         segmentation.warm_up_detector()
     except Exception:
-        logging.getLogger("uvicorn.error").exception("โหลดโมเดลตรวจเล็บล่วงหน้าไม่สำเร็จ (จะโหลดตอนมีคนใช้ครั้งแรกแทน)")
+        log.exception("โหลดโมเดลตรวจเล็บล่วงหน้าไม่สำเร็จ (จะโหลดตอนมีคนใช้ครั้งแรกแทน)")
+    try:
+        # import xgboost ดึง scikit-learn, scipy และ pandas มาด้วย (แรม +130 MB) ซึ่งช้ามากบน CPU ของ Render ฟรี
+        # ถ้ารอไปโหลดตอนลูกค้ากด "ให้ AI แนะนำลาย" ครั้งแรก หน้าเว็บจะค้างที่ "กำลังให้ AI คำนวณ..."
+        recommend_ai.is_model_ready()
+    except Exception:
+        log.exception("โหลดโมเดลแนะนำลายล่วงหน้าไม่สำเร็จ (จะโหลดตอนมีคนใช้ครั้งแรกแทน)")
 
 
 @app.on_event("startup")
@@ -84,9 +92,10 @@ def on_startup():
     finally:
         db.close()
     app.state.scheduler = start_scheduler()
-    # โหลดโมเดลตรวจเล็บทิ้งไว้ก่อนใน thread แยก (เซิร์ฟเวอร์ไม่ต้องเริ่มช้าลง) ผู้ใช้คนแรกจะได้ไม่ต้องรอโหลดโมเดล
+    # โหลดโมเดลตรวจเล็บและโมเดลแนะนำลายทิ้งไว้ก่อนใน thread แยก (เซิร์ฟเวอร์ไม่ต้องเริ่มช้าลง)
+    # ผู้ใช้คนแรกจะได้ไม่ต้องรอโหลดโมเดล
     if settings.ai_warm_up:
-        threading.Thread(target=_warm_up_detector, daemon=True).start()
+        threading.Thread(target=_warm_up_models, daemon=True).start()
 
 
 @app.on_event("shutdown")

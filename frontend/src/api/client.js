@@ -5,6 +5,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 const ADMIN_TOKEN_KEY = 'nailglow_admin_token'
 const CUSTOMER_PHONE_KEY = 'nailglow_customer_phone'
 const CUSTOMER_BOOKING_CODE_KEY = 'nailglow_customer_booking_code'
+// เท่ากับ DETECT_TIMEOUT_MS ใน NailTryOn.jsx
+const REQUEST_TIMEOUT_MS = 60000
 
 export function getAdminToken() {
   return localStorage.getItem(ADMIN_TOKEN_KEY)
@@ -54,7 +56,20 @@ async function request(path, { method = 'GET', body, auth = false, params } = {}
     if (token) headers['Authorization'] = `Bearer ${token}`
   }
 
-  const res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined })
+  // เซิร์ฟเวอร์ฟรีที่เพิ่งตื่นจากหลับอาจตอบช้าเกือบนาที แต่ถ้าเกินนี้ให้บอกผู้ใช้ ไม่ให้ปุ่มค้าง "กำลัง..." ไม่รู้จบ
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+  let res
+  try {
+    res = await fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined, signal: controller.signal })
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new ApiError('เซิร์ฟเวอร์ตอบช้ากว่าปกติ อาจกำลังเริ่มทำงานใหม่ รอสักครู่แล้วลองอีกครั้ง', 0)
+    }
+    throw new ApiError('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองอีกครั้ง', 0)
+  } finally {
+    clearTimeout(timer)
+  }
 
   if (!res.ok) {
     let detail = `เกิดข้อผิดพลาด (${res.status})`

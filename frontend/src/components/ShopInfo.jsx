@@ -70,8 +70,16 @@ const ChatIcon = () => (
   </Icon>
 )
 
+const ContactHeading = () => (
+  <div className="text-center mb-10">
+    <h2 className="font-display text-3xl font-bold text-gray-800">ที่ตั้งและเวลาทำการ</h2>
+    <p className="text-gray-500 mt-2">แวะมาหาเราได้เลย หรือทักไลน์ถามก่อนก็ได้</p>
+  </div>
+)
+
 export default function ShopInfo() {
   const [settings, setSettings] = useState(null)
+  const [failed, setFailed] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -80,14 +88,33 @@ export default function ShopInfo() {
         if (alive) setSettings(s)
       })
       .catch(() => {
-        /* โหลดข้อมูลร้านไม่ได้ก็ไม่แสดงส่วนนี้ ดีกว่าโชว์เวลาเปิด-ปิดที่อาจไม่ตรงกับจริง */
+        if (alive) setFailed(true)
       })
     return () => {
       alive = false
     }
   }, [])
 
-  if (!settings) return null
+  // เปิดลิงก์ /#contact มาจากหน้าอื่น: ตอนเบราว์เซอร์หาหมวดนี้ หมวดด้านบนยังโหลดข้อมูลไม่เสร็จ ตำแหน่งจึงเลื่อนไป
+  // พอข้อมูลร้านมาแล้วจึงเลื่อนลงมาที่นี่อีกครั้ง
+  useEffect(() => {
+    if ((settings || failed) && window.location.hash === '#contact') {
+      document.getElementById('contact')?.scrollIntoView({ block: 'start' })
+    }
+  }, [settings, failed])
+
+  // ยังไม่มีข้อมูลก็ต้องมีหมวดนี้ไว้ก่อน ไม่อย่างนั้นเมนู "ติดต่อ" กดแล้วไม่ไปไหน -- แต่ไม่เดาเวลาเปิด-ปิดให้
+  // เพราะอาจไม่ตรงกับจริง
+  if (!settings) {
+    return (
+      <section id="contact" className="max-w-6xl mx-auto px-6 py-16 scroll-mt-16">
+        <ContactHeading />
+        <p className="mx-auto max-w-md rounded-2xl bg-white p-6 text-center text-gray-500 shadow-card">
+          {failed ? 'โหลดเวลาทำการไม่สำเร็จ รีเฟรชหน้านี้อีกครั้ง' : 'กำลังโหลดเวลาทำการและช่องทางติดต่อ...'}
+        </p>
+      </section>
+    )
+  }
 
   const address = settings.address?.trim()
   const phone = settings.phone?.trim()
@@ -103,11 +130,8 @@ export default function ShopInfo() {
     : null
 
   return (
-    <section id="contact" className="max-w-6xl mx-auto px-6 py-16">
-      <div className="text-center mb-10">
-        <h2 className="font-display text-3xl font-bold text-gray-800">ที่ตั้งและเวลาทำการ</h2>
-        <p className="text-gray-500 mt-2">แวะมาหาเราได้เลย หรือทักไลน์ถามก่อนก็ได้</p>
-      </div>
+    <section id="contact" className="max-w-6xl mx-auto px-6 py-16 scroll-mt-16">
+      <ContactHeading />
 
       <div className={hasContact ? 'grid gap-5 md:grid-cols-2' : 'mx-auto max-w-md'}>
         <div className="rounded-2xl bg-white p-6 shadow-card">

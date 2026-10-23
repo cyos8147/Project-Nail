@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import json
+import threading
 from pathlib import Path
 
 import numpy as np
@@ -21,14 +22,26 @@ _model = None
 _encoders = None
 _metrics: dict = {}
 _load_attempted = False
+_load_lock = threading.Lock()
 
 
 def _try_load():
-    global _model, _encoders, _metrics, _load_attempted
+    global _load_attempted
     if _load_attempted:
         return
-    _load_attempted = True
+    # คำขอที่เข้ามาตอน thread ของ main.py กำลังโหลดล่วงหน้าอยู่ ต้องรอให้โหลดเสร็จ ไม่อย่างนั้นจะเห็นว่ายังไม่มี
+    # โมเดลแล้วไปใช้กฎ fallback แทน
+    with _load_lock:
+        if _load_attempted:
+            return
+        try:
+            _load()
+        finally:
+            _load_attempted = True
 
+
+def _load():
+    global _model, _encoders, _metrics
     model_path = Path(settings.xgboost_model_path)
     encoders_path = Path(settings.xgboost_encoders_path)
     if not model_path.is_file() or not encoders_path.is_file():
