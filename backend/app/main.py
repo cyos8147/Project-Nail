@@ -14,7 +14,7 @@ from .ai import recommend as recommend_ai
 from .ai import segmentation
 from .config import get_settings
 from .database import Base, SessionLocal, engine, get_db
-from .migrations import ensure_columns
+from .migrations import enable_row_level_security, ensure_columns
 from .rate_limit import limiter
 from .scheduler import start_scheduler
 from .routers import (
@@ -88,6 +88,7 @@ def _warm_up_models():
 def on_startup():
     Base.metadata.create_all(bind=engine)
     ensure_columns(engine)  # คอลัมน์ใหม่ของตารางเดิม (create_all ไม่เพิ่มให้) -- ดู migrations.py
+    enable_row_level_security(engine)  # กันตารางถูกเข้าถึงจากสาธารณะผ่าน Supabase API -- ดู migrations.py
     db = SessionLocal()
     try:
         run_seed(db)

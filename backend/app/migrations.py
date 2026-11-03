@@ -41,3 +41,24 @@ def ensure_columns(engine: Engine) -> list[str]:
                 table, column, table, column, definition,
             )
     return added
+
+
+def enable_row_level_security(engine: Engine) -> list[str]:
+    """เปิด Row Level Security ให้ทุกตารางในฐานข้อมูล Postgres (Supabase) คืนรายชื่อตารางที่เปิดแล้ว
+
+    ตารางที่ create_all สร้างไม่ได้เปิด RLS เอง Supabase จึงแสดงว่าเป็นตารางที่เข้าถึงได้จากสาธารณะ
+    การเปิด RLS โดยยังไม่มี policy ทำให้ role สาธารณะ (anon, authenticated) เข้าถึงตารางไม่ได้
+    ส่วนเจ้าของตาราง (role ที่ backend เชื่อมต่อด้วย) ไม่ถูกบังคับตาม RLS จึงยังใช้งานได้ตามปกติ
+    รันซ้ำได้ทุกครั้งโดยไม่มีผลเสีย
+    """
+    if engine.dialect.name != "postgresql":
+        return []  # SQLite ตอนพัฒนาในเครื่องไม่มี RLS
+    enabled: list[str] = []
+    for table in inspect(engine).get_table_names():
+        try:
+            with engine.begin() as conn:
+                conn.execute(text(f'ALTER TABLE "{table}" ENABLE ROW LEVEL SECURITY'))
+            enabled.append(table)
+        except Exception:
+            log.exception("migration: เปิด RLS ให้ตาราง %s ไม่สำเร็จ -- เปิดเองได้ใน Supabase SQL editor", table)
+    return enabled

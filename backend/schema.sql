@@ -276,5 +276,15 @@ create policy "public read shop settings" on shop_settings for select using (tru
 drop policy if exists "public read holidays" on shop_holidays;
 create policy "public read holidays" on shop_holidays for select using (true);
 
--- ตารางที่เหลือ (customers, bookings, ai_*, expenses, admin_users, line_notify_log) ไม่เปิด public
--- policy ใดๆ ทั้งสิ้น เข้าถึงได้เฉพาะผ่าน backend (service role key) เท่านั้น
+-- ตารางที่เหลือ (customers, bookings, ai_*, expenses, admin_users, line_notify_log, shop_line_recipients)
+-- ไม่มี policy ใดๆ จึงเข้าถึงจาก API สาธารณะไม่ได้ ต้องเปิด RLS ให้ตารางเหล่านี้ด้วย ไม่งั้น Supabase แจ้งว่า
+-- "Table publicly accessible" (rls_disabled_in_public) ตอนเริ่มเซิร์ฟเวอร์ backend เปิดให้อัตโนมัติ
+-- (app/migrations.py enable_row_level_security) ถ้าต้องรันมือใน SQL editor ใช้คำสั่งด้านล่างได้
+-- เจ้าของตารางไม่ถูกบังคับตาม RLS จึงไม่กระทบ backend
+do $$
+declare r record;
+begin
+  for r in select tablename from pg_tables where schemaname = 'public' loop
+    execute format('alter table public.%I enable row level security', r.tablename);
+  end loop;
+end $$;
