@@ -11,6 +11,12 @@ function StatTile({ label, value, accent = 'text-gray-800' }) {
   )
 }
 
+function formatShortDate(iso) {
+  const [, m, d] = iso.split('-')
+  return `${Number(d)}/${Number(m)}`
+}
+
+// กราฟแท่งรายได้รายวัน พร้อมเส้นบอกระดับและวันที่กำกับ ให้อ่านค่าได้โดยไม่ต้องชี้ทีละแท่ง
 function RevenueChart({ trend }) {
   const max = Math.max(1, ...trend.map((t) => t.revenue))
   const width = 600
@@ -18,24 +24,38 @@ function RevenueChart({ trend }) {
   const barWidth = width / trend.length
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-36" preserveAspectRatio="none">
-      {trend.map((t, i) => {
-        const h = (t.revenue / max) * (height - 10)
-        return (
-          <rect
-            key={t.date}
-            x={i * barWidth + 1}
-            y={height - h}
-            width={Math.max(1, barWidth - 2)}
-            height={h}
-            fill="#EC4C82"
-            opacity={t.revenue > 0 ? 0.85 : 0.15}
-          >
-            <title>{t.date}: {t.revenue.toLocaleString()} บาท</title>
-          </rect>
-        )
-      })}
-    </svg>
+    <div>
+      <div className="flex justify-between text-[11px] text-gray-400 mb-1">
+        <span>เส้นบน = {max.toLocaleString()} ฿/วัน · เส้นกลาง = {Math.round(max / 2).toLocaleString()} ฿</span>
+        <span>แตะ/ชี้ที่แท่งเพื่อดูยอดของวันนั้น</span>
+      </div>
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-36" preserveAspectRatio="none">
+        <line x1="0" y1={height - (height - 10)} x2={width} y2={height - (height - 10)} stroke="#F3D2DE" strokeWidth="1" />
+        <line x1="0" y1={height - (height - 10) / 2} x2={width} y2={height - (height - 10) / 2} stroke="#F3D2DE" strokeWidth="1" strokeDasharray="4 4" />
+        <line x1="0" y1={height} x2={width} y2={height} stroke="#E8C3D2" strokeWidth="1" />
+        {trend.map((t, i) => {
+          const h = (t.revenue / max) * (height - 10)
+          return (
+            <rect
+              key={t.date}
+              x={i * barWidth + 1}
+              y={height - h}
+              width={Math.max(1, barWidth - 2)}
+              height={h}
+              fill="#EC4C82"
+              opacity={t.revenue > 0 ? 0.85 : 0.15}
+            >
+              <title>{t.date}: {t.revenue.toLocaleString()} บาท</title>
+            </rect>
+          )
+        })}
+      </svg>
+      <div className="flex justify-between text-[11px] text-gray-400 mt-1">
+        <span>{trend.length > 0 && formatShortDate(trend[0].date)}</span>
+        <span>{trend.length > 15 && formatShortDate(trend[Math.floor(trend.length / 2)].date)}</span>
+        <span>{trend.length > 0 && `${formatShortDate(trend[trend.length - 1].date)} (วันนี้)`}</span>
+      </div>
+    </div>
   )
 }
 
@@ -113,7 +133,12 @@ export default function DashboardPage() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-card p-6">
-        <p className="font-medium text-gray-700 mb-3">รายได้ย้อนหลัง 30 วัน</p>
+        <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+          <p className="font-medium text-gray-700">รายได้ย้อนหลัง 30 วัน (เฉพาะคิวที่เสร็จแล้ว)</p>
+          <p className="text-sm text-rose-600 font-semibold">
+            รวม {summary.revenue_trend.reduce((acc, t) => acc + t.revenue, 0).toLocaleString()} ฿
+          </p>
+        </div>
         <RevenueChart trend={summary.revenue_trend} />
       </div>
 

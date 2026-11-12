@@ -1390,16 +1390,26 @@ function sampleSkinNearNails(ctx, w, h, nailPolygons) {
         const i = (y * w + x) * 4;
         const r = data[i], g = data[i + 1], b = data[i + 2];
         const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-        if (lum < 35 || lum > 250) continue;
-        samples.push([r, g, b]);
+        if (lum < 35 || lum > 240) continue; // เงามืด / ไฮไลต์ที่ขาดรายละเอียด
+        if (g > r || b > r) continue; // ผิวคนช่องแดงต้องนำ — ตัดฉากหลังและแสงสีเย็น
+        // แสงสะท้อนบนผิวมัน: สว่างจัดแต่สีซีด (ความอิ่มสีต่ำ) เคยทำให้ผิวแทนถูกอ่านเป็นผิวขาว
+        const sat = (Math.max(r, g, b) - Math.min(r, g, b)) / Math.max(r, g, b, 1);
+        if (lum > 200 && sat < 0.1) continue;
+        samples.push([r, g, b, lum]);
       }
     }
   });
   if (samples.length === 0) return null;
+  // ตัดหัว-ท้ายตามความสว่างข้างละ 15% กันแสงสะท้อน/เงาที่เหลือรอดจากตัวกรองรายพิกเซล
+  samples.sort((a, b) => a[3] - b[3]);
+  const lo = Math.floor(samples.length * 0.15);
+  const hi = Math.max(Math.ceil(samples.length * 0.85), lo + 1);
+  const trimmed = samples.slice(lo, hi);
+  const use = trimmed.length >= 12 ? trimmed : samples;
   return [
-    medianOf(samples.map((s) => s[0])),
-    medianOf(samples.map((s) => s[1])),
-    medianOf(samples.map((s) => s[2])),
+    medianOf(use.map((s) => s[0])),
+    medianOf(use.map((s) => s[1])),
+    medianOf(use.map((s) => s[2])),
   ];
 }
 
@@ -1416,7 +1426,10 @@ function sampleAverageColor(ctx, w, h) {
       const i = (Math.floor(y) * w + Math.floor(x)) * 4;
       const r = data[i], g = data[i + 1], b = data[i + 2];
       const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-      if (lum < 35 || lum > 250) continue;
+      if (lum < 35 || lum > 240) continue;
+      if (g > r || b > r) continue; // ไม่ใช่โทนผิวคน
+      const sat = (Math.max(r, g, b) - Math.min(r, g, b)) / Math.max(r, g, b, 1);
+      if (lum > 200 && sat < 0.1) continue; // แสงสะท้อนบนผิวมัน
       rs += r; gs += g; bs += b; n++;
     }
   }
