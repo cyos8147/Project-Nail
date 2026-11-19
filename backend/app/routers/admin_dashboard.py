@@ -1,6 +1,9 @@
+import calendar
+from collections import defaultdict
 from datetime import date, timedelta
+from typing import Literal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -12,6 +15,11 @@ from ..timeutil import today_th
 router = APIRouter(prefix="/admin", tags=["admin-dashboard"])
 
 COMPLETED = "completed"
+OPEN_STATUSES = ("pending", "confirmed")
+CLOSED_STATUSES = ("completed", "cancelled", "no_show")
+STATUS_KEYS = ("pending", "confirmed", "completed", "cancelled", "no_show")
+MAX_CUSTOM_DAYS = 366
+DAILY_TREND_MAX_DAYS = 62  # ยาวกว่านี้สรุปรายเดือนแทน ไม่งั้นแท่งแน่นอ่านไม่ออก
 
 
 def _revenue_between(db: Session, start: date, end: date) -> float:
@@ -133,3 +141,224 @@ def delete_expense(
     if expense is not None:
         db.delete(expense)
         db.commit()
+
+
+# ---------------------------------------------------------------------------
+# รายงานแบบเลือกช่วงเวลา + เทียบช่วงก่อนหน้า
+# ---------------------------------------------------------------------------
+
+THAI_MONTHS = ["", "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."]
+
+
+def _shift_year(d: date, years: int) -> date:
+    try:
+        return d.replace(year=d.year + years)
+    except ValueError:  # 29 ก.พ.
+        return d.replace(year=d.year + years, day=28)
+
+
+def resolve_window(period: str, today: date, date_from: date | None, date_to: date | None):
+    """คืน (start, end, previous_start, previous_end, label)
+
+    เดือนนี้/ปีนี้เทียบกับ "ช่วงเดียวกันของเดือน/ปีก่อน" (วันที่ 1 ถึงวันที่เท่ากัน) ไม่ใช่ช่วงที่เลื่อนลอย
+    7/30 วันและกำหนดเองเทียบกับช่วงก่อนหน้าที่ยาวเท่ากันติดกัน
+    """
+    if period == "custom":
+        if date_from is None or date_to is None:
+            raise HTTPException(status_code=422, detail="ช่วงกำหนดเองต้องระบุทั้ง date_from และ date_to")
+        if date_from > date_to:
+            raise HTTPException(status_code=422, detail="วันเริ่มต้องไม่เกินวันสิ้นสุด")
+        if (date_to - date_from).days + 1 > MAX_CUSTOM_DAYS:
+            raise HTTPException(status_code=422, detail=f"เลือกช่วงได้ไม่เกิน {MAX_CUSTOM_DAYS} วัน")
+        start, end = date_from, date_to
+        label = "ช่วงที่เลือก"
+    elif period == "7d":
+        start, end, label = today - timedelta(days=6), today, "7 วันล่าสุด"
+    elif period == "30d":
+        start, end, label = today - timedelta(days=29), today, "30 วันล่าสุด"
+    elif period == "month":
+        start, end, label = today.replace(day=1), today, f"{THAI_MONTHS[today.month]} {today.year + 543} (ถึงวันนี้)"
+        prev_last = start - timedelta(days=1)
+        prev_start = prev_last.replace(day=1)
+        prev_end = min(prev_start + timedelta(days=today.day - 1), prev_last)
+        return start, end, prev_start, prev_end, label
+    elif period == "year":
+        start, end, label = today.replace(month=1, day=1), today, f"ปี {today.year + 543} (ถึงวันนี้)"
+        return start, end, _shift_year(start, -1), _shift_year(end, -1), label
+    else:  # pragma: no cover - Literal กันไว้แล้ว
+        raise HTTPException(status_code=422, detail="period ไม่ถูกต้อง")
+    days = (end - start).days + 1
+    return start, end, start - timedelta(days=days), start - timedelta(days=1), label
+
+
+def _aggregate(db: Session, start: date, end: date) -> tuple[float, int, float]:
+    revenue, completed = (
+        db.query(func.coalesce(func.sum(models.Booking.price), 0), func.count(models.Booking.id))
+        .filter(models.Booking.status == COMPLETED, models.Booking.booking_date.between(start, end))
+        .one()
+    )
+    expenses = (
+        db.query(func.coalesce(func.sum(models.Expense.amount), 0))
+        .filter(models.Expense.expense_date.between(start, end))
+        .scalar()
+    )
+    return float(revenue or 0), int(completed or 0), float(expenses or 0)
+
+
+def _rows_sorted(bucket: dict[str, dict]) -> list[schemas.ReportBreakdownRow]:
+    rows = [schemas.ReportBreakdownRow(key=k, **v) for k, v in bucket.items()]
+    return sorted(rows, key=lambda r: (-r.revenue, -r.count, r.label))
+
+
+@router.get("/dashboard/report", response_model=schemas.DashboardReport)
+def dashboard_report(
+    period: Literal["7d", "30d", "month", "year", "custom"] = "30d",
+    date_from: date | None = None,
+    date_to: date | None = None,
+    db: Session = Depends(get_db),
+    admin: models.AdminUser = Depends(get_current_admin),
+):
+    today = today_th()
+    start, end, prev_start, prev_end, label = resolve_window(period, today, date_from, date_to)
+
+    revenue, completed_count, expenses = _aggregate(db, start, end)
+    prev_revenue, prev_completed, prev_expenses = _aggregate(db, prev_start, prev_end)
+
+    rows = (
+        db.query(
+            models.Booking.booking_date,
+            models.Booking.booking_time,
+            models.Booking.status,
+            models.Booking.price,
+            models.Booking.category_id,
+            models.Booking.service_name,
+            models.Booking.customer_id,
+        )
+        .filter(models.Booking.booking_date.between(start, end))
+        .all()
+    )
+
+    status_counts = {k: 0 for k in STATUS_KEYS}
+    by_day_revenue: dict[date, float] = defaultdict(float)
+    by_day_count: dict[date, int] = defaultdict(int)
+    weekday_demand = [0] * 7
+    weekday_revenue = [0.0] * 7
+    hour_demand: dict[int, int] = defaultdict(int)
+    category_totals: dict[str, dict] = {}
+    service_totals: dict[str, dict] = {}
+    served_ids: set[str] = set()
+
+    category_names = {c.id: c.name for c in db.query(models.ServiceCategory).all()}
+
+    for booking_date, booking_time, status, price, category_id, service_name, customer_id in rows:
+        status_counts[status] = status_counts.get(status, 0) + 1
+        price = float(price or 0)
+        if status != "cancelled":  # คิวที่ถูกยกเลิกไม่นับเป็นความต้องการจริง
+            weekday_demand[booking_date.weekday()] += 1
+            try:
+                hour_demand[int(booking_time.split(":")[0])] += 1
+            except (ValueError, AttributeError):
+                pass
+        if status == COMPLETED:
+            by_day_revenue[booking_date] += price
+            by_day_count[booking_date] += 1
+            weekday_revenue[booking_date.weekday()] += price
+            served_ids.add(customer_id)
+            cat = category_totals.setdefault(category_id, {"label": category_names.get(category_id, category_id), "revenue": 0.0, "count": 0})
+            cat["revenue"] += price
+            cat["count"] += 1
+            svc = service_totals.setdefault(service_name, {"label": service_name, "revenue": 0.0, "count": 0})
+            svc["revenue"] += price
+            svc["count"] += 1
+
+    returning = 0
+    if served_ids:
+        earlier = {
+            r[0]
+            for r in db.query(models.Booking.customer_id)
+            .filter(models.Booking.status == COMPLETED, models.Booking.booking_date < start)
+            .distinct()
+            .all()
+        }
+        returning = len(served_ids & earlier)
+
+    resolved = sum(status_counts[k] for k in CLOSED_STATUSES)
+    cancel_rate = round(status_counts["cancelled"] / resolved, 4) if resolved else 0.0
+    no_show_rate = round(status_counts["no_show"] / resolved, 4) if resolved else 0.0
+
+    # แนวโน้ม: รายวันถ้าช่วงสั้น รายเดือนถ้ายาว
+    span_days = (end - start).days + 1
+    if span_days <= DAILY_TREND_MAX_DAYS:
+        trend_unit = "day"
+        trend = [
+            {"date": (start + timedelta(days=i)).isoformat(), "revenue": by_day_revenue.get(start + timedelta(days=i), 0.0), "bookings": by_day_count.get(start + timedelta(days=i), 0)}
+            for i in range(span_days)
+        ]
+    else:
+        trend_unit = "month"
+        monthly: dict[tuple[int, int], dict] = {}
+        cursor = start.replace(day=1)
+        while cursor <= end:
+            monthly[(cursor.year, cursor.month)] = {"date": cursor.isoformat(), "revenue": 0.0, "bookings": 0}
+            cursor = cursor.replace(day=1) + timedelta(days=calendar.monthrange(cursor.year, cursor.month)[1])
+        for d, v in by_day_revenue.items():
+            monthly[(d.year, d.month)]["revenue"] += v
+            monthly[(d.year, d.month)]["bookings"] += by_day_count[d]
+        trend = list(monthly.values())
+
+    expense_rows = (
+        db.query(models.Expense.category, func.sum(models.Expense.amount), func.count(models.Expense.id))
+        .filter(models.Expense.expense_date.between(start, end))
+        .group_by(models.Expense.category)
+        .all()
+    )
+    expense_buckets = {(c or "อื่นๆ"): {"label": c or "อื่นๆ", "revenue": float(total or 0), "count": int(n)} for c, total, n in expense_rows}
+
+    upcoming_value, upcoming_count = (
+        db.query(func.coalesce(func.sum(models.Booking.price), 0), func.count(models.Booking.id))
+        .filter(models.Booking.status.in_(OPEN_STATUSES), models.Booking.booking_date >= today)
+        .one()
+    )
+    today_value, today_count = (
+        db.query(func.coalesce(func.sum(models.Booking.price), 0), func.count(models.Booking.id))
+        .filter(models.Booking.status.in_(OPEN_STATUSES), models.Booking.booking_date == today)
+        .one()
+    )
+
+    # คะแนนรีวิวของคิวในช่วงนี้ (ผูกกับวันที่ของคิว)
+    rating_stats = (
+        db.query(func.avg(models.Review.rating), func.count(models.Review.id))
+        .join(models.Booking, models.Booking.id == models.Review.booking_id)
+        .filter(models.Booking.booking_date.between(start, end))
+        .first()
+    )
+
+    average_ticket = revenue / completed_count if completed_count else 0.0
+    prev_average_ticket = prev_revenue / prev_completed if prev_completed else 0.0
+
+    return schemas.DashboardReport(
+        window=schemas.ReportWindow(start=start, end=end, previous_start=prev_start, previous_end=prev_end, label=label),
+        revenue=schemas.ReportKpi(value=revenue, previous=prev_revenue),
+        completed_bookings=schemas.ReportKpi(value=completed_count, previous=prev_completed),
+        average_ticket=schemas.ReportKpi(value=round(average_ticket, 2), previous=round(prev_average_ticket, 2)),
+        expenses=schemas.ReportKpi(value=expenses, previous=prev_expenses),
+        net_profit=schemas.ReportKpi(value=revenue - expenses, previous=prev_revenue - prev_expenses),
+        status_counts=status_counts,
+        cancel_rate=cancel_rate,
+        no_show_rate=no_show_rate,
+        customers_served=len(served_ids),
+        returning_customers=returning,
+        upcoming_count=int(upcoming_count or 0),
+        upcoming_value=float(upcoming_value or 0),
+        today_pending_count=int(today_count or 0),
+        today_pending_value=float(today_value or 0),
+        trend_unit=trend_unit,
+        trend=trend,
+        by_category=_rows_sorted(category_totals),
+        top_services=_rows_sorted(service_totals)[:8],
+        expenses_by_category=_rows_sorted(expense_buckets),
+        by_weekday=[{"weekday": i, "bookings": weekday_demand[i], "revenue": weekday_revenue[i]} for i in range(7)],
+        by_hour=[{"hour": h, "bookings": hour_demand[h]} for h in sorted(hour_demand)],
+        average_rating=round(float(rating_stats[0] or 0), 2) if rating_stats else 0.0,
+        review_count=int(rating_stats[1] or 0) if rating_stats else 0,
+    )

@@ -24,7 +24,7 @@ def test_login_succeeds_with_the_right_password_only(client):
 
 
 def test_admin_endpoints_need_a_valid_token(client):
-    for path in ("/api/admin/me", "/api/admin/bookings", "/api/admin/customers", "/api/admin/dashboard/summary"):
+    for path in ("/api/admin/me", "/api/admin/bookings", "/api/admin/customers", "/api/admin/dashboard/summary", "/api/admin/dashboard/report"):
         assert client.get(path).status_code == 401
     assert client.get("/api/admin/me", headers={"Authorization": "Bearer not-a-token"}).status_code == 401
 
@@ -111,3 +111,121 @@ def test_customer_search_and_edit(client, services, owner_headers, phone):
     book(client, services["ทำสีเจล"], open_date(83), "10:00", phone, name="ค้นหาฉันสิ")
     found = client.get("/api/admin/customers", headers=owner_headers, params={"q": "ค้นหาฉันสิ"}).json()
     assert any(c["phone"] == phone for c in found)
+
+
+# ---------------------------------------------------------------------------
+# รายงานแดชบอร์ดแบบเลือกช่วงเวลา
+# ---------------------------------------------------------------------------
+
+REPORT_TODAY = date(2033, 3, 15)  # ปีที่ไม่มีเทสต์อื่นใช้ ตัวเลขจึงไม่ปนกัน
+
+
+def _set_status(client, headers, booking, status):
+    r = client.patch(f"/api/admin/bookings/{booking['id']}", headers=headers, json={"status": status})
+    assert r.status_code == 200, r.text
+
+
+def _report(client, headers, **params):
+    with mock.patch("app.routers.admin_dashboard.today_th", lambda: REPORT_TODAY):
+        return client.get("/api/admin/dashboard/report", headers=headers, params=params)
+
+
+@pytest.fixture
+def report_data(client, services, owner_headers, phone):
+    """ข้อมูลตัวอย่างเดือนมี.ค.-ก.พ. 2033: ลูกค้า A กลับมาซ้ำ ลูกค้า B มาครั้งแรก มีคิวยกเลิก/ไม่มา/รอทำ และค่าใช้จ่ายสองหมวด"""
+    phone_b = "09" + phone[2:]
+    gel, extension = services["ทำสีเจล"], services["ต่อเล็บ PVC / เจล"]
+    made = []
+    prev = book(client, gel, date(2033, 2, 10), "10:00", phone, name="ลูกค้า A").json()
+    _set_status(client, owner_headers, prev, "completed")
+    a = book(client, gel, date(2033, 3, 10), "10:00", phone, name="ลูกค้า A").json()
+    _set_status(client, owner_headers, a, "completed")
+    b = book(client, extension, date(2033, 3, 12), "14:00", phone_b, name="ลูกค้า B").json()
+    _set_status(client, owner_headers, b, "completed")
+    cancelled = book(client, gel, date(2033, 3, 12), "10:00", phone_b, name="ลูกค้า B").json()
+    _set_status(client, owner_headers, cancelled, "cancelled")
+    no_show = book(client, gel, date(2033, 3, 14), "10:00", phone_b, name="ลูกค้า B").json()
+    _set_status(client, owner_headers, no_show, "no_show")
+    upcoming = book(client, gel, date(2033, 3, 16), "10:00", phone_b, name="ลูกค้า B").json()
+    made += [prev, a, b, cancelled, no_show, upcoming]
+    expenses = [
+        client.post("/api/admin/expenses", headers=owner_headers, json={"expense_date": d, "category": cat, "amount": amt}).json()
+        for d, cat, amt in (("2033-03-11", "วัสดุ", 100), ("2033-03-12", "ค่าเช่า", 200), ("2033-02-05", "วัสดุ", 50))
+    ]
+    yield
+    for e in expenses:
+        client.delete(f"/api/admin/expenses/{e['id']}", headers=owner_headers)
+    for bk in made:
+        client.delete(f"/api/admin/bookings/{bk['id']}", headers=owner_headers)
+
+
+def test_report_month_compares_with_the_same_days_last_month(client, owner_headers, report_data):
+    r = _report(client, owner_headers, period="month")
+    assert r.status_code == 200, r.text
+    rep = r.json()
+    assert rep["window"]["start"] == "2033-03-01" and rep["window"]["end"] == "2033-03-15"
+    assert rep["window"]["previous_start"] == "2033-02-01" and rep["window"]["previous_end"] == "2033-02-15"
+    assert rep["revenue"] == {"value": 950, "previous": 350}
+    assert rep["completed_bookings"] == {"value": 2, "previous": 1}
+    assert rep["average_ticket"]["value"] == 475 and rep["average_ticket"]["previous"] == 350
+    assert rep["expenses"] == {"value": 300, "previous": 50}
+    assert rep["net_profit"] == {"value": 650, "previous": 300}
+
+
+def test_report_status_rates_customers_and_pipeline(client, owner_headers, report_data):
+    rep = _report(client, owner_headers, period="month").json()
+    assert rep["status_counts"]["completed"] == 2 and rep["status_counts"]["cancelled"] == 1 and rep["status_counts"]["no_show"] == 1
+    assert rep["cancel_rate"] == 0.25 and rep["no_show_rate"] == 0.25  # จาก 4 คิวที่ปิดสถานะแล้ว
+    assert rep["customers_served"] == 2 and rep["returning_customers"] == 1  # A เคยมาก่อนเดือนนี้ B ใหม่
+    assert rep["upcoming_count"] == 1 and rep["upcoming_value"] == 350  # คิว 16 มี.ค. ยังรอทำ (อยู่นอกช่วง แต่นับเป็นรายได้ที่กำลังจะเข้า)
+    assert rep["today_pending_count"] == 0
+
+
+def test_report_breakdowns_exclude_cancelled_from_demand(client, owner_headers, report_data):
+    rep = _report(client, owner_headers, period="month").json()
+    assert [(c["label"], c["revenue"], c["count"]) for c in rep["by_category"]] == [("ทำเล็บ", 950, 2)]
+    assert [(s["label"], s["revenue"]) for s in rep["top_services"]] == [("ต่อเล็บ PVC / เจล", 600), ("ทำสีเจล", 350)]
+    assert {(e["label"], e["revenue"]) for e in rep["expenses_by_category"]} == {("วัสดุ", 100), ("ค่าเช่า", 200)}
+    weekday = {w["weekday"]: w for w in rep["by_weekday"]}
+    assert weekday[3]["bookings"] == 1 and weekday[3]["revenue"] == 350  # พฤ. 10 มี.ค.
+    assert weekday[5]["bookings"] == 1 and weekday[5]["revenue"] == 600  # ส. 12 มี.ค. (คิวที่ยกเลิกไม่นับ)
+    assert weekday[0]["bookings"] == 1 and weekday[0]["revenue"] == 0  # จ. 14 มี.ค. ไม่มา = มีความต้องการแต่ไม่มีรายได้
+    hours = {h["hour"]: h["bookings"] for h in rep["by_hour"]}
+    assert hours == {10: 2, 14: 1}
+    assert rep["trend_unit"] == "day" and len(rep["trend"]) == 15
+    assert sum(t["revenue"] for t in rep["trend"]) == 950
+
+
+def test_report_long_range_switches_to_monthly_trend(client, owner_headers, report_data):
+    rep = _report(client, owner_headers, period="custom", date_from="2033-01-01", date_to="2033-12-31").json()
+    assert rep["trend_unit"] == "month" and len(rep["trend"]) == 12
+    by_month = {t["date"][:7]: t["revenue"] for t in rep["trend"]}
+    assert by_month["2033-03"] == 950 and by_month["2033-02"] == 350 and by_month["2033-01"] == 0
+
+
+def test_report_rejects_bad_ranges(client, owner_headers):
+    assert _report(client, owner_headers, period="custom").status_code == 422  # ไม่ระบุวัน
+    assert _report(client, owner_headers, period="custom", date_from="2033-03-10", date_to="2033-03-01").status_code == 422
+    assert _report(client, owner_headers, period="custom", date_from="2030-01-01", date_to="2032-01-01").status_code == 422  # ยาวเกิน 366 วัน
+    assert _report(client, owner_headers, period="forever").status_code == 422
+    assert _report(client, owner_headers, period="7d").status_code == 200
+
+
+def test_report_empty_period_has_no_division_errors(client, owner_headers):
+    rep = _report(client, owner_headers, period="custom", date_from="2040-05-01", date_to="2040-05-07").json()
+    assert rep["revenue"]["value"] == 0 and rep["average_ticket"]["value"] == 0
+    assert rep["cancel_rate"] == 0 and rep["customers_served"] == 0 and rep["by_hour"] == []
+
+
+def test_report_window_edges():
+    from app.routers.admin_dashboard import resolve_window
+
+    # 31 มี.ค. เทียบกับ ก.พ. ทั้งเดือน (ไม่ล้นไปเป็นมี.ค.)
+    _, _, ps, pe, _ = resolve_window("month", date(2033, 3, 31), None, None)
+    assert (ps, pe) == (date(2033, 2, 1), date(2033, 2, 28))
+    # 29 ก.พ. ปีอธิกสุรทิน เทียบกับ 28 ก.พ. ปีก่อน
+    _, _, ps, pe, _ = resolve_window("year", date(2032, 2, 29), None, None)
+    assert (ps, pe) == (date(2031, 1, 1), date(2031, 2, 28))
+    # 7 วัน เทียบกับ 7 วันก่อนหน้าติดกัน
+    s, e, ps, pe, _ = resolve_window("7d", date(2033, 3, 15), None, None)
+    assert (s, e, ps, pe) == (date(2033, 3, 9), date(2033, 3, 15), date(2033, 3, 2), date(2033, 3, 8))

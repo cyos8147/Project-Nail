@@ -388,6 +388,53 @@ class ExpenseOut(ExpenseIn):
         from_attributes = True
 
 
+class ReportKpi(BaseModel):
+    value: float
+    previous: float  # ค่าช่วงเทียบ (ช่วงก่อนหน้าความยาวเท่ากัน)
+
+
+class ReportWindow(BaseModel):
+    start: date
+    end: date
+    previous_start: date
+    previous_end: date
+    label: str
+
+
+class ReportBreakdownRow(BaseModel):
+    key: str
+    label: str
+    revenue: float = 0.0
+    count: int = 0
+
+
+class DashboardReport(BaseModel):
+    window: ReportWindow
+    revenue: ReportKpi
+    completed_bookings: ReportKpi
+    average_ticket: ReportKpi
+    expenses: ReportKpi
+    net_profit: ReportKpi
+    status_counts: dict[str, int]  # pending/confirmed/completed/cancelled/no_show ในช่วงนี้
+    cancel_rate: float  # สัดส่วนจากคิวที่ปิดสถานะแล้ว (completed+cancelled+no_show)
+    no_show_rate: float
+    customers_served: int
+    returning_customers: int
+    upcoming_count: int  # คิวรอทำ (pending/confirmed) ตั้งแต่วันนี้เป็นต้นไป
+    upcoming_value: float
+    today_pending_count: int
+    today_pending_value: float
+    trend_unit: str  # 'day' | 'month'
+    trend: list[dict]
+    by_category: list[ReportBreakdownRow]
+    top_services: list[ReportBreakdownRow]
+    expenses_by_category: list[ReportBreakdownRow]
+    by_weekday: list[dict]
+    by_hour: list[dict]
+    average_rating: float
+    review_count: int
+
+
 class DashboardSummary(BaseModel):
     revenue_today: float
     revenue_month: float
