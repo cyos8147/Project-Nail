@@ -26,7 +26,7 @@ export default function AiStudioPage() {
       </div>
 
       <div className="relative z-10">
-        <header className="sticky top-0 z-50 bg-blush-50/80 backdrop-blur border-b border-blush-200">
+        <header className="sticky top-0 z-50 bg-white/75 backdrop-blur-md border-b border-blush-200/70 shadow-[0_6px_24px_-16px_rgba(217,59,114,0.35)]">
           <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
             <p className="flex items-center gap-2 font-display text-2xl font-bold text-rose-600 whitespace-nowrap">
               <img src="/logo.jpg" alt="Lucky Salon" className="w-8 h-8 rounded-full object-cover" />
@@ -42,17 +42,37 @@ export default function AiStudioPage() {
           </div>
         </header>
 
-        <section className="max-w-4xl mx-auto px-6 pt-16 pb-8 text-center">
-          <span className="inline-block bg-white text-rose-600 text-xs font-semibold px-4 py-1.5 rounded-full shadow-card mb-5">
+        <section className="max-w-4xl mx-auto px-6 pt-14 pb-10 text-center">
+          <span className="inline-flex items-center gap-2 bg-white/90 text-rose-600 text-xs font-semibold px-4 py-1.5 rounded-full shadow-card border border-blush-200 mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
             Lucky Salon AI Beauty Studio
           </span>
-          <h1 className="font-display text-3xl sm:text-4xl font-bold text-gray-800 leading-tight">
-            ให้ AI ช่วยหา<span className="text-rose-500">ลุคเล็บที่ใช่</span>สำหรับคุณ
+          <h1 className="font-display text-4xl sm:text-5xl font-extrabold text-gray-800 leading-[1.15] tracking-tight">
+            ให้ AI ช่วยหา
+            <span className="bg-gradient-to-r from-rose-500 via-fuchsia-500 to-violet-500 bg-clip-text text-transparent">ลุคเล็บที่ใช่</span>
+            <br className="hidden sm:block" />สำหรับคุณ
           </h1>
-          <p className="text-gray-500 mt-4 max-w-xl mx-auto">
+          <p className="text-gray-500 mt-5 max-w-xl mx-auto text-base leading-relaxed">
             วิเคราะห์สีผิว ลองสีเล็บบนรูปมือจริงของคุณ และรับคำแนะนำลายที่เหมาะกับคุณ แล้วจองคิวต่อได้ทันที
           </p>
-          <p className="mt-3 text-xs text-gray-400">
+
+          <ol className="mt-9 grid grid-cols-2 sm:grid-cols-4 gap-3 text-left">
+            {[
+              ['🎨', 'วิเคราะห์สีผิว', 'รู้โทนผิวและสีที่เข้ากับคุณ'],
+              ['💅', 'ลองสีเล็บ', 'ลงสีบนรูปมือจริงของคุณ'],
+              ['✨', 'รับคำแนะนำ', 'AI จัดอันดับลายที่ใช่'],
+              ['📅', 'จองคิว', 'ส่งสีที่ชอบไปจองต่อได้เลย'],
+            ].map(([icon, title, sub]) => (
+              <li key={title} className="bg-white/80 backdrop-blur rounded-2xl border border-white shadow-card px-4 py-3.5 flex flex-col gap-1">
+                <span className="text-xl leading-none" aria-hidden="true">{icon}</span>
+                <span className="font-semibold text-sm text-gray-800 mt-1">{title}</span>
+                <span className="text-xs text-gray-500 leading-snug">{sub}</span>
+              </li>
+            ))}
+          </ol>
+
+          <p className="mt-6 text-xs text-gray-400 flex items-center justify-center gap-1.5 flex-wrap">
+            <span aria-hidden="true">🔒</span>
             รูปที่คุณอัปโหลดส่งไปประมวลผลชั่วคราวเท่านั้น ไม่ถูกเก็บไว้บนเซิร์ฟเวอร์ (เว้นแต่คุณกดจองคิวพร้อมรูป) ·{' '}
             <Link to="/privacy" className="underline hover:text-rose-600">
               นโยบายความเป็นส่วนตัว

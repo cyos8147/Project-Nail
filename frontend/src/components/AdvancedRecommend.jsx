@@ -42,8 +42,8 @@ function Field({ label, hint, options, value, onChange }) {
             type="button"
             aria-pressed={value === o.id}
             onClick={() => onChange(o.id)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              value === o.id ? 'bg-rose-500 text-white' : 'bg-white text-gray-600 border border-blush-200 hover:bg-blush-100'
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+              value === o.id ? 'bg-gradient-to-r from-rose-500 to-rose-400 text-white shadow-[0_8px_16px_-6px_rgba(236,76,130,0.6)] scale-[1.03]' : 'bg-white text-gray-600 border border-blush-200 hover:border-rose-300 hover:text-rose-600'
             }`}
           >
             {o.label}
@@ -103,16 +103,16 @@ export default function AdvancedRecommend({ skinTone = null }) {
   const scores = result ? toRecommendScores(result.recommendations.map((r) => r.match_score)) : []
 
   return (
-    <section id="ai-advanced-recommend" className="max-w-5xl mx-auto px-6 py-16">
+    <section id="ai-advanced-recommend" className="max-w-5xl mx-auto px-6 py-20">
       <div className="text-center mb-4">
-        <span className="inline-block bg-blush-100 text-rose-600 text-xs font-semibold px-4 py-1.5 rounded-full mb-4">
+        <span className="inline-block bg-white text-rose-600 text-xs font-semibold px-4 py-1.5 rounded-full mb-4 border border-blush-200 shadow-card">
           AI แนะนำลายเล็บ
         </span>
-        <h2 className="font-display text-3xl font-bold text-gray-800">ให้ AI เลือกลายที่ใช่ให้คุณ</h2>
+        <h2 className="font-display text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight">ให้ AI เลือกลายที่ใช่ให้คุณ</h2>
         <p className="text-gray-500 mt-2">ตอบไม่กี่ข้อ แล้วดูลายที่เหมาะกับคุณที่สุดจากลายของร้าน</p>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-card p-6 sm:p-10 grid md:grid-cols-2 gap-8">
+      <div className="bg-white/90 backdrop-blur rounded-[2rem] border border-blush-100 shadow-[0_30px_60px_-30px_rgba(217,59,114,0.35)] p-6 sm:p-10 grid md:grid-cols-2 gap-8 mt-8">
         <div className="space-y-6">
           <Field
             label="โทนสีผิวของคุณ"
@@ -139,7 +139,7 @@ export default function AdvancedRecommend({ skinTone = null }) {
             type="button"
             onClick={handleSubmit}
             disabled={status === 'loading'}
-            className="w-full bg-rose-500 hover:bg-rose-600 disabled:bg-blush-200 text-white font-semibold py-3 rounded-full shadow-card transition-colors"
+            className="w-full bg-gradient-to-r from-rose-500 via-rose-500 to-fuchsia-500 hover:brightness-110 disabled:opacity-60 text-white font-semibold py-3.5 rounded-full shadow-[0_14px_28px_-10px_rgba(236,76,130,0.7)] transition"
           >
             {status === 'loading' ? 'AI กำลังเลือกลายให้คุณ...' : 'ดูลายที่เหมาะกับฉัน'}
           </button>
@@ -148,8 +148,8 @@ export default function AdvancedRecommend({ skinTone = null }) {
 
         <div aria-live="polite">
           {status !== 'done' && (
-            <div className="h-full min-h-[220px] flex flex-col items-center justify-center text-sm text-gray-400 text-center px-6 gap-2">
-              <span className="text-3xl" aria-hidden="true">💅</span>
+            <div className="h-full min-h-[240px] flex flex-col items-center justify-center text-sm text-gray-400 text-center px-6 gap-2 rounded-3xl border-2 border-dashed border-blush-200 bg-gradient-to-br from-blush-50 to-violet-50/60">
+              <span className="text-4xl" aria-hidden="true">💅</span>
               ลายที่ AI เลือกให้จะแสดงที่นี่
             </div>
           )}
@@ -160,7 +160,7 @@ export default function AdvancedRecommend({ skinTone = null }) {
                 {result.recommendations.map((r, i) => (
                   <div
                     key={r.design.id}
-                    className={`rounded-2xl p-3 flex items-center gap-3 border ${i === 0 ? 'border-rose-300 bg-rose-50/60' : 'border-blush-200'}`}
+                    className={`rounded-2xl p-3 flex items-center gap-3 border transition hover:-translate-y-0.5 hover:shadow-card ${i === 0 ? 'border-rose-300 bg-gradient-to-r from-rose-50 to-white shadow-card' : 'border-blush-200 bg-white'}`}
                   >
                     <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
                       {r.design.image_url ? (
@@ -182,7 +182,7 @@ export default function AdvancedRecommend({ skinTone = null }) {
                     <button
                       type="button"
                       onClick={() => handleBookThis(r.design)}
-                      className="text-xs font-semibold text-white bg-rose-500 hover:bg-rose-600 px-3.5 py-2 rounded-full whitespace-nowrap"
+                      className="text-xs font-semibold text-white bg-gradient-to-r from-rose-500 to-rose-400 hover:brightness-110 px-3.5 py-2 rounded-full whitespace-nowrap shadow-md"
                     >
                       จองลายนี้
                     </button>

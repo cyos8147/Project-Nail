@@ -51,12 +51,12 @@ export default function NailRecommendation({ skinTone }) {
   }
 
   return (
-    <section id="ai-recommend" className="max-w-6xl mx-auto px-6 py-16">
+    <section id="ai-recommend" className="max-w-6xl mx-auto px-6 py-20">
       <div className="text-center mb-4">
-        <span className="inline-block bg-blush-100 text-rose-600 text-xs font-semibold px-4 py-1.5 rounded-full mb-4">
+        <span className="inline-block bg-white text-rose-600 text-xs font-semibold px-4 py-1.5 rounded-full mb-4 border border-blush-200 shadow-card">
           {personalized ? 'AI จัดอันดับให้คุณ' : 'ลายเล็บยอดนิยม'}
         </span>
-        <h2 className="font-display text-3xl font-bold text-gray-800">
+        <h2 className="font-display text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight">
           {personalized ? `ลายเล็บที่เหมาะกับผิว${TONE_LABEL[skinTone]}ของคุณ` : 'ลายเล็บยอดนิยมของร้าน'}
         </h2>
         <p className="text-gray-500 mt-2">
@@ -70,16 +70,16 @@ export default function NailRecommendation({ skinTone }) {
         {ranked.map((d, i) => (
           <div
             key={d.id ?? d.name}
-            className="bg-white rounded-2xl shadow-card overflow-hidden relative flex flex-col hover:-translate-y-1 hover:shadow-lg transition-all duration-200"
+            className="group bg-white rounded-3xl border border-blush-100 shadow-card overflow-hidden relative flex flex-col hover:-translate-y-1.5 hover:shadow-[0_22px_40px_-18px_rgba(217,59,114,0.4)] transition-all duration-300"
           >
             {personalized && i === 0 && (
-              <span className="absolute top-2 left-2 z-10 bg-rose-500 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
+              <span className="absolute top-3 left-3 z-10 bg-gradient-to-r from-rose-500 to-fuchsia-500 text-white text-[11px] font-semibold px-3 py-1 rounded-full shadow-md">
                 แนะนำที่สุด
               </span>
             )}
-            <div className="aspect-square">
+            <div className="aspect-square overflow-hidden">
               {d.image_url ? (
-                <img loading="lazy" decoding="async" src={d.image_url} alt={d.name} className="w-full h-full object-cover" />
+                <img loading="lazy" decoding="async" src={d.image_url} alt={d.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               ) : (
                 <NailThumb label={d.name} accent={d.color_hex || ACCENTS[i % ACCENTS.length]} />
               )}
@@ -94,7 +94,7 @@ export default function NailRecommendation({ skinTone }) {
                   </span>
                 </div>
                 <div className="w-full h-1.5 bg-blush-100 rounded-full overflow-hidden mt-1">
-                  <div className="h-full bg-rose-400 rounded-full" style={{ width: `${d.score * 10}%` }} />
+                  <div className="h-full bg-gradient-to-r from-rose-400 to-fuchsia-400 rounded-full" style={{ width: `${d.score * 10}%` }} />
                 </div>
               </div>
               <div className="flex items-center justify-between text-xs text-gray-400">
@@ -105,7 +105,7 @@ export default function NailRecommendation({ skinTone }) {
                 <button
                   type="button"
                   onClick={() => handleBook(d)}
-                  className="mt-auto text-xs font-semibold text-rose-600 border border-rose-200 hover:bg-rose-50 rounded-full py-2 transition-colors"
+                  className="mt-auto text-xs font-semibold text-rose-600 border border-rose-200 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-full py-2.5 transition-colors"
                 >
                   จองลายนี้
                 </button>
