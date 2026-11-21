@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { adminCreateExpense, adminDashboardReport, adminDeleteExpense, adminListExpenses, getLastBackupAt } from '../../api/client.js'
-import { WEEKDAY_LABELS, baht, compare, deltaLabel, deltaTone, fullDate, monthLabel, percentText, shiftIso, shortDate, thaiTodayIso } from '../../utils/dashboardFormat.js'
+import { WEEKDAY_LABELS, baht, compare, deltaLabel, deltaTone, fullDate, percentText, shiftIso, thaiTodayIso } from '../../utils/dashboardFormat.js'
+import RrdChart from '../../components/admin/RrdChart.jsx'
 
 const TONE_CLASS = {
   good: 'bg-green-50 text-green-700',
@@ -43,44 +44,6 @@ function Card({ title, note, children }) {
         {note && <p className="text-xs text-gray-400 mt-0.5">{note}</p>}
       </div>
       {children}
-    </div>
-  )
-}
-
-// กราฟแท่งรายได้ พร้อมเส้นระดับและวันที่กำกับ (รายวันถ้าช่วงสั้น รายเดือนถ้าช่วงยาว)
-function RevenueChart({ trend, unit }) {
-  const max = Math.max(1, ...trend.map((t) => t.revenue))
-  const width = 600
-  const height = 140
-  const barWidth = width / Math.max(trend.length, 1)
-  const label = (t) => (unit === 'month' ? monthLabel(t.date) : shortDate(t.date))
-  const mid = trend[Math.floor(trend.length / 2)]
-
-  return (
-    <div>
-      <div className="flex justify-between text-[11px] text-gray-400 mb-1">
-        <span>เส้นบน = {baht(max)} · เส้นกลาง = {baht(max / 2)}</span>
-        <span>ชี้ที่แท่งเพื่อดูยอด{unit === 'month' ? 'ของเดือน' : 'ของวัน'}นั้น</span>
-      </div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-40" preserveAspectRatio="none">
-        <line x1="0" y1="10" x2={width} y2="10" stroke="#F3D2DE" strokeWidth="1" />
-        <line x1="0" y1={height - (height - 10) / 2} x2={width} y2={height - (height - 10) / 2} stroke="#F3D2DE" strokeWidth="1" strokeDasharray="4 4" />
-        <line x1="0" y1={height} x2={width} y2={height} stroke="#E8C3D2" strokeWidth="1" />
-        {trend.map((t) => {
-          const i = trend.indexOf(t)
-          const h = (t.revenue / max) * (height - 10)
-          return (
-            <rect key={t.date} x={i * barWidth + 1} y={height - h} width={Math.max(1, barWidth - 2)} height={h} fill="#EC4C82" opacity={t.revenue > 0 ? 0.85 : 0.15}>
-              <title>{label(t)}: {baht(t.revenue)} · {t.bookings} คิว</title>
-            </rect>
-          )
-        })}
-      </svg>
-      <div className="flex justify-between text-[11px] text-gray-400 mt-1">
-        <span>{trend.length > 0 && label(trend[0])}</span>
-        <span>{trend.length > 6 && label(mid)}</span>
-        <span>{trend.length > 0 && label(trend[trend.length - 1])}</span>
-      </div>
     </div>
   )
 }
@@ -302,8 +265,8 @@ export default function DashboardPage() {
           />
         </div>
 
-        <Card title={report.trend_unit === 'month' ? 'รายได้รายเดือน' : 'รายได้รายวัน'}>
-          <RevenueChart trend={report.trend} unit={report.trend_unit} />
+        <Card title="กราฟรายได้แบบ RRD" note="เลือกความละเอียด เลื่อนดูย้อนหลังด้วยลูกศร ‹ › (กราฟนี้ไม่ขึ้นกับช่วงเวลาที่เลือกด้านบน)">
+          <RrdChart />
         </Card>
 
         <div className="grid lg:grid-cols-2 gap-6">

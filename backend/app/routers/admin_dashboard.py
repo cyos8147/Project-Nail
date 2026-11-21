@@ -8,6 +8,8 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
+from .. import rrd
+from ..availability import get_shop_settings
 from ..database import get_db
 from ..security import get_current_admin
 from ..timeutil import today_th
@@ -362,3 +364,76 @@ def dashboard_report(
         average_rating=round(float(rating_stats[0] or 0), 2) if rating_stats else 0.0,
         review_count=int(rating_stats[1] or 0) if rating_stats else 0,
     )
+
+
+# ---------------------------------------------------------------------------
+# กราฟแบบ RRD (ดู app/rrd.py)
+# ---------------------------------------------------------------------------
+
+MAX_RRD_OFFSET = 520  # ย้อนได้ไกลสุด ~10 ปีในมุมมองรายสัปดาห์ กันค่าผิดปกติ
+
+
+@router.get("/dashboard/rrd")
+def dashboard_rrd(
+    resolution: Literal["day", "week", "month", "year"] = "day",
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    admin: models.AdminUser = Depends(get_current_admin),
+):
+    """รายได้และจำนวนคิวที่เสร็จแล้ว แบ่งเป็นช่องตามความละเอียด จำนวนช่องคงที่ เลื่อนย้อนหลังด้วย offset
+
+    ช่องที่ร้านปิดทั้งช่อง (วันหยุดประจำสัปดาห์ตามการตั้งค่าปัจจุบัน หรือวันหยุดพิเศษ) ติดธง closed
+    ไม่นับในค่าเฉลี่ย/ต่ำสุด ช่องปัจจุบันที่ยังไม่จบติดธง partial ช่องอนาคตไม่มี (หน้าต่างล่าสุดจบที่วันนี้)
+    """
+    if not 0 <= offset <= MAX_RRD_OFFSET:
+        raise HTTPException(status_code=422, detail="offset ไม่ถูกต้อง")
+    today = today_th()
+    window = rrd.buckets(resolution, today, offset)
+    start, end = window[0].start, window[-1].end
+
+    rows = (
+        db.query(models.Booking.booking_date, models.Booking.price)
+        .filter(models.Booking.status == COMPLETED, models.Booking.booking_date.between(start, end))
+        .all()
+    )
+    settings = get_shop_settings(db)
+    closed_weekdays = set(settings.closed_weekdays or [])  # แบบ JS: 0=อาทิตย์
+    holidays = {
+        h.holiday_date
+        for h in db.query(models.ShopHoliday).filter(models.ShopHoliday.holiday_date.between(start, end)).all()
+    }
+
+    def is_closed(d: date) -> bool:
+        return (d.weekday() + 1) % 7 in closed_weekdays or d in holidays
+
+    out, revenue_values, count_values, usable = [], [], [], []
+    for b in window:
+        revenue = sum(float(p or 0) for d, p in rows if b.start <= d <= b.end)
+        count = sum(1 for d, _p in rows if b.start <= d <= b.end)
+        last_day = min(b.end, today)
+        days = [b.start + timedelta(days=i) for i in range((last_day - b.start).days + 1)] if b.start <= today else []
+        open_days = sum(1 for d in days if not is_closed(d))
+        closed = bool(days) and open_days == 0 and count == 0
+        out.append({
+            "start": b.start.isoformat(),
+            "end": b.end.isoformat(),
+            "label": b.label,
+            "revenue": revenue,
+            "bookings": count,
+            "open_days": open_days,
+            "closed": closed,
+            "partial": b.start <= today < b.end,
+        })
+        revenue_values.append(revenue)
+        count_values.append(float(count))
+        usable.append(not closed)
+
+    return {
+        "resolution": resolution,
+        "offset": offset,
+        "start": start.isoformat(),
+        "end": end.isoformat(),
+        "buckets": out,
+        "summary": {"revenue": rrd.summarize(revenue_values, usable), "bookings": rrd.summarize(count_values, usable)},
+        "has_older": offset < MAX_RRD_OFFSET,
+    }

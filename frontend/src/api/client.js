@@ -180,6 +180,7 @@ export const adminDeleteHoliday = (id) => request(`/admin/holidays/${id}`, { met
 // --- Admin dashboard ------------------------------------------------------
 export const adminDashboardSummary = () => request('/admin/dashboard/summary', { auth: true })
 export const adminDashboardReport = (params) => request('/admin/dashboard/report', { auth: true, params })
+export const adminDashboardRrd = (params) => request('/admin/dashboard/rrd', { auth: true, params })
 
 // --- Admin export / backup (เฉพาะ owner) ---------------------------------------
 const LAST_BACKUP_KEY = 'luckysalon_last_backup'
