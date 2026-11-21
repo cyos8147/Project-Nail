@@ -2677,6 +2677,25 @@ export default function NailTryOn({ onBookDesign, onSkinAnalyzed } = {}) {
               </>
             )}
 
+            {skinRecommendations.length > 0 && (
+              <>
+                <div className="section-label">สีที่แนะนำสำหรับคุณ (จากผลวิเคราะห์สีผิว)</div>
+                <div className="swatch-grid">
+                  {skinRecommendations.map(({ hex, name }) => (
+                    <button
+                      key={`rec-${hex}`}
+                      type="button"
+                      className={`swatch-item ${selectedHex === hex ? 'selected' : ''}`}
+                      onClick={() => applyColor(hex)}
+                    >
+                      <span className="swatch-dot" style={{ background: swatchGradient(hex) }} />
+                      <span className="swatch-label">{name}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
             <div className="section-label">สี</div>
             <div className="swatch-grid">
               {PALETTE.map(({ hex, name }) => (
