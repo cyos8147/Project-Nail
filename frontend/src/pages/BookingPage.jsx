@@ -4,8 +4,8 @@ import Footer from '../components/Footer.jsx'
 
 export default function BookingPage() {
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-blush-50 via-white to-blush-50 text-gray-800 overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+    <div className="relative min-h-screen bg-gradient-to-b from-blush-50 via-white to-blush-50 text-gray-800 overflow-x-clip">
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-clip">
         <div className="absolute top-0 -right-32 w-[28rem] h-[28rem] bg-peach/50 rounded-full blur-3xl" />
         <div className="absolute top-[60%] -left-40 w-[26rem] h-[26rem] bg-rose-200/40 rounded-full blur-3xl" />
       </div>

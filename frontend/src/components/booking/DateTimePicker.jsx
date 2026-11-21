@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getAvailability } from '../../api/client.js'
+import { getAvailability, getChainAvailability } from '../../api/client.js'
 import { CLOSED_WEEKDAY } from '../../data/bookingData.js'
 
 const THAI_MONTHS = [
@@ -27,6 +27,8 @@ export default function DateTimePicker({
   categoryId,
   closedWeekdays,
   excludeBookingId,
+  chainParam = null, // จองหลายบริการต่อกัน: "hair:60,nail:45" → ใช้คิวว่างของทั้งชุด
+  chainPreview = null, // (time) => [{service, start, end}] แสดงตารางเวลาของแต่ละบริการเมื่อเลือกเวลา
 }) {
   const today = startOfToday()
   const [viewYear, setViewYear] = useState(today.getFullYear())
@@ -77,7 +79,10 @@ export default function DateTimePicker({
     let cancelled = false
     setLoadingSlots(true)
     setSlotsError(null)
-    getAvailability(selectedDate, serviceDurationMinutes, categoryId, excludeBookingId)
+    const req = chainParam
+      ? getChainAvailability(selectedDate, chainParam)
+      : getAvailability(selectedDate, serviceDurationMinutes, categoryId, excludeBookingId)
+    req
       .then((res) => {
         if (!cancelled) setSlots(res.slots || [])
       })
@@ -90,7 +95,7 @@ export default function DateTimePicker({
     return () => {
       cancelled = true
     }
-  }, [selectedDate, serviceDurationMinutes, categoryId, excludeBookingId])
+  }, [selectedDate, serviceDurationMinutes, categoryId, excludeBookingId, chainParam])
 
   return (
     <div>
@@ -206,7 +211,24 @@ export default function DateTimePicker({
             </div>
           )}
 
-          {selectedDate && <p className="text-[11px] text-gray-400 mt-4">* ช่วงเวลาที่มีเส้นขีดคือคิวที่ถูกจองแล้ว</p>}
+          {selectedDate && selectedTime && chainPreview && (
+            <div className="mt-4 rounded-xl bg-rose-50 border border-rose-200 p-3">
+              <p className="text-xs font-semibold text-rose-700 mb-1.5">ตารางเวลาของคุณ</p>
+              <ol className="space-y-1">
+                {chainPreview(selectedTime).map((c, i) => (
+                  <li key={c.service.id} className="flex justify-between gap-3 text-xs text-gray-700">
+                    <span>{i + 1}. {c.service.name}</span>
+                    <span className="font-semibold whitespace-nowrap">{c.start}–{c.end} น.</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+          {selectedDate && (
+            <p className="text-[11px] text-gray-400 mt-4">
+              * ช่วงเวลาที่มีเส้นขีดคือคิวที่ถูกจองแล้ว{chainParam ? ' (เวลาที่เลือกได้คือเวลาที่ทุกบริการในชุดว่างต่อกันพอดี)' : ''}
+            </p>
+          )}
         </div>
       </div>
     </div>

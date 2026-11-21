@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test src/utils/cancelPolicy.test.js src/utils/dashboardFormat.test.js src/utils/tryonStorage.test.js src/utils/recommendScore.test.js src/utils/carryDesign.test.js"
+    "test": "node --test src/utils/cancelPolicy.test.js src/utils/dashboardFormat.test.js src/utils/tryonStorage.test.js src/utils/recommendScore.test.js src/utils/carryDesign.test.js src/utils/multiBooking.test.js"
   },
   "dependencies": {
     "react": "^18.3.1",

@@ -11,6 +11,7 @@ function formatDateKey(dateKey) {
 }
 
 export default function ContactForm({
+  chain = null,
   category,
   service,
   selectedShade,
@@ -42,6 +43,18 @@ export default function ContactForm({
               <p className="text-[11px] text-gray-400 mt-1">กดที่รูปเพื่อดูเต็มจอ</p>
             </div>
           )}
+          {chain ? (
+            <div className="space-y-2">
+              <p className="text-xs text-gray-500">บริการ (ทำต่อกันตามลำดับ)</p>
+              {chain.map((c, i) => (
+                <div key={c.service.id} className="flex justify-between gap-2 text-sm bg-white rounded-xl border border-blush-200 px-3 py-2">
+                  <span className="font-medium text-gray-800">{i + 1}. {c.service.name}</span>
+                  <span className="text-gray-600 whitespace-nowrap">{c.start}–{c.end} น.</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+          <>
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">หมวดหมู่</span>
             <span className="font-medium text-gray-800">{category === 'hair' ? 'ทำผม' : 'ทำเล็บ'}</span>
@@ -50,6 +63,8 @@ export default function ContactForm({
             <span className="text-gray-500">บริการ</span>
             <span className="font-medium text-gray-800">{service?.name}</span>
           </div>
+          </>
+          )}
           {selectedShade && (
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">โทนสี</span>
@@ -78,7 +93,7 @@ export default function ContactForm({
           ) : null}
           <div className="border-t border-blush-200 pt-3 flex justify-between text-sm">
             <span className="text-gray-500">ราคาโดยประมาณ</span>
-            <span className="font-semibold text-rose-600">{service?.price} บาท</span>
+            <span className="font-semibold text-rose-600">{chain ? chain.reduce((n, c) => n + c.price, 0) : service?.price} บาท</span>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed">
             ตรวจรูป สี และบริการให้ถูกต้องก่อนกดยืนยัน ถ้าต้องการแก้ไขกด “ย้อนกลับ”

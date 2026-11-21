@@ -109,3 +109,74 @@ def lock_slot(db: Session, category_id: str, target_date: date, target_time: str
         return
     key = f"{category_id}|{target_date.isoformat()}|{target_time}"
     db.execute(text("select pg_advisory_xact_lock(hashtext(:key))"), {"key": key})
+
+
+MAX_CHAIN_ITEMS = 3
+
+
+def _busy_ranges(db: Session, target_date: date, category_id: str, exclude_ids: set[str]) -> list[tuple[int, int]]:
+    q = db.query(Booking).filter(
+        Booking.booking_date == target_date,
+        Booking.category_id == category_id,
+        Booking.status.in_(ACTIVE_STATUSES),
+    )
+    ranges = []
+    for b in q.all():
+        if b.id in exclude_ids:
+            continue
+        start = _time_to_minutes(b.booking_time)
+        ranges.append((start, start + (b.estimated_duration_minutes or 60)))
+    return ranges
+
+
+def chain_start_times(start_minutes: int, items: list[tuple[str, int]]) -> list[int]:
+    """เวลาเริ่มของแต่ละบริการเมื่อทำต่อกันทีละอย่าง (บริการถัดไปเริ่มทันทีที่บริการก่อนหน้าเสร็จ)"""
+    starts, t = [], start_minutes
+    for _category_id, duration in items:
+        starts.append(t)
+        t += duration
+    return starts
+
+
+def compute_chain_slots(
+    db: Session,
+    target_date: date,
+    items: list[tuple[str, int]],
+    exclude_booking_ids: set[str] | None = None,
+) -> list[dict]:
+    """คิวว่างสำหรับ "หลายบริการทำต่อกัน" -- เวลาเริ่มหนึ่งจะว่างก็ต่อเมื่อ "ทุกบริการ" ในชุดว่างตามช่วงเวลาของตัวเอง
+    (แต่ละบริการเช็กกับช่างของหมวดตัวเองตาม staff_count เหมือนคิวเดี่ยว) และบริการสุดท้ายต้องเสร็จก่อนร้านปิด
+    items = [(category_id, duration_minutes), ...] ตามลำดับที่ลูกค้าเลือก"""
+    if not items or any(d <= 0 for _c, d in items) or not is_shop_open(db, target_date):
+        return []
+    settings = get_shop_settings(db)
+    open_min = _time_to_minutes(settings.opening_time)
+    close_min = _time_to_minutes(settings.closing_time)
+    step = settings.slot_interval_minutes or 60
+    total = sum(d for _c, d in items)
+    exclude = exclude_booking_ids or set()
+
+    busy = {c: _busy_ranges(db, target_date, c, exclude) for c in {c for c, _d in items}}
+    capacity = {}
+    for c in busy:
+        category = db.get(ServiceCategory, c)
+        capacity[c] = category.staff_count if category else 0
+
+    now = now_th()
+    is_today = target_date == now.date()
+    now_minutes = now.hour * 60 + now.minute
+
+    slots = []
+    t = open_min
+    while t + total <= close_min:
+        ok = not (is_today and t <= now_minutes)
+        if ok:
+            for (category_id, duration), start in zip(items, chain_start_times(t, items)):
+                end = start + duration
+                overlapping = sum(1 for bs, be in busy[category_id] if start < be and end > bs)
+                if overlapping >= capacity[category_id]:
+                    ok = False
+                    break
+        slots.append({"time": _minutes_to_time(t), "available": ok})
+        t += step
+    return slots

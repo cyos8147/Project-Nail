@@ -98,6 +98,8 @@ export const getAvailability = (date, durationMinutes, categoryId, excludeBookin
 
 // --- Bookings -----------------------------------------------------------
 export const createBooking = (payload) => request('/bookings', { method: 'POST', body: payload })
+export const createMultiBooking = (payload) => request('/bookings/multi', { method: 'POST', body: payload })
+export const getChainAvailability = (date, items) => request('/availability/chain', { params: { date, items } })
 export const getBookingStatus = (bookingCode, phone) =>
   request('/bookings/status', { params: { booking_code: bookingCode, phone } })
 export const getCustomerHistory = (phone, bookingCode) =>

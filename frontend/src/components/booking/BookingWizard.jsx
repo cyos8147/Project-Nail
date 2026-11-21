@@ -5,9 +5,11 @@ import ServiceDetails from './ServiceDetails.jsx'
 import CancelPolicyNote from '../CancelPolicyNote.jsx'
 import DateTimePicker from './DateTimePicker.jsx'
 import ContactForm from './ContactForm.jsx'
+import ExtraServicesPicker from './ExtraServicesPicker.jsx'
 import StepIndicator from './StepIndicator.jsx'
 import {
   createBooking,
+  createMultiBooking,
   fileToBase64,
   getServiceCategories,
   getServices,
@@ -16,6 +18,7 @@ import {
   savePhone,
 } from '../../api/client.js'
 import { pickNailService, shadeFromCarry, takeCarryDesign } from '../../utils/carryDesign.js'
+import { buildChain, chainParam, chainTotals } from '../../utils/multiBooking.js'
 import ZoomableImage from '../ZoomableImage.jsx'
 
 const THAI_MONTHS_SHORT = [
@@ -41,6 +44,7 @@ const initialContact = { name: '', phone: '', lineId: '' }
 export default function BookingWizard() {
   const [category, setCategory] = useState('hair')
   const [service, setService] = useState(null)
+  const [extras, setExtras] = useState([]) // บริการที่ทำต่อจากบริการหลัก ตามลำดับ (ข้อ 2.2)
   const [selectedShade, setSelectedShade] = useState(null)
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState(null)
@@ -139,11 +143,14 @@ export default function BookingWizard() {
   function handleCategoryChange(newCategory) {
     setCategory(newCategory)
     setService(null)
+    setExtras([])
     resetServiceRelatedState()
   }
 
   function handleServiceChange(newService) {
     setService(newService)
+    setExtras((prev) => prev.filter((s) => s.id !== newService?.id))
+    setSelectedTime(null)
     setSelectedShade(null)
     setImageFile(null)
     setImagePreview(null)
@@ -208,7 +215,7 @@ export default function BookingWizard() {
         referenceImageBase64 = carriedDesign.reference_image_base64
       }
 
-      const result = await createBooking({
+      const mainItem = {
         category_id: category,
         service_id: service.id,
         shade_id: (selectedShade ?? carriedShade)?.id ?? null,
@@ -217,12 +224,38 @@ export default function BookingWizard() {
         reference_image_base64: referenceImageBase64,
         ai_style_tag: aiStyleTag,
         ai_extra_minutes: aiExtraMinutes,
+      }
+      const contact = {
         booking_date: selectedDate,
         booking_time: selectedTime,
         customer_name: form.name,
         customer_phone: form.phone,
         line_id: form.lineId,
-      })
+      }
+      let result
+      if (isMulti) {
+        // สี/รูปที่ส่งมาจาก AI Studio เป็นของบริการทำเล็บ: ถ้าบริการหลักไม่ใช่ทำเล็บ แนบไปกับบริการทำเล็บตัวแรกในชุดแทน
+        const carriedNail = category !== 'nail' && carriedDesign ? shadeFromCarry(carriedDesign) : null
+        let carriedUsed = false
+        const extraItems = extras.map((s) => {
+          const item = { category_id: s.category_id, service_id: s.id }
+          if (carriedDesign && category !== 'nail' && !carriedUsed && s.category_id === 'nail') {
+            carriedUsed = true
+            return {
+              ...item,
+              shade_id: carriedNail?.id ?? null,
+              shade_name: carriedNail?.name ?? null,
+              nail_design_id: carriedDesign.nail_design_id ?? null,
+              reference_image_base64: carriedDesign.reference_image_base64 ?? null,
+            }
+          }
+          return item
+        })
+        const list = await createMultiBooking({ items: [mainItem, ...extraItems], ...contact })
+        result = { ...list[0], all: list }
+      } else {
+        result = await createBooking({ ...mainItem, ...contact })
+      }
 
       savePhone(form.phone)
       // จำรหัสคิวไว้ในเครื่อง หน้า "ประวัติของฉัน" จะเปิดดู/ยกเลิก/เลื่อนคิวได้ทันทีโดยไม่ต้องพิมพ์รหัสเอง
@@ -239,6 +272,7 @@ export default function BookingWizard() {
   function handleReset() {
     setCategory('hair')
     setService(null)
+    setExtras([])
     setSelectedShade(null)
     setImageFile(null)
     setImagePreview(null)
@@ -255,8 +289,22 @@ export default function BookingWizard() {
     setStep(1)
   }
 
+  // เปลี่ยนชุดบริการ → เวลาที่เลือกไว้อาจไม่ว่างสำหรับชุดใหม่ ให้เลือกเวลาใหม่
+  const extrasKey = extras.map((x) => x.id).join(',')
+  const lastExtrasKey = useRef(extrasKey)
+  useEffect(() => {
+    if (lastExtrasKey.current !== extrasKey) {
+      lastExtrasKey.current = extrasKey
+      setSelectedTime(null)
+    }
+  }, [extrasKey])
+
   const currentStepName = steps[step - 1]
   const estimatedDuration = (service?.duration_minutes ?? service?.duration ?? 60) + aiExtraMinutes
+  const allServices = useMemo(() => Object.values(servicesByCategory).flat(), [servicesByCategory])
+  const isMulti = extras.length > 0
+  const chain = useMemo(() => buildChain(service, extras, selectedTime, aiExtraMinutes), [service, extras, selectedTime, aiExtraMinutes])
+  const multiParam = isMulti ? chainParam(chain) : null
 
   if (submitted) {
     return (
@@ -267,19 +315,39 @@ export default function BookingWizard() {
           <p className="text-gray-500 mt-2">ขอบคุณที่ใช้บริการ Lucky Salon</p>
 
           <div className="mt-6 bg-blush-50 border border-blush-200 rounded-2xl p-5 max-w-xs mx-auto text-left space-y-2.5">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">บริการ</span>
-              <span className="font-medium text-gray-800">{service?.name}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">วันที่</span>
-              <span className="font-medium text-gray-800">{formatDateKey(selectedDate)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">เวลา</span>
-              <span className="font-medium text-gray-800">{selectedTime} น.</span>
-            </div>
-            {bookingResult?.booking_code && (
+            {bookingResult?.all ? (
+              <>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">วันที่</span>
+                  <span className="font-medium text-gray-800">{formatDateKey(selectedDate)}</span>
+                </div>
+                {bookingResult.all.map((b, i) => (
+                  <div key={b.id} className="text-sm pt-2 border-t border-blush-200">
+                    <div className="flex justify-between gap-2">
+                      <span className="font-medium text-gray-800">{i + 1}. {b.service_name}</span>
+                      <span className="text-gray-600 whitespace-nowrap">{b.booking_time} น.</span>
+                    </div>
+                    <p className="text-xs text-gray-400">รหัสคิว <span className="font-display font-bold text-rose-600">{b.booking_code}</span></p>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">บริการ</span>
+                  <span className="font-medium text-gray-800">{service?.name}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">วันที่</span>
+                  <span className="font-medium text-gray-800">{formatDateKey(selectedDate)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">เวลา</span>
+                  <span className="font-medium text-gray-800">{selectedTime} น.</span>
+                </div>
+              </>
+            )}
+            {bookingResult?.booking_code && !bookingResult?.all && (
               <div className="flex justify-between items-center text-sm pt-2.5 mt-1 border-t border-blush-200">
                 <span className="text-gray-500">รหัสคิว</span>
                 <span className="font-display font-bold text-rose-600">{bookingResult.booking_code}</span>
@@ -387,6 +455,14 @@ export default function BookingWizard() {
               categories={categories}
               servicesByCategory={servicesByCategory}
             />
+            <ExtraServicesPicker
+              main={service}
+              extras={extras}
+              setExtras={setExtras}
+              allServices={allServices}
+              categories={categories}
+              mainExtraMinutes={aiExtraMinutes}
+            />
             </>
           ) : (
             <p className="text-center text-gray-400 text-sm py-12">กำลังโหลดข้อมูลบริการ...</p>
@@ -421,6 +497,8 @@ export default function BookingWizard() {
             serviceDurationMinutes={estimatedDuration}
             categoryId={category}
             closedWeekdays={closedWeekdays}
+            chainParam={multiParam}
+            chainPreview={isMulti ? (t) => buildChain(service, extras, t, aiExtraMinutes) : null}
           />
         )}
 
@@ -430,7 +508,8 @@ export default function BookingWizard() {
             service={service}
             selectedShade={selectedShade ?? carriedShade}
             referenceImage={imagePreview || carriedDesign?.reference_image_base64 || null}
-            durationMinutes={estimatedDuration}
+            durationMinutes={isMulti ? chainTotals(chain).minutes : estimatedDuration}
+            chain={isMulti ? chain : null}
             selectedDate={selectedDate}
             selectedTime={selectedTime}
             form={form}
@@ -439,23 +518,38 @@ export default function BookingWizard() {
           />
         )}
 
-        {/* Navigation buttons */}
-        <div className="flex items-center justify-between mt-10 pt-6 border-t border-blush-100">
+        {/* Navigation buttons: ติดขอบล่างจอบนมือถือ กดถัดไปได้โดยไม่ต้องเลื่อนลงไปหา พร้อมสรุปสิ่งที่เลือกและบอกว่ายังขาดอะไร */}
+        <div className="sticky bottom-0 z-20 -mx-6 sm:mx-0 mt-10 px-6 sm:px-0 py-4 sm:pt-6 bg-white/95 backdrop-blur border-t border-blush-100 flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={goBack}
             disabled={step === 1}
-            className="px-5 py-2.5 rounded-full text-sm font-semibold text-gray-500 hover:bg-blush-100 disabled:opacity-0 transition-colors"
+            className="px-4 py-2.5 rounded-full text-sm font-semibold text-gray-500 hover:bg-blush-100 disabled:opacity-0 transition-colors"
           >
             ย้อนกลับ
           </button>
+
+          <div className="flex-1 min-w-0 text-center text-xs leading-snug" aria-live="polite">
+            {service ? (
+              <p className="text-gray-600 truncate">
+                <span className="font-semibold text-gray-800">{[service.name, ...extras.map((x) => x.name)].join(' + ')}</span>
+                {' · '}{isMulti ? chainTotals(chain).price : service.price} บาท
+                {selectedDate && selectedTime ? ` · ${formatDateKey(selectedDate)} ${selectedTime} น.` : ''}
+              </p>
+            ) : null}
+            {!isStepValid(step) && (
+              <p className="text-rose-500 font-medium">
+                {currentStepName === 'เลือกบริการ' ? 'เลือกบริการก่อน' : currentStepName === 'วันและเวลา' ? (selectedDate ? 'เลือกเวลาที่ว่าง' : 'เลือกวันจากปฏิทิน') : ''}
+              </p>
+            )}
+          </div>
 
           {step < totalSteps ? (
             <button
               type="button"
               onClick={goNext}
               disabled={!isStepValid(step)}
-              className="bg-rose-500 hover:bg-rose-600 disabled:bg-blush-200 disabled:cursor-not-allowed text-white font-semibold px-7 py-2.5 rounded-full shadow-card transition-colors"
+              className="bg-rose-500 hover:bg-rose-600 disabled:bg-blush-200 disabled:cursor-not-allowed text-white font-semibold px-6 sm:px-7 py-2.5 rounded-full shadow-card transition-colors whitespace-nowrap"
             >
               ถัดไป
             </button>

@@ -17,6 +17,7 @@ log = logging.getLogger("uvicorn.error")
 # (ตาราง, คอลัมน์, นิยามคอลัมน์) -- เพิ่มรายการใหม่ต่อท้ายเมื่อมีคอลัมน์ใหม่ในโมเดล ใช้ SQL มาตรฐานที่ทั้ง Postgres และ SQLite รับได้
 COLUMN_ADDITIONS = [
     ("shop_settings", "cancel_cutoff_hours", "INTEGER NOT NULL DEFAULT 0"),
+    ("bookings", "group_id", "VARCHAR(36)"),  # จองหลายบริการต่อกัน (NULL = คิวเดี่ยว แถวเดิมทั้งหมดเป็นคิวเดี่ยว)
 ]
 
 

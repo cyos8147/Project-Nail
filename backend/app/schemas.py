@@ -161,6 +161,28 @@ class BookingCreate(BaseModel):
     line_id: str = ""
 
 
+class MultiBookingItem(BaseModel):
+    """บริการหนึ่งรายการในการจองต่อกัน -- รายละเอียดสี/รูป/AI แนบเฉพาะรายการที่เกี่ยวข้อง (ปกติคือบริการทำเล็บ)"""
+
+    category_id: str
+    service_id: str
+    shade_id: Optional[str] = Field(default=None, max_length=64)
+    shade_name: Optional[str] = Field(default=None, max_length=120)
+    nail_design_id: Optional[str] = None
+    reference_image_base64: Optional[str] = None
+    ai_style_tag: Optional[str] = None
+    ai_extra_minutes: int = 0
+
+
+class MultiBookingCreate(BaseModel):
+    items: list[MultiBookingItem] = Field(min_length=2, max_length=3)
+    booking_date: date
+    booking_time: str
+    customer_name: str
+    customer_phone: str
+    line_id: str = ""
+
+
 class BookingOut(BaseModel):
     id: UUIDStr
     booking_code: str
@@ -182,6 +204,7 @@ class BookingOut(BaseModel):
     line_id: str
     status: str
     admin_note: str
+    group_id: Optional[str] = None
     created_at: datetime
 
     class Config:

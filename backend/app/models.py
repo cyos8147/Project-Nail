@@ -166,6 +166,10 @@ class Booking(Base):
     status: Mapped[str] = mapped_column(String(16), default="pending")
     admin_note: Mapped[str] = mapped_column(Text, default="")
     reminder_sent: Mapped[bool] = mapped_column(Boolean, default=False)
+    # จองหลายบริการต่อกันในครั้งเดียว (เช่น ทำผมแล้วต่อด้วยทำเล็บ): แต่ละบริการเป็น 1 แถวของตัวเอง (เวลาเริ่ม ช่าง ราคา
+    # สถานะแยกกัน รายงาน/คิวว่างเดิมจึงใช้ได้ทันที) แล้วผูกกันด้วย group_id เดียวกัน -- คิวเดี่ยวเป็น NULL
+    # คอลัมน์ที่เพิ่มทีหลัง: migrations.py เพิ่มให้ตารางเดิมอัตโนมัติตอนเริ่มเซิร์ฟเวอร์
+    group_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

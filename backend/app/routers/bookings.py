@@ -3,7 +3,16 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
-from ..availability import compute_available_slots, is_shop_open, lock_slot
+from ..availability import (
+    _minutes_to_time,
+    _time_to_minutes,
+    chain_start_times,
+    compute_available_slots,
+    compute_chain_slots,
+    is_shop_open,
+    lock_slot,
+)
+from ..models import new_uuid
 from ..database import get_db
 from ..policy import ensure_online_change_allowed, get_cancel_cutoff_hours
 from ..rate_limit import limiter
@@ -100,6 +109,95 @@ def create_booking(request: Request, payload: schemas.BookingCreate, db: Session
     line_notify.notify_booking_created(booking, customer.line_user_id, get_cancel_cutoff_hours(db))
     line_notify.notify_shop_new_booking(booking, _shop_recipient_ids(db))
     return booking
+
+
+@router.post("/multi", response_model=list[schemas.BookingOut], status_code=201)
+@limiter.limit("10/minute")
+def create_multi_booking(request: Request, payload: schemas.MultiBookingCreate, db: Session = Depends(get_db)):
+    """จองหลายบริการต่อกันในครั้งเดียว (ทำต่อทีละอย่าง เช่น ทำผมแล้วทำเล็บ) -- สร้างเป็นคิวแยกตามบริการ
+    เวลาเริ่มของบริการถัดไป = เวลาเสร็จของบริการก่อนหน้า ผูกกันด้วย group_id เดียวกัน
+    ทั้งชุดต้องว่างพร้อมกันเท่านั้น ถ้าบริการไหนไม่ว่างจะไม่บันทึกอะไรเลย (ไม่เหลือครึ่งชุดค้างในระบบ)"""
+    if not is_shop_open(db, payload.booking_date):
+        raise HTTPException(400, "ร้านปิดในวันที่เลือก กรุณาเลือกวันอื่น")
+
+    resolved = []  # (item, service, duration)
+    for item in payload.items:
+        service = db.get(models.Service, item.service_id)
+        if service is None or not service.active or service.category_id != item.category_id:
+            raise HTTPException(404, "ไม่พบบริการนี้ในระบบ")
+        resolved.append((item, service, service.duration_minutes + max(0, item.ai_extra_minutes)))
+    if len({svc.id for _i, svc, _d in resolved}) != len(resolved):
+        raise HTTPException(400, "เลือกบริการซ้ำกันในการจองเดียว")
+
+    chain = [(item.category_id, duration) for item, _svc, duration in resolved]
+    starts = chain_start_times(_time_to_minutes(payload.booking_time), chain)
+
+    images = []
+    for item, _svc, _d in resolved:
+        url = None
+        if item.reference_image_base64:
+            try:
+                raw, _content_type = decode_and_validate_image(item.reference_image_base64)
+            except ValueError as e:
+                raise HTTPException(400, str(e))
+            url = upload_photo(raw, "booking-references", REFERENCE_PHOTO_MAX_SIDE)
+        images.append(url)
+
+    for _attempt in range(MAX_BOOKING_ATTEMPTS):
+        for (category_id, _d), start in zip(chain, starts):
+            lock_slot(db, category_id, payload.booking_date, _minutes_to_time(start))
+        slots = compute_chain_slots(db, payload.booking_date, chain)
+        chosen = next((s for s in slots if s["time"] == payload.booking_time), None)
+        if chosen is None or not chosen["available"]:
+            db.rollback()
+            raise HTTPException(409, SLOT_TAKEN_MESSAGE)
+
+        customer = _get_or_create_customer(db, payload.customer_phone, payload.customer_name, payload.line_id)
+        group_id = new_uuid()
+        created = []
+        for (item, service, duration), start, image_url in zip(resolved, starts, images):
+            booking = models.Booking(
+                booking_code=generate_booking_code(db, payload.booking_date),
+                customer_id=customer.id,
+                category_id=item.category_id,
+                service_id=service.id,
+                service_name=service.name,
+                price=service.price,
+                shade_id=item.shade_id,
+                shade_name=item.shade_name,
+                nail_design_id=item.nail_design_id,
+                reference_image_url=image_url,
+                ai_style_tag=item.ai_style_tag,
+                ai_extra_minutes=max(0, item.ai_extra_minutes),
+                estimated_duration_minutes=duration,
+                booking_date=payload.booking_date,
+                booking_time=_minutes_to_time(start),
+                customer_name=payload.customer_name,
+                customer_phone=payload.customer_phone,
+                line_id=payload.line_id,
+                status="pending",
+                group_id=group_id,
+            )
+            db.add(booking)
+            db.flush()  # ให้รหัสคิวของบริการถัดไปนับแถวนี้ด้วย (ไม่งั้นได้รหัสซ้ำกันเอง)
+            created.append(booking)
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            continue
+        for b in created:
+            db.refresh(b)
+        break
+    else:
+        raise HTTPException(409, SLOT_TAKEN_MESSAGE)
+
+    cutoff = get_cancel_cutoff_hours(db)
+    recipients = _shop_recipient_ids(db)
+    for b in created:
+        line_notify.notify_booking_created(b, customer.line_user_id, cutoff)
+        line_notify.notify_shop_new_booking(b, recipients)
+    return created
 
 
 @router.get("/status", response_model=schemas.BookingOut)

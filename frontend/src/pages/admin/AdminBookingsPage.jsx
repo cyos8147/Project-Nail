@@ -391,6 +391,20 @@ export default function AdminBookingsPage() {
                   )}
                 </p>
                 <p className="text-xs text-gray-400 mt-0.5">{b.booking_code} · {b.service_name} · {b.booking_date} {b.booking_time} น. · {b.price} บาท</p>
+                {b.group_id && (() => {
+                  const group = bookings.filter((x) => x.group_id === b.group_id)
+                  const others = group.filter((x) => x.id !== b.id)
+                  return (
+                    <p className="mt-1 inline-flex flex-wrap items-center gap-1 text-[11px] font-semibold text-violet-700 bg-violet-50 border border-violet-200 rounded-full px-2.5 py-0.5">
+                      🔗 จองต่อเนื่องหลายบริการ
+                      {others.length > 0 && (
+                        <span className="font-normal text-violet-600">
+                          · ร่วมกับ {others.map((x) => `${x.service_name} ${x.booking_time} น.`).join(', ')}
+                        </span>
+                      )}
+                    </p>
+                  )
+                })()}
                 {b.shade_name && <p className="text-xs text-gray-400">โทนสี: {b.shade_name}</p>}
                 {b.ai_style_tag && <p className="text-xs text-gray-400">AI style: {b.ai_style_tag} (+{b.ai_extra_minutes} นาที)</p>}
               </div>
