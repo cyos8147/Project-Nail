@@ -1392,7 +1392,7 @@ function sampleSkinNearNails(ctx, w, h, nailPolygons) {
   const samples = [];
   nailPolygons.forEach((polygon) => {
     const bbox = polygonBBox(polygon);
-    const padX = bbox.w * 0.7, padY = bbox.h * 0.7;
+    const padX = bbox.w * 0.5, padY = bbox.h * 0.5;
     const x0 = Math.max(0, Math.floor(bbox.minX - padX));
     const x1 = Math.min(w, Math.ceil(bbox.maxX + padX));
     const y0 = Math.max(0, Math.floor(bbox.minY - padY));
@@ -1404,8 +1404,10 @@ function sampleSkinNearNails(ctx, w, h, nailPolygons) {
         const i = (y * w + x) * 4;
         const r = data[i], g = data[i + 1], b = data[i + 2];
         const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-        if (lum < 35 || lum > 240) continue; // เงามืด / ไฮไลต์ที่ขาดรายละเอียด
+        if (lum < 60 || lum > 240) continue; // เงามืด / ฉากหลังสีเข้ม / ไฮไลต์ที่ขาดรายละเอียด
         if (g > r || b > r) continue; // ผิวคนช่องแดงต้องนำ — ตัดฉากหลังและแสงสีเย็น
+        if (r - b < 14 || r - g < 4) continue; // ผิวต้องอุ่นกว่าเทา: ตัดแขนเสื้อ/พื้นหลังสีเทาน้ำตาลที่อยู่รอบนิ้ว
+        if (!isSkinAt(data, i)) continue; // ต้องผ่านช่วงสีผิวมนุษย์ (YCrCb) จริง
         // แสงสะท้อนบนผิวมัน: สว่างจัดแต่สีซีด (ความอิ่มสีต่ำ) เคยทำให้ผิวแทนถูกอ่านเป็นผิวขาว
         const sat = (Math.max(r, g, b) - Math.min(r, g, b)) / Math.max(r, g, b, 1);
         if (lum > 200 && sat < 0.1) continue;
