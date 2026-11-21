@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { baht, compare, deltaLabel, deltaTone, percentText, shortDate, monthLabel, fullDate, thaiTodayIso, shiftIso } from './dashboardFormat.js'
+import { baht, compare, deltaLabel, deltaTone, percentText, shortDate, monthLabel, fullDate, thaiTodayIso, shiftIso, longDate } from './dashboardFormat.js'
 
 test('compare: เพิ่ม ลด เท่าเดิม และช่วงก่อนเป็นศูนย์', () => {
   assert.deepEqual(compare(950, 350), { kind: 'up', percent: ((950 - 350) / 350) * 100 })
@@ -42,4 +42,11 @@ test('วันที่ไทย: ตี 1 เวลาไทยต้องเ
   assert.equal(thaiTodayIso(Date.UTC(2033, 2, 15, 10, 0)), '2033-03-15')
   assert.equal(shiftIso('2033-03-01', -29), '2033-01-31')
   assert.equal(fullDate('2033-03-05'), '5 มี.ค. 76')
+})
+
+test('longDate: วันในสัปดาห์ถูกต้องและไม่เพี้ยนตามเขตเวลาเครื่อง', () => {
+  assert.equal(longDate('2033-03-05'), 'ส. 5 มี.ค. 2576')
+  assert.equal(longDate('2026-12-31'), 'พฤ. 31 ธ.ค. 2569')
+  assert.equal(longDate('2026-01-01'), 'พฤ. 1 ม.ค. 2569')
+  assert.equal(longDate(''), '')
 })

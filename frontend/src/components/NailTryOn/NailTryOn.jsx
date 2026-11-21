@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import './NailTryOn.css';
+import {
+  addEntry, clearHistory, getStorage, loadHistory, loadSkinResult, lookKey, removeEntry, saveHistory,
+  saveSkinResult, thaiDateTime,
+} from '../../utils/tryonStorage.js';
 
 const API_URL = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'}/ai/detect-nails`;
 // เผื่อเวลาเซิร์ฟเวอร์ฟรีตื่นจากหลับ + โหลดโมเดลครั้งแรก แต่ไม่ให้หน้าเว็บรอไม่รู้จบถ้าเซิร์ฟเวอร์ไม่ตอบ
@@ -91,6 +95,16 @@ const FINISH_STYLE = {
 };
 
 const TIPS_DISMISSED_KEY = 'nailTipsDismissed';
+
+// ประวัติลองสีเก็บในเครื่องลูกค้า (ไม่ส่งขึ้นเซิร์ฟเวอร์) รูปย่อด้านยาวสุดเท่านี้ เพื่อไม่ให้ localStorage เต็ม
+const THUMB_MAX = 480;
+const COMPARE_MAX = 3;
+
+let cachedStorage;
+function store() {
+  if (cachedStorage === undefined) cachedStorage = getStorage();
+  return cachedStorage;
+}
 
 // ---------- pure helpers (no React state, just canvas/geometry math) ----------
 
@@ -1569,7 +1583,7 @@ const TIPS_CONTENT = {
 
 // Pass onBookDesign(dataUrl) once merged into the real app to navigate to
 // the actual booking page instead of the localStorage-handoff placeholder.
-export default function NailTryOn({ onBookDesign } = {}) {
+export default function NailTryOn({ onBookDesign, onSkinAnalyzed } = {}) {
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
   const baseImageRef = useRef(null);
@@ -1617,7 +1631,11 @@ export default function NailTryOn({ onBookDesign } = {}) {
   const [isDragging, setIsDragging] = useState(false);
   const [shakeHint, setShakeHint] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
-  const [savedDesigns, setSavedDesigns] = useState([]); // [{dataUrl}]
+  const [history, setHistory] = useState(() => loadHistory(store())); // ประวัติลองสี (เก็บในเครื่อง)
+  const historyRef = useRef(history);
+  const [compareIds, setCompareIds] = useState([]);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const pendingColorRef = useRef(null); // สีที่จะลงให้ทันทีหลัง AI หาเล็บบนรูปที่ส่งต่อมาจากหน้าวิเคราะห์สีผิว
   const [bookHintVisible, setBookHintVisible] = useState(false);
   const [tipsOpen, setTipsOpen] = useState(false);
   const [tipsContext, setTipsContext] = useState('tryon'); // which page's tips to show
@@ -1642,6 +1660,7 @@ export default function NailTryOn({ onBookDesign } = {}) {
   const [skinAnalysis, setSkinAnalysis] = useState(null); // {hex, depth, undertone, confidence}
   const [skinSelectedColor, setSkinSelectedColor] = useState(null); // {hex, name}
   const [skinBookHintVisible, setSkinBookHintVisible] = useState(false);
+  const [savedSkin, setSavedSkin] = useState(() => loadSkinResult(store())); // ผลวิเคราะห์ล่าสุดที่จำไว้ในเครื่อง
 
   const hasAnyColor = nailColors.some((c) => c);
 
@@ -1692,13 +1711,16 @@ export default function NailTryOn({ onBookDesign } = {}) {
           paintNail(ctx, polygon, frames[i], applied.hex, applied.finish, seed, geos[i], photoPixelsRef.current);
         }
       });
-      const splitX = (comparePosRef.current / 100) * w;
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(0, 0, splitX, h);
-      ctx.clip();
-      ctx.drawImage(img, 0, 0, w, h);
-      ctx.restore();
+      // แถบเลื่อนก่อน/หลังเป็นของหน้าจอเท่านั้น ภาพที่ดาวน์โหลด/บันทึก/ส่งไปจองคิว (hideOverlays) ต้องเป็นภาพหลังลงสีเต็มใบ
+      if (!hideOverlaysRef.current) {
+        const splitX = (comparePosRef.current / 100) * w;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, 0, splitX, h);
+        ctx.clip();
+        ctx.drawImage(img, 0, 0, w, h);
+        ctx.restore();
+      }
       setCompareVisible(true);
       if (compareHandleRef.current) compareHandleRef.current.style.left = `${comparePosRef.current}%`;
       if (compareDividerRef.current) compareDividerRef.current.style.left = `${comparePosRef.current}%`;
@@ -1944,6 +1966,13 @@ export default function NailTryOn({ onBookDesign } = {}) {
     setNailColors(Array.from({ length: nailRegionsRef.current.length }, () => null));
     setSelectedFinger(null);
     setErrorText(null);
+    const pending = pendingColorRef.current;
+    pendingColorRef.current = null;
+    if (pending) {
+      setMode('single');
+      setNailColors(nailRegionsRef.current.map(() => ({ hex: pending, finish: activeFinish })));
+      setSelectedHex(pending);
+    }
   }
 
   // The AI can't always tell which end of a finger is the tip from the photo
@@ -2152,32 +2181,164 @@ export default function NailTryOn({ onBookDesign } = {}) {
     showToast('ดาวน์โหลดรูปแล้ว');
   }
 
-  function saveCurrentDesign() {
-    if (!baseImageRef.current) return null;
-    const dataUrl = withCleanCanvas(() => canvasRef.current.toDataURL('image/png'));
-    setSavedDesigns((prev) => [...prev, { dataUrl }]);
-    return dataUrl;
+  // ---------- ประวัติการลองสี (เก็บในเครื่องลูกค้า) ----------
+
+  // เขียนประวัติใหม่ผ่านตัวนี้ทางเดียว: อ่านค่าล่าสุดจาก ref (timer เก่าไม่ทับของใหม่) บันทึกลง storage แล้วซิงก์หน้าจอตามที่เก็บได้จริง
+  function commitHistory(updater) {
+    const next = updater(historyRef.current);
+    const { list } = saveHistory(store(), next);
+    historyRef.current = list;
+    setHistory(list);
+    setCompareIds((ids) => ids.filter((id) => list.some((e) => e.id === id)));
+    return list;
   }
+
+  // ลุคที่อยู่บนมือตอนนี้ (หลายสีได้) ในรูปที่เก็บและส่งต่อได้
+  function describeLook() {
+    const seen = new Map();
+    nailColors.forEach((c) => { if (c && !seen.has(`${c.hex}:${c.finish}`)) seen.set(`${c.hex}:${c.finish}`, c); });
+    const colors = [...seen.values()].slice(0, 5).map((c) => ({
+      hex: c.hex,
+      name: PALETTE.find((p) => p.hex === c.hex)?.name || c.hex,
+      finish: c.finish,
+      finishLabel: FINISHES.find((f) => f.key === c.finish)?.label || '',
+    }));
+    const natural = lengthPreset === 'natural';
+    return {
+      colors,
+      lengthKey: lengthPreset,
+      lengthLabel: LENGTH_PRESETS.find((p) => p.key === lengthPreset)?.label || '',
+      tipShape: natural ? 'round' : tipShape, // ความยาวธรรมชาติไม่มีทรงปลาย จึงไม่ให้ทรงมาทำให้ลุคเดียวกันนับเป็นคนละอัน
+      tipLabel: natural ? '' : TIP_SHAPES.find((t) => t.key === tipShape)?.label || '',
+    };
+  }
+
+  // รูปย่อของผลลัพธ์ (ภาพหลังลงสีเต็มใบ) สำหรับประวัติ
+  function captureThumb() {
+    const src = canvasRef.current;
+    if (!src || !baseImageRef.current) return null;
+    try {
+      return withCleanCanvas(() => {
+        const scale = Math.min(1, THUMB_MAX / Math.max(src.width, src.height));
+        const off = document.createElement('canvas');
+        off.width = Math.max(1, Math.round(src.width * scale));
+        off.height = Math.max(1, Math.round(src.height * scale));
+        off.getContext('2d').drawImage(src, 0, 0, off.width, off.height);
+        return off.toDataURL('image/jpeg', 0.72);
+      });
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
+  }
+
+  // จดลุคปัจจุบันลงประวัติ (favorite: true = กดหัวใจ สลับชอบ/ไม่ชอบ)
+  function recordCurrentLook({ toggleLike = false } = {}) {
+    const look = describeLook();
+    if (look.colors.length === 0) return null;
+    const thumb = captureThumb();
+    const list = commitHistory((prev) => {
+      let next = addEntry(prev, { ...look, thumb, at: new Date().toISOString() });
+      if (toggleLike) {
+        const wasLiked = prev.some((e) => e.key === next[0].key && e.favorite);
+        next = next.map((e, i) => (i === 0 ? { ...e, favorite: !wasLiked } : e));
+      }
+      return next;
+    });
+    return list[0] || null;
+  }
+
+  // ลองสีไว้เองอัตโนมัติ: ลุคที่ค้างอยู่เกิน 1.5 วินาทีถึงนับว่า "ลอง" (กดไล่สีผ่าน ๆ ไม่จด)
+  useEffect(() => {
+    if (!hasImage || !nailColors.some(Boolean)) return undefined;
+    const t = setTimeout(() => recordCurrentLook(), 1500);
+    return () => clearTimeout(t);
+  }, [nailColors, lengthPreset, tipShape]);
 
   function handleSaveDesign() {
-    if (!saveCurrentDesign()) return;
-    showToast('บันทึกลายนี้แล้ว');
+    const entry = recordCurrentLook({ toggleLike: true });
+    if (!entry) { showToast('เลือกสีก่อน แล้วค่อยกดหัวใจ'); return; }
+    showToast(entry.favorite ? 'บันทึกเป็นสีที่ชอบแล้ว' : 'เอาออกจากสีที่ชอบแล้ว');
   }
 
-  // The booking system itself isn't built yet -- this saves the chosen look
-  // and hands it off via localStorage (or the onBookDesign prop, once the
-  // parent app wires up real navigation) so the real booking page can pick
-  // it up after the two projects are merged.
-  function handleBookDesign() {
-    const dataUrl = saveCurrentDesign();
-    if (!dataUrl) return;
+  // ลุคปัจจุบันนี้ถูกกดชอบอยู่ไหม (ไว้ทำให้ไอคอนหัวใจเป็นสีทึบ)
+  const currentLookLiked = (() => {
+    if (!hasAnyColor) return false;
+    return history.some((e) => e.key === lookKey(describeLook()) && e.favorite);
+  })();
+
+  function handleReuseLook(entry) {
+    if (!hasImage) { showToast('อัปโหลดรูปมือก่อน เพื่อใช้สีนี้อีกครั้ง'); return; }
+    if (detectingRef.current || nailRegionsRef.current.length === 0) { showToast('AI กำลังหาตำแหน่งเล็บ รอสักครู่'); return; }
+    setMode('single');
+    setLengthPreset(entry.lengthKey);
+    setTipShape(entry.tipShape);
+    const [first, ...rest] = entry.colors;
+    // ลุคหลายสี: ลงสีแรกกับทุกเล็บ แล้วไล่สีที่เหลือลงเล็บถัดไป (ตำแหน่งนิ้วเดิมไม่ได้เก็บไว้เพราะรูปคนละใบ)
+    setNailColors(nailRegionsRef.current.map((_, i) => {
+      const c = i === 0 ? first : rest.length ? rest[(i - 1) % rest.length] : first;
+      return { hex: c.hex, finish: c.finish };
+    }));
+    setActiveFinish(first.finish);
+    setSelectedHex(first.hex);
+    showToast('ใช้สีนี้กับรูปของคุณแล้ว');
+  }
+
+  function toggleCompare(id) {
+    setCompareIds((ids) => {
+      if (ids.includes(id)) return ids.filter((x) => x !== id);
+      if (ids.length >= COMPARE_MAX) { showToast(`เปรียบเทียบได้สูงสุด ${COMPARE_MAX} สี`); return ids; }
+      return [...ids, id];
+    });
+  }
+
+  function handleDeleteHistory(id) {
+    commitHistory((prev) => removeEntry(prev, id));
+  }
+
+  function handleClearHistory() {
+    historyRef.current = clearHistory(store());
+    setHistory([]);
+    setCompareIds([]);
+    setCompareOpen(false);
+    showToast('ล้างประวัติการลองสีแล้ว');
+  }
+
+  function lookSummary(look) {
+    const colorText = look.colors.length === 1 ? look.colors[0].name : look.colors.map((c) => c.name).join(' + ');
+    const parts = [colorText, look.colors[0]?.finishLabel];
+    if (look.lengthKey && look.lengthKey !== 'natural') parts.push(`ต่อเล็บ${look.lengthLabel}${look.tipLabel ? ` ทรง${look.tipLabel}` : ''}`);
+    return parts.filter(Boolean).join(' · ');
+  }
+
+  // ส่งลุคไปหน้าจองคิว: รูป + สี/พื้นผิว/ความยาว ไปด้วยกัน หน้าจองจะเลือกบริการที่เกี่ยวข้องและแสดงให้ตรวจก่อนยืนยัน
+  function sendLookToBooking(dataUrl, look) {
+    const meta = { source: 'tryon', ...look, summary: lookSummary(look) };
     if (onBookDesign) {
-      onBookDesign(dataUrl);
+      onBookDesign(dataUrl, meta);
     } else {
       try { localStorage.setItem('nailDesignForBooking', dataUrl); } catch (err) { console.error(err); }
     }
+  }
+
+  function handleBookDesign() {
+    if (!baseImageRef.current) return;
+    const look = describeLook();
+    if (look.colors.length === 0) { showToast('เลือกสีก่อน แล้วค่อยจองคิว'); return; }
+    // JPEG (ไม่ใช่ PNG): ภาพถึงหน้าจองผ่าน localStorage ที่จุได้ราว 5MB PNG ความละเอียดเต็มอาจเกินแล้วส่งไม่สำเร็จ
+    const dataUrl = withCleanCanvas(() => canvasRef.current.toDataURL('image/jpeg', 0.9));
+    recordCurrentLook();
+    sendLookToBooking(dataUrl, look);
     setBookHintVisible(true);
-    showToast('ส่งลายนี้ไปหน้าจองคิวแล้ว');
+    showToast('ส่งสีนี้ไปหน้าจองคิวแล้ว');
+  }
+
+  // จองจากประวัติ: ใช้รูปย่อที่เก็บไว้ (หรือการ์ดสีถ้าไม่มีรูป)
+  function handleBookFromHistory(entry) {
+    const primary = entry.colors[0];
+    const dataUrl = entry.thumb || colorCardDataUrl(primary.hex, primary.name);
+    sendLookToBooking(dataUrl, entry);
+    showToast('ส่งสีนี้ไปหน้าจองคิวแล้ว');
   }
 
   function toggleFullscreen() {
@@ -2293,6 +2454,18 @@ export default function NailTryOn({ onBookDesign } = {}) {
       result.confidence = confidence;
       setSkinAnalysis(result);
       setSkinSelectedColor(null);
+      // จำผลและสีแนะนำไว้ในเครื่อง ให้กลับมาดูย้อนหลังได้โดยไม่ต้องถ่ายรูปใหม่
+      const saved = saveSkinResult(store(), {
+        at: new Date().toISOString(),
+        hex: result.hex,
+        depthKey: result.depth.key,
+        depthLabel: result.depth.label,
+        undertone: result.undertone,
+        confidence,
+        recommended: getRecommendedColors(result.undertone).map(({ hex, name }) => ({ hex, name })),
+      });
+      if (saved) setSavedSkin(saved);
+      onSkinAnalyzed?.({ undertone: result.undertone, depthLabel: result.depth.label, hex: result.hex });
     } catch (err) {
       console.error(err);
       setSkinErrorText('วิเคราะห์ภาพไม่สำเร็จ ลองใหม่อีกครั้ง');
@@ -2358,10 +2531,27 @@ export default function NailTryOn({ onBookDesign } = {}) {
 
   // "try this on my hand photo" -- crosses over to the try-on page and
   // applies the recommended color directly if a hand photo is already loaded
+  // ใช้รูปที่เพิ่งวิเคราะห์สีผิวไปลองสีเล็บต่อเลย ไม่ต้องอัปโหลดซ้ำ (hexAfter = สีที่จะลงให้ทันทีเมื่อ AI หาเล็บเจอ)
+  async function sendSkinPhotoToTryOn(hexAfter) {
+    if (!skinBaseImageRef.current || !skinCanvasRef.current) return false;
+    const blob = await skinCanvasToBlob();
+    if (!blob) return false;
+    pendingColorRef.current = hexAfter || null;
+    resetToUpload(); // ล้างรูปเก่าก่อน ไม่งั้นสีเก่าค้างบนรูปใหม่
+    setPage('tryon');
+    processFile(new File([blob], 'skin-photo.jpg', { type: 'image/jpeg' }));
+    return true;
+  }
+
   function handleSkinTryOn() {
     if (!skinSelectedColor) return;
     const { hex } = skinSelectedColor;
     if (nailRegionsRef.current.length === 0) {
+      // ยังไม่มีรูปในหน้าลองสี: ถ้ามีรูปจากหน้าวิเคราะห์อยู่ ใช้รูปนั้นเลย
+      if (skinHasImage) {
+        sendSkinPhotoToTryOn(hex).then((ok) => { if (ok) showToast('ใช้รูปเดิมลองสีนี้ให้แล้ว'); });
+        return;
+      }
       setPage('tryon');
       showToast('อัปโหลดรูปมือก่อน เพื่อลองสีนี้');
       return;
@@ -2373,17 +2563,33 @@ export default function NailTryOn({ onBookDesign } = {}) {
 
   function handleSkinBook() {
     if (!skinSelectedColor) return;
-    const dataUrl = colorCardDataUrl(skinSelectedColor.hex, skinSelectedColor.name);
-    if (onBookDesign) {
-      onBookDesign(dataUrl);
-    } else {
-      try { localStorage.setItem('nailDesignForBooking', dataUrl); } catch (err) { console.error(err); }
-    }
+    const { hex, name } = skinSelectedColor;
+    const dataUrl = colorCardDataUrl(hex, name);
+    const look = { colors: [{ hex, name, finish: 'creamy', finishLabel: 'ครีมมี่' }], lengthKey: 'natural', lengthLabel: 'ธรรมชาติ', tipShape: 'round', tipLabel: '' };
+    sendLookToBooking(dataUrl, look);
     setSkinBookHintVisible(true);
     showToast('ส่งสีนี้ไปหน้าจองคิวแล้ว');
   }
 
-  const skinRecommendations = skinAnalysis ? getRecommendedColors(skinAnalysis.undertone) : [];
+  // คนที่เคยวิเคราะห์ไว้แล้ว (จำในเครื่อง) กลับมาก็ให้หน้าแนะนำลายเห็นโทนผิวทันที
+  useEffect(() => {
+    if (savedSkin) onSkinAnalyzed?.({ undertone: savedSkin.undertone, depthLabel: savedSkin.depthLabel, hex: savedSkin.hex });
+  }, []);
+
+  function handleForgetSkin() {
+    try { store()?.removeItem('luckysalon_skin_result_v1'); } catch { /* ไม่มีอะไรต้องทำ */ }
+    setSavedSkin(null);
+    showToast('ลบผลวิเคราะห์ที่บันทึกไว้แล้ว');
+  }
+
+  // แสดงผลวิเคราะห์ที่เพิ่งทำ ถ้าไม่มีก็แสดงผลครั้งล่าสุดที่จำไว้ในเครื่อง (เห็นย้อนหลังได้โดยไม่ต้องอัปโหลดใหม่)
+  const skinView = skinAnalysis
+    ? { hex: skinAnalysis.hex, depthLabel: skinAnalysis.depth.label, undertone: skinAnalysis.undertone, confidence: skinAnalysis.confidence, recommended: getRecommendedColors(skinAnalysis.undertone), fromSaved: false }
+    : savedSkin
+      ? { ...savedSkin, recommended: savedSkin.recommended.length ? savedSkin.recommended : getRecommendedColors(savedSkin.undertone), fromSaved: true }
+      : null;
+  const skinRecommendations = skinView ? skinView.recommended : [];
+  const compareEntries = compareIds.map((id) => history.find((e) => e.id === id)).filter(Boolean);
 
   return (
     <div className="page">
@@ -2396,7 +2602,7 @@ export default function NailTryOn({ onBookDesign } = {}) {
             <Icon.Sparkle />
             <div className="brand-text">
               <span className="brand-name">ลองเล็บเสมือนจริง</span>
-              <span className="brand-sub">AI Virtual Nail Try-On</span>
+              <span className="brand-sub">ลองสีเล็บบนรูปจริงด้วย AI</span>
             </div>
           </div>
           <div className="page-nav">
@@ -2502,12 +2708,12 @@ export default function NailTryOn({ onBookDesign } = {}) {
             </div>
 
             {hasImage && (
-              <button className="btn-book" type="button" onClick={handleBookDesign}>
+              <button className="btn-book" type="button" onClick={handleBookDesign} disabled={!hasAnyColor}>
                 <Icon.DecoHeart />
-                จองลายนี้
+                จองคิวด้วยสีนี้
               </button>
             )}
-            {bookHintVisible && <p className="book-hint">บันทึกลายนี้ไว้แล้ว พร้อมส่งต่อไปหน้าจองคิว</p>}
+            {bookHintVisible && <p className="book-hint">ส่งรูปและสีนี้ไปหน้าจองคิวแล้ว</p>}
           </div>
 
           <div className="col col-viewer">
@@ -2539,6 +2745,11 @@ export default function NailTryOn({ onBookDesign } = {}) {
                     <button className="btn-primary" type="button" onClick={() => requestUploadAction('tryon', 'file')}>เลือกรูปภาพ</button>
                     <button className="btn-secondary" type="button" onClick={() => requestUploadAction('tryon', 'camera')}><Icon.CameraSmall />ถ่ายรูป</button>
                   </div>
+                  {skinHasImage && (
+                    <button className="btn-reuse" type="button" onClick={() => sendSkinPhotoToTryOn(null)}>
+                      ใช้รูปจากหน้าวิเคราะห์สีผิว ไม่ต้องอัปโหลดใหม่
+                    </button>
+                  )}
                 </div>
               )}
               <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={onFileInputChange} />
@@ -2591,7 +2802,7 @@ export default function NailTryOn({ onBookDesign } = {}) {
 
             {hasImage && (
               <div className="tool-rail">
-                <button className="tool-btn" type="button" onClick={handleSaveDesign} title="บันทึกลายนี้"><Icon.HeartOutline /></button>
+                <button className={`tool-btn ${currentLookLiked ? 'liked' : ''}`} type="button" onClick={handleSaveDesign} title="บันทึกเป็นสีที่ชอบ" aria-pressed={currentLookLiked}><Icon.HeartOutline /></button>
                 <button className="tool-btn" type="button" onClick={handleReset} title="รีเซ็ต"><Icon.Reset /></button>
                 <button className="tool-btn" type="button" onClick={() => handleZoom(0.15)} title="ซูมเข้า"><Icon.ZoomIn /></button>
                 <button className="tool-btn" type="button" onClick={() => handleZoom(-0.15)} title="ซูมออก"><Icon.ZoomOut /></button>
@@ -2601,26 +2812,51 @@ export default function NailTryOn({ onBookDesign } = {}) {
           </div>
 
           <div className="col col-saved">
-            <div className="section-label">ลายที่บันทึกไว้</div>
-            {savedDesigns.length > 0 && (
-              <div className="saved-grid">
-                {savedDesigns.map((d, i) => (
-                  <div className="saved-thumb" key={i}>
-                    <img src={d.dataUrl} alt="ลายที่บันทึกไว้" />
-                    <button
-                      className="saved-download"
-                      type="button"
-                      aria-label="ดาวน์โหลดลายนี้"
-                      onClick={() => downloadDataUrl(d.dataUrl, 'nail-design.png', false)}
-                    >
-                      <Icon.Download />
-                    </button>
-                  </div>
-                ))}
-              </div>
+            <div className="section-label">ประวัติการลองสี</div>
+            {history.length === 0 && (
+              <p className="saved-empty">ยังไม่มีสีที่เคยลอง<br />สีที่คุณลองจะถูกจดไว้ที่นี่ให้อัตโนมัติ<br />กดหัวใจเมื่อเจอสีที่ถูกใจ</p>
             )}
-            {savedDesigns.length === 0 && (
-              <p className="saved-empty">ยังไม่มีลายที่บันทึกไว้<br />กดไอคอนหัวใจตอนได้ลายที่ถูกใจ</p>
+            {history.length > 0 && (
+              <>
+                <ul className="hist-list">
+                  {history.map((h) => (
+                    <li className={`hist-item ${compareIds.includes(h.id) ? 'picked' : ''}`} key={h.id}>
+                      <div className="hist-thumb">
+                        {h.thumb ? (
+                          <img src={h.thumb} alt={lookSummary(h)} />
+                        ) : (
+                          <span className="hist-swatch" style={{ background: swatchGradient(h.colors[0].hex) }} />
+                        )}
+                        {h.favorite && <span className="hist-heart" title="สีที่ชอบ">♥</span>}
+                      </div>
+                      <div className="hist-info">
+                        <div className="hist-dots">
+                          {h.colors.map((c) => <span key={c.hex + c.finish} className="hist-dot" style={{ background: c.hex }} title={c.name} />)}
+                        </div>
+                        <p className="hist-name">{h.colors.length === 1 ? h.colors[0].name : `${h.colors.length} สีผสม`}</p>
+                        <p className="hist-meta">
+                          {h.colors[0].finishLabel}
+                          {h.lengthKey !== 'natural' && ` · เล็บ${h.lengthLabel}`}
+                        </p>
+                        <p className="hist-time">{thaiDateTime(h.at)}</p>
+                        <div className="hist-actions">
+                          <button type="button" onClick={() => handleReuseLook(h)} disabled={!hasImage} title={hasImage ? 'ใช้สีนี้กับรูปของคุณ' : 'อัปโหลดรูปมือก่อน'}>ใช้สีนี้</button>
+                          <button type="button" className={compareIds.includes(h.id) ? 'on' : ''} onClick={() => toggleCompare(h.id)} aria-pressed={compareIds.includes(h.id)}>เทียบ</button>
+                          <button type="button" onClick={() => handleBookFromHistory(h)}>จอง</button>
+                          <button type="button" className="hist-del" aria-label="ลบรายการนี้" onClick={() => handleDeleteHistory(h.id)}>✕</button>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <div className="hist-footer">
+                  <button type="button" className="btn-secondary" disabled={compareIds.length < 2} onClick={() => setCompareOpen(true)}>
+                    เปรียบเทียบ ({compareIds.length}/{COMPARE_MAX})
+                  </button>
+                  <button type="button" className="link-btn" onClick={handleClearHistory}>ล้างประวัติ</button>
+                </div>
+                <p className="hist-note">เก็บไว้ในเครื่องนี้เท่านั้น ไม่ส่งขึ้นเซิร์ฟเวอร์ · ล้างข้อมูลเบราว์เซอร์หรือเปลี่ยนเครื่องแล้วประวัติจะหาย</p>
+              </>
             )}
           </div>
 
@@ -2635,6 +2871,7 @@ export default function NailTryOn({ onBookDesign } = {}) {
               <li>ถ่ายรูปหรืออัปโหลดรูปมือ/ผิวของคุณ</li>
               <li>ระบบวิเคราะห์โทนสีผิวให้อัตโนมัติ</li>
               <li>รับคำแนะนำสีเล็บที่เข้ากับผิวคุณที่สุด</li>
+              <li>ใช้รูปเดิมลองสีเล็บต่อ แล้วจองคิวได้เลย</li>
             </ol>
 
             <div className="section-label">โทนสีผิว</div>
@@ -2725,31 +2962,50 @@ export default function NailTryOn({ onBookDesign } = {}) {
 
           <div className="col col-saved">
             <div className="section-label">สีเล็บที่แนะนำสำหรับคุณ</div>
-            {skinAnalysis && (
-              <div className="swatch-grid">
-                {skinRecommendations.map(({ hex, name }) => (
-                  <button
-                    key={hex}
-                    type="button"
-                    className={`swatch-item ${skinSelectedColor?.hex === hex ? 'selected' : ''}`}
-                    onClick={() => { setSkinSelectedColor({ hex, name }); setSkinBookHintVisible(false); }}
-                  >
-                    <span className="swatch-dot" style={{ background: swatchGradient(hex) }} />
-                    <span className="swatch-label">{name}</span>
-                  </button>
-                ))}
-              </div>
+            {skinView && (
+              <>
+                {skinView.fromSaved && (
+                  <div className="skin-saved-card">
+                    <span className="skin-result-swatch" style={{ background: skinView.hex }} />
+                    <div className="skin-saved-text">
+                      <strong>{skinView.depthLabel} · {UNDERTONE_LABELS[skinView.undertone]}</strong>
+                      <span>ผลวิเคราะห์ครั้งล่าสุดของคุณ · {thaiDateTime(skinView.at)}</span>
+                    </div>
+                    <button type="button" className="link-btn" onClick={handleForgetSkin}>ลบ</button>
+                  </div>
+                )}
+                <div className="swatch-grid">
+                  {skinRecommendations.map(({ hex, name }) => (
+                    <button
+                      key={hex}
+                      type="button"
+                      className={`swatch-item ${skinSelectedColor?.hex === hex ? 'selected' : ''}`}
+                      onClick={() => { setSkinSelectedColor({ hex, name }); setSkinBookHintVisible(false); }}
+                    >
+                      <span className="swatch-dot" style={{ background: swatchGradient(hex) }} />
+                      <span className="swatch-label">{name}</span>
+                    </button>
+                  ))}
+                </div>
+                {!skinView.fromSaved && <p className="hist-note">บันทึกผลนี้ไว้ในเครื่องแล้ว กลับมาดูย้อนหลังได้โดยไม่ต้องถ่ายรูปใหม่</p>}
+              </>
             )}
-            {!skinAnalysis && (
+            {!skinView && (
               <p className="saved-empty">วิเคราะห์รูปก่อน เพื่อดูสีเล็บที่เหมาะกับคุณ</p>
+            )}
+
+            {skinHasImage && skinAnalysis && (
+              <button className="btn-secondary btn-wide" type="button" onClick={() => sendSkinPhotoToTryOn(null).then((ok) => ok && showToast('ใช้รูปเดิมไปหน้าลองสีให้แล้ว'))}>
+                ใช้รูปนี้ลองสีเล็บต่อ
+              </button>
             )}
 
             {skinSelectedColor && (
               <div className="skin-actions">
-                <button className="btn-secondary" type="button" onClick={handleSkinTryOn}>ลองสีนี้ในหน้าลองเล็บ</button>
+                <button className="btn-secondary" type="button" onClick={handleSkinTryOn}>ลองสีนี้บนรูปมือของฉัน</button>
                 <button className="btn-book" type="button" onClick={handleSkinBook}>
                   <Icon.DecoHeart />
-                  จองคิวเลย
+                  จองคิวด้วยสีนี้
                 </button>
               </div>
             )}
@@ -2757,6 +3013,34 @@ export default function NailTryOn({ onBookDesign } = {}) {
           </div>
 
         </div>
+
+        {compareOpen && compareEntries.length >= 2 && (
+          <div className="cmp-overlay" role="dialog" aria-modal="true" aria-label="เปรียบเทียบสี" onClick={(e) => { if (e.target === e.currentTarget) setCompareOpen(false); }}>
+            <div className="cmp-card">
+              <div className="cmp-head">
+                <h2>เปรียบเทียบสีที่เลือก</h2>
+                <button className="icon-btn" type="button" aria-label="ปิด" onClick={() => setCompareOpen(false)}><Icon.Close /></button>
+              </div>
+              <div className={`cmp-grid cols-${compareEntries.length}`}>
+                {compareEntries.map((e) => (
+                  <div className="cmp-col" key={e.id}>
+                    <div className="cmp-img">
+                      {e.thumb ? <img src={e.thumb} alt={lookSummary(e)} /> : <span className="cmp-swatch" style={{ background: swatchGradient(e.colors[0].hex) }} />}
+                    </div>
+                    <div className="hist-dots">
+                      {e.colors.map((c) => <span key={c.hex + c.finish} className="hist-dot" style={{ background: c.hex }} />)}
+                    </div>
+                    <p className="cmp-name">{lookSummary(e)}</p>
+                    <button className="btn-book" type="button" onClick={() => { setCompareOpen(false); handleBookFromHistory(e); }}>
+                      <Icon.DecoHeart />
+                      เลือกสีนี้ จองคิว
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {toast && (
           <div className={`toast ${toast.leaving ? 'leaving' : ''}`}>{toast.text}</div>

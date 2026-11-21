@@ -1,16 +1,19 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import NailRecommendation from '../components/NailRecommendation.jsx'
 import AdvancedRecommend from '../components/AdvancedRecommend.jsx'
 import NailTryOn from '../components/NailTryOn/NailTryOn.jsx'
 import Footer from '../components/Footer.jsx'
-
-const CARRY_DESIGN_KEY = 'nailglow_carry_design'
+import { saveCarryDesign } from '../utils/carryDesign.js'
 
 export default function AiStudioPage() {
   const navigate = useNavigate()
+  // โทนผิวจากการวิเคราะห์ (สดหรือที่จำไว้ในเครื่อง) ส่งต่อให้ส่วนแนะนำลายจัดอันดับให้ตรงกับลูกค้า
+  const [skin, setSkin] = useState(null)
 
-  function handleBookDesign(dataUrl) {
-    localStorage.setItem(CARRY_DESIGN_KEY, JSON.stringify({ reference_image_base64: dataUrl }))
+  // รูป + สี/พื้นผิว/ความยาวที่ลูกค้าลอง ไปหน้าจองพร้อมกัน (meta มาจากหน้าลองสี)
+  function handleBookDesign(dataUrl, meta = {}) {
+    saveCarryDesign({ ...meta, reference_image_base64: dataUrl })
     navigate('/booking')
   }
 
@@ -47,20 +50,19 @@ export default function AiStudioPage() {
             ให้ AI ช่วยหา<span className="text-rose-500">ลุคเล็บที่ใช่</span>สำหรับคุณ
           </h1>
           <p className="text-gray-500 mt-4 max-w-xl mx-auto">
-            ลองสี/ลายเล็บบนรูปจริงและวิเคราะห์สีผิวด้วย AI พร้อมรับคำแนะนำลายจากโมเดล Machine Learning
-            — ครบในที่เดียว
+            วิเคราะห์สีผิว ลองสีเล็บบนรูปมือจริงของคุณ และรับคำแนะนำลายที่เหมาะกับคุณ แล้วจองคิวต่อได้ทันที
           </p>
           <p className="mt-3 text-xs text-gray-400">
-            รูปที่คุณอัปโหลดส่งไปประมวลผลชั่วคราวเท่านั้น ไม่ถูกบันทึกไว้ (เว้นแต่คุณกด &ldquo;จองลายนี้&rdquo;) ·{' '}
+            รูปที่คุณอัปโหลดส่งไปประมวลผลชั่วคราวเท่านั้น ไม่ถูกเก็บไว้บนเซิร์ฟเวอร์ (เว้นแต่คุณกดจองคิวพร้อมรูป) ·{' '}
             <Link to="/privacy" className="underline hover:text-rose-600">
               นโยบายความเป็นส่วนตัว
             </Link>
           </p>
         </section>
 
-        <NailTryOn onBookDesign={handleBookDesign} />
-        <NailRecommendation skinTone={null} />
-        <AdvancedRecommend />
+        <NailTryOn onBookDesign={handleBookDesign} onSkinAnalyzed={setSkin} />
+        <NailRecommendation skinTone={skin?.undertone ?? null} />
+        <AdvancedRecommend skinTone={skin?.undertone ?? null} />
 
         <Footer />
       </div>

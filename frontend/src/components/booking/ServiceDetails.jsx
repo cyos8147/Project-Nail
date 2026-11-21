@@ -65,11 +65,11 @@ export default function ServiceDetails({
         <div className="mb-6 flex items-center gap-3 bg-rose-50 border border-rose-200 rounded-xl p-4">
           <img
             src={carriedDesign.reference_image_base64}
-            alt="ลายที่ออกแบบจาก AI ลองเล็บ"
-            className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+            alt="รูปที่ลองสีจาก AI"
+            className="w-20 h-20 rounded-xl object-cover flex-shrink-0 bg-white"
           />
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-800">ใช้ลายที่ออกแบบจาก AI ลองเล็บ</p>
+            <p className="text-sm font-medium text-gray-800">ใช้รูปที่ลองสีจาก AI{carriedDesign.summary ? `: ${carriedDesign.summary}` : ''}</p>
             <p className="text-xs text-gray-400">จะแนบไปกับการจองคิวนี้โดยอัตโนมัติ</p>
           </div>
           <button type="button" onClick={onClearCarriedDesign} className="text-xs text-gray-400 hover:text-rose-500">

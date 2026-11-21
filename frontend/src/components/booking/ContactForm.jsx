@@ -13,6 +13,8 @@ export default function ContactForm({
   category,
   service,
   selectedShade,
+  referenceImage,
+  durationMinutes,
   selectedDate,
   selectedTime,
   form,
@@ -27,7 +29,17 @@ export default function ContactForm({
       <div className="grid md:grid-cols-2 gap-6">
         {/* Summary */}
         <div className="bg-blush-50 border border-blush-200 rounded-2xl p-5 space-y-3 h-fit">
-          <p className="font-display font-semibold text-gray-800 mb-2">สรุปการจอง</p>
+          <p className="font-display font-semibold text-gray-800 mb-2">ตรวจสอบการจอง</p>
+          {referenceImage && (
+            <div>
+              <p className="text-xs text-gray-500 mb-1.5">รูปที่แนบไปกับการจอง</p>
+              <img
+                src={referenceImage}
+                alt="รูปที่แนบไปกับการจอง"
+                className="w-full max-h-72 object-contain rounded-xl bg-white border border-blush-200"
+              />
+            </div>
+          )}
           <div className="flex justify-between text-sm">
             <span className="text-gray-500">หมวดหมู่</span>
             <span className="font-medium text-gray-800">{category === 'hair' ? 'ทำผม' : 'ทำเล็บ'}</span>
@@ -56,10 +68,19 @@ export default function ContactForm({
             <span className="text-gray-500">เวลา</span>
             <span className="font-medium text-gray-800">{selectedTime} น.</span>
           </div>
+          {durationMinutes ? (
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">เวลาโดยประมาณ</span>
+              <span className="font-medium text-gray-800">{durationMinutes} นาที</span>
+            </div>
+          ) : null}
           <div className="border-t border-blush-200 pt-3 flex justify-between text-sm">
             <span className="text-gray-500">ราคาโดยประมาณ</span>
             <span className="font-semibold text-rose-600">{service?.price} บาท</span>
           </div>
+          <p className="text-xs text-gray-500 leading-relaxed">
+            ตรวจรูป สี และบริการให้ถูกต้องก่อนกดยืนยัน ถ้าต้องการแก้ไขกด “ย้อนกลับ”
+          </p>
         </div>
 
         {/* Contact fields */}

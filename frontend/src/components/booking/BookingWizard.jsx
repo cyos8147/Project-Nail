@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ServiceSelector from './ServiceSelector.jsx'
 import ServiceDetails from './ServiceDetails.jsx'
@@ -14,6 +14,7 @@ import {
   getShopSettings,
   savePhone,
 } from '../../api/client.js'
+import { pickNailService, shadeFromCarry, takeCarryDesign } from '../../utils/carryDesign.js'
 
 const THAI_MONTHS_SHORT = [
   'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
@@ -34,7 +35,6 @@ function buildLineAddLink(basicId, message) {
 }
 
 const initialContact = { name: '', phone: '', lineId: '' }
-const CARRY_DESIGN_KEY = 'nailglow_carry_design'
 
 export default function BookingWizard() {
   const [category, setCategory] = useState('hair')
@@ -54,6 +54,8 @@ export default function BookingWizard() {
   const [aiStyleTag, setAiStyleTag] = useState(null)
   const [aiExtraMinutes, setAiExtraMinutes] = useState(0)
   const [carriedDesign, setCarriedDesign] = useState(null)
+  const [autoPickedName, setAutoPickedName] = useState(null) // ชื่อบริการที่ระบบเลือกให้จากสีที่ลูกค้าลอง
+  const autoAppliedRef = useRef(false)
 
   const [categories, setCategories] = useState([])
   const [servicesByCategory, setServicesByCategory] = useState({})
@@ -89,19 +91,27 @@ export default function BookingWizard() {
       })
       .catch(() => {})
 
-    // ลายที่ถูก "จองลายนี้"/"จองคิว" มาจากหน้า AI Studio (AdvancedRecommend / NailTryOn)
-    const raw = localStorage.getItem(CARRY_DESIGN_KEY)
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw)
-        setCarriedDesign(parsed)
-        setCategory('nail')
-      } catch {
-        /* ignore */
-      }
-      localStorage.removeItem(CARRY_DESIGN_KEY)
+    // สี/ลาย/รูปที่ส่งมาจากหน้า AI Studio (ลองสี วิเคราะห์สีผิว หรือแนะนำลาย) อ่านครั้งเดียวแล้วลบทิ้ง
+    const carried = takeCarryDesign()
+    if (carried) {
+      setCarriedDesign(carried)
+      setCategory('nail')
     }
   }, [])
+
+  // มีสีที่ลูกค้าลองมา → เลือกบริการทำเล็บที่เกี่ยวข้องให้เลย (ลูกค้าเปลี่ยนเองได้) ทำครั้งเดียวหลังโหลดรายการบริการเสร็จ
+  useEffect(() => {
+    if (autoAppliedRef.current || !carriedDesign || !servicesLoaded) return
+    autoAppliedRef.current = true
+    const pick = pickNailService(servicesByCategory.nail, carriedDesign)
+    if (pick) {
+      setService(pick)
+      setAutoPickedName(pick.name)
+    }
+  }, [carriedDesign, servicesLoaded, servicesByCategory])
+
+  // สีจาก AI ที่จะบันทึกในใบจอง ใช้เฉพาะบริการทำเล็บ (ถ้าลูกค้าเปลี่ยนไปทำผม สีเล็บไม่เกี่ยว)
+  const carriedShade = useMemo(() => (category === 'nail' ? shadeFromCarry(carriedDesign) : null), [carriedDesign, category])
 
   const needsDetailsStep = category === 'nail' || (category === 'hair' && service?.isColor)
 
@@ -198,8 +208,8 @@ export default function BookingWizard() {
       const result = await createBooking({
         category_id: category,
         service_id: service.id,
-        shade_id: selectedShade?.id ?? null,
-        shade_name: selectedShade?.name ?? null,
+        shade_id: (selectedShade ?? carriedShade)?.id ?? null,
+        shade_name: (selectedShade ?? carriedShade)?.name ?? null,
         nail_design_id: carriedDesign?.nail_design_id ?? null,
         reference_image_base64: referenceImageBase64,
         ai_style_tag: aiStyleTag,
@@ -235,6 +245,7 @@ export default function BookingWizard() {
     setSubmitError(null)
     setBookingResult(null)
     setCarriedDesign(null)
+    setAutoPickedName(null)
     setStep(1)
   }
 
@@ -324,6 +335,25 @@ export default function BookingWizard() {
 
         {currentStepName === 'เลือกบริการ' && (
           servicesLoaded ? (
+            <>
+              {carriedDesign && (
+                <div className="mb-6 flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4">
+                  {carriedDesign.reference_image_base64 ? (
+                    <img src={carriedDesign.reference_image_base64} alt="รูปที่ลองสีจาก AI" className="w-14 h-14 rounded-xl object-cover flex-shrink-0 bg-white" />
+                  ) : (
+                    <span className="w-14 h-14 rounded-xl border border-black/10 flex-shrink-0" style={{ backgroundColor: carriedShade?.hex || carriedDesign.color_hex || '#F4C6CE' }} />
+                  )}
+                  <div className="flex-1 min-w-0 text-sm">
+                    <p className="font-semibold text-gray-800">จองต่อจาก AI Studio{carriedDesign.summary ? `: ${carriedDesign.summary}` : ''}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {autoPickedName ? `เลือกบริการ “${autoPickedName}” ให้แล้ว เปลี่ยนเป็นบริการอื่นได้` : 'เลือกบริการที่ต้องการด้านล่าง'}
+                    </p>
+                    {carriedDesign.imageDropped && (
+                      <p className="text-xs text-amber-600 mt-0.5">รูปที่ลองสีส่งมาไม่ได้ (พื้นที่เบราว์เซอร์เต็ม) แต่สีที่เลือกยังอยู่ครบ</p>
+                    )}
+                  </div>
+                </div>
+              )}
             <ServiceSelector
               category={category}
               setCategory={handleCategoryChange}
@@ -332,6 +362,7 @@ export default function BookingWizard() {
               categories={categories}
               servicesByCategory={servicesByCategory}
             />
+            </>
           ) : (
             <p className="text-center text-gray-400 text-sm py-12">กำลังโหลดข้อมูลบริการ...</p>
           )
@@ -372,7 +403,9 @@ export default function BookingWizard() {
           <ContactForm
             category={category}
             service={service}
-            selectedShade={selectedShade}
+            selectedShade={selectedShade ?? carriedShade}
+            referenceImage={imagePreview || carriedDesign?.reference_image_base64 || null}
+            durationMinutes={estimatedDuration}
             selectedDate={selectedDate}
             selectedTime={selectedTime}
             form={form}

@@ -1,10 +1,11 @@
-// AI แนะนำลายเล็บ (โมเดล XGBoost จากฝั่งเซิร์ฟเวอร์) — ต่างจาก NailRecommendation.jsx (ซึ่งจัดอันดับ
-// จากผลวิเคราะห์สีผิวอย่างเดียวแบบ heuristic บนเบราว์เซอร์) ส่วนนี้ส่ง 5 ปัจจัยไปให้โมเดล XGBoost ที่เทรน
-// ไว้แล้วบน backend ทำนาย (ดู backend/ml/train_xgboost_recommender.py) ใช้โชว์ผลลัพธ์จริงจากโมเดล ML
-// พร้อมค่าความแม่นยำของโมเดลจากชุดทดสอบ (Accuracy/Precision/Recall/F1)
+// แนะนำลายเล็บด้วย AI: ลูกค้าตอบไม่กี่ข้อ ระบบส่งให้โมเดลบนเซิร์ฟเวอร์ (XGBoost) จัดอันดับลายของร้านที่เหมาะที่สุด
+// ข้อมูลทางเทคนิคของโมเดล (ความแม่นยำ ชื่อไฟล์) ไม่แสดงให้ลูกค้า — อยู่ในเอกสารโครงงานและสไลด์แล้ว
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { aiRecommend, aiRecommendAccept, getSavedPhone } from '../api/client.js'
+import { toRecommendScores, scoreLabel } from '../utils/recommendScore.js'
+import { saveCarryDesign } from '../utils/carryDesign.js'
 import NailThumb from './NailThumb.jsx'
 
 const SKIN_TONES = [
@@ -21,25 +22,27 @@ const NAIL_LENGTHS = [
   { id: 'short', label: 'สั้น' }, { id: 'medium', label: 'ปานกลาง' }, { id: 'long', label: 'ยาว' },
 ]
 const STYLE_PREFS = [
-  { id: 'minimal', label: 'มินิมอล' }, { id: 'classic', label: 'คลาสสิก' }, { id: 'bold', label: 'จัดจ้าน' },
+  { id: 'minimal', label: 'เรียบง่าย' }, { id: 'classic', label: 'คลาสสิก' }, { id: 'bold', label: 'โดดเด่น' },
 ]
 const OCCASIONS = [
-  { id: 'daily', label: 'ใช้ชีวิตประจำวัน' }, { id: 'work', label: 'ทำงาน' },
+  { id: 'daily', label: 'ใช้ทุกวัน' }, { id: 'work', label: 'ไปทำงาน' },
   { id: 'wedding', label: 'งานแต่งงาน' }, { id: 'party', label: 'ปาร์ตี้' }, { id: 'date', label: 'เดต' },
 ]
 const ACCENTS = ['#EC4C82', '#D4AF37', '#6B3FA0', '#8B5E3C', '#3B8FA6']
 
-function Field({ label, options, value, onChange }) {
+function Field({ label, hint, options, value, onChange }) {
   return (
     <div>
-      <p className="text-xs font-semibold text-gray-500 mb-2">{label}</p>
-      <div className="flex flex-wrap gap-2">
+      <p className="text-sm font-semibold text-gray-700">{label}</p>
+      {hint && <p className="text-xs text-green-600 mt-0.5">{hint}</p>}
+      <div className="flex flex-wrap gap-2 mt-2">
         {options.map((o) => (
           <button
             key={o.id}
             type="button"
+            aria-pressed={value === o.id}
             onClick={() => onChange(o.id)}
-            className={`px-3.5 py-2 rounded-full text-xs font-medium transition-colors ${
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               value === o.id ? 'bg-rose-500 text-white' : 'bg-white text-gray-600 border border-blush-200 hover:bg-blush-100'
             }`}
           >
@@ -51,15 +54,26 @@ function Field({ label, options, value, onChange }) {
   )
 }
 
-export default function AdvancedRecommend() {
+export default function AdvancedRecommend({ skinTone = null }) {
+  const navigate = useNavigate()
   const [form, setForm] = useState({
-    skin_tone: 'warm', nail_shape: 'round', nail_length: 'medium', style_preference: 'classic', occasion: 'daily',
+    skin_tone: skinTone || 'warm', nail_shape: 'round', nail_length: 'medium', style_preference: 'classic', occasion: 'daily',
   })
+  const [skinFromAnalysis, setSkinFromAnalysis] = useState(!!skinTone)
   const [status, setStatus] = useState('idle')
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
 
+  // วิเคราะห์สีผิวเสร็จทีหลัง (หรือโหลดผลที่จำไว้) → เติมโทนผิวให้เอง ถ้าลูกค้ายังไม่ได้เลือกเอง
+  useEffect(() => {
+    if (skinTone) {
+      setForm((f) => ({ ...f, skin_tone: skinTone }))
+      setSkinFromAnalysis(true)
+    }
+  }, [skinTone])
+
   function set(key, value) {
+    if (key === 'skin_tone') setSkinFromAnalysis(false)
     setForm((f) => ({ ...f, [key]: value }))
   }
 
@@ -72,41 +86,54 @@ export default function AdvancedRecommend() {
       setResult(res)
       setStatus('done')
     } catch (err) {
-      setError(err.message || 'เรียกโมเดลแนะนำไม่สำเร็จ')
+      setError('ตอนนี้ระบบแนะนำลายไม่ตอบสนอง รอสักครู่แล้วลองอีกครั้ง')
+      console.error(err)
       setStatus('error')
     }
   }
 
   function handleBookThis(design) {
     if (result?.log_id) aiRecommendAccept(result.log_id).catch(() => {})
-    localStorage.setItem(
-      'nailglow_carry_design',
-      JSON.stringify({ nail_design_id: design.id, nail_design_name: design.name, color_hex: design.color_hex })
-    )
-    window.location.href = '/booking'
+    saveCarryDesign({
+      source: 'design', nail_design_id: design.id, nail_design_name: design.name, color_hex: design.color_hex, summary: design.name,
+    })
+    navigate('/booking')
   }
 
-  const usingModel = result && !result.model_metrics?.note
+  const scores = result ? toRecommendScores(result.recommendations.map((r) => r.match_score)) : []
 
   return (
     <section id="ai-advanced-recommend" className="max-w-5xl mx-auto px-6 py-16">
       <div className="text-center mb-4">
         <span className="inline-block bg-blush-100 text-rose-600 text-xs font-semibold px-4 py-1.5 rounded-full mb-4">
-          AI แนะนำลาย (XGBoost Model)
+          AI แนะนำลายเล็บ
         </span>
-        <h2 className="font-display text-3xl font-bold text-gray-800">ตอบ 5 คำถาม ให้โมเดล ML แนะนำลายที่ใช่</h2>
-        <p className="text-gray-500 mt-2">
-          ผลลัพธ์คำนวณจากโมเดล XGBoost ที่เทรนบนฝั่งเซิร์ฟเวอร์ (backend/ml/train_xgboost_recommender.py)
-        </p>
+        <h2 className="font-display text-3xl font-bold text-gray-800">ให้ AI เลือกลายที่ใช่ให้คุณ</h2>
+        <p className="text-gray-500 mt-2">ตอบไม่กี่ข้อ แล้วดูลายที่เหมาะกับคุณที่สุดจากลายของร้าน</p>
       </div>
 
       <div className="bg-white rounded-3xl shadow-card p-6 sm:p-10 grid md:grid-cols-2 gap-8">
-        <div className="space-y-5">
-          <Field label="โทนสีผิว" options={SKIN_TONES} value={form.skin_tone} onChange={(v) => set('skin_tone', v)} />
-          <Field label="รูปทรงเล็บ" options={NAIL_SHAPES} value={form.nail_shape} onChange={(v) => set('nail_shape', v)} />
-          <Field label="ความยาวเล็บ" options={NAIL_LENGTHS} value={form.nail_length} onChange={(v) => set('nail_length', v)} />
-          <Field label="สไตล์ที่ชอบ" options={STYLE_PREFS} value={form.style_preference} onChange={(v) => set('style_preference', v)} />
-          <Field label="โอกาสที่จะใช้" options={OCCASIONS} value={form.occasion} onChange={(v) => set('occasion', v)} />
+        <div className="space-y-6">
+          <Field
+            label="โทนสีผิวของคุณ"
+            hint={skinFromAnalysis ? 'เลือกให้แล้วจากผลวิเคราะห์สีผิวของคุณ' : null}
+            options={SKIN_TONES}
+            value={form.skin_tone}
+            onChange={(v) => set('skin_tone', v)}
+          />
+          <Field label="ชอบสไตล์ไหน" options={STYLE_PREFS} value={form.style_preference} onChange={(v) => set('style_preference', v)} />
+          <Field label="จะไปใช้ตอนไหน" options={OCCASIONS} value={form.occasion} onChange={(v) => set('occasion', v)} />
+
+          <details className="group rounded-2xl border border-blush-200 px-4 py-3">
+            <summary className="cursor-pointer text-sm font-semibold text-gray-600 list-none flex items-center justify-between">
+              ปรับแต่งเพิ่มเติม (ทรงและความยาวเล็บ)
+              <span className="text-gray-400 text-xs group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            <div className="space-y-5 mt-4">
+              <Field label="ทรงเล็บ" options={NAIL_SHAPES} value={form.nail_shape} onChange={(v) => set('nail_shape', v)} />
+              <Field label="ความยาวเล็บ" options={NAIL_LENGTHS} value={form.nail_length} onChange={(v) => set('nail_length', v)} />
+            </div>
+          </details>
 
           <button
             type="button"
@@ -114,58 +141,55 @@ export default function AdvancedRecommend() {
             disabled={status === 'loading'}
             className="w-full bg-rose-500 hover:bg-rose-600 disabled:bg-blush-200 text-white font-semibold py-3 rounded-full shadow-card transition-colors"
           >
-            {status === 'loading' ? 'กำลังให้ AI คำนวณ...' : '🤖 ให้ AI แนะนำลาย'}
+            {status === 'loading' ? 'AI กำลังเลือกลายให้คุณ...' : 'ดูลายที่เหมาะกับฉัน'}
           </button>
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p className="text-sm text-red-500" role="alert">{error}</p>}
         </div>
 
-        <div>
+        <div aria-live="polite">
           {status !== 'done' && (
-            <div className="h-full min-h-[220px] flex items-center justify-center text-sm text-gray-400 text-center px-6">
-              เลือกตัวเลือกด้านซ้ายให้ครบ แล้วกด "ให้ AI แนะนำลาย"
+            <div className="h-full min-h-[220px] flex flex-col items-center justify-center text-sm text-gray-400 text-center px-6 gap-2">
+              <span className="text-3xl" aria-hidden="true">💅</span>
+              ลายที่ AI เลือกให้จะแสดงที่นี่
             </div>
           )}
           {status === 'done' && result && (
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-sm font-medium text-gray-700">ลายที่โมเดลแนะนำ</p>
-                {usingModel ? (
-                  <span className="text-[11px] text-green-600 bg-green-50 px-2.5 py-1 rounded-full font-medium">
-                    ใช้โมเดลที่เทรนแล้ว · Accuracy {(result.model_metrics.accuracy * 100).toFixed(1)}%
-                  </span>
-                ) : (
-                  <span className="text-[11px] text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full font-medium">
-                    ใช้กฎ fallback (ยังไม่ได้เทรนโมเดล)
-                  </span>
-                )}
-              </div>
+              <p className="text-sm font-semibold text-gray-700 mb-4">ลายที่เหมาะกับคุณที่สุด 5 อันดับ</p>
               <div className="space-y-3">
                 {result.recommendations.map((r, i) => (
-                  <div key={r.design.id} className="flex items-center gap-3 border border-blush-200 rounded-xl p-3">
-                    <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
+                  <div
+                    key={r.design.id}
+                    className={`rounded-2xl p-3 flex items-center gap-3 border ${i === 0 ? 'border-rose-300 bg-rose-50/60' : 'border-blush-200'}`}
+                  >
+                    <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
                       {r.design.image_url ? (
                         <img loading="lazy" decoding="async" src={r.design.image_url} alt={r.design.name} className="w-full h-full object-cover" />
                       ) : (
-                        <NailThumb label="" accent={ACCENTS[i % ACCENTS.length]} />
+                        <NailThumb label="" accent={r.design.color_hex || ACCENTS[i % ACCENTS.length]} />
                       )}
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-gray-800">{r.design.name}</p>
-                        <span className="text-xs font-bold text-rose-600">{r.match_score.toFixed(1)}%</span>
-                      </div>
-                      <p className="text-xs text-gray-400">{r.design.duration_minutes} นาที · {r.design.price} บาท</p>
+                    <div className="flex-1 min-w-0">
+                      {i === 0 && <span className="inline-block bg-rose-500 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full mb-1">แนะนำที่สุด</span>}
+                      <p className="text-sm font-semibold text-gray-800 truncate">{r.design.name}</p>
+                      <p className="text-xs text-gray-400">{r.design.duration_minutes} นาที · {Math.round(r.design.price)} บาท</p>
+                      <p className="text-xs mt-0.5">
+                        <span className="text-gray-400">คะแนนที่ AI แนะนำ </span>
+                        <span className="font-bold text-rose-600">★ {scoreLabel(scores[i])}</span>
+                        <span className="text-gray-400">/10</span>
+                      </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleBookThis(r.design)}
-                      className="text-xs font-semibold text-white bg-rose-500 hover:bg-rose-600 px-3 py-2 rounded-full whitespace-nowrap"
+                      className="text-xs font-semibold text-white bg-rose-500 hover:bg-rose-600 px-3.5 py-2 rounded-full whitespace-nowrap"
                     >
                       จองลายนี้
                     </button>
                   </div>
                 ))}
               </div>
+              <p className="text-[11px] text-gray-400 mt-3">คะแนนเทียบกับลายที่เหมาะที่สุดของคุณในรอบนี้ (ลายอันดับ 1 = 10.0)</p>
             </div>
           )}
         </div>

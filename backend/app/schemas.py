@@ -130,6 +130,15 @@ class HolidayOut(BaseModel):
         from_attributes = True
 
 
+class PublicHolidayOut(BaseModel):
+    """วันหยุดพิเศษที่ลูกค้าเห็นได้ (ไม่เปิดเผย id ภายใน)"""
+    holiday_date: date
+    note: str
+
+    class Config:
+        from_attributes = True
+
+
 class HolidayIn(BaseModel):
     holiday_date: date
     note: str = ""
@@ -138,8 +147,9 @@ class HolidayIn(BaseModel):
 class BookingCreate(BaseModel):
     category_id: str
     service_id: str
-    shade_id: Optional[str] = None
-    shade_name: Optional[str] = None
+    # ยาวเกินคอลัมน์ในฐานข้อมูล (64/120) แล้ว PostgreSQL จะ error 500 ตอนบันทึก จึงกั้นที่ 422 ตั้งแต่รับคำขอ
+    shade_id: Optional[str] = Field(default=None, max_length=64)
+    shade_name: Optional[str] = Field(default=None, max_length=120)
     nail_design_id: Optional[str] = None
     reference_image_base64: Optional[str] = None
     ai_style_tag: Optional[str] = None

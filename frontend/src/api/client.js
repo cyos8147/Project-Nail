@@ -90,6 +90,7 @@ export const getServiceCategories = () => request('/service-categories')
 export const getServices = (categoryId) => request('/services', { params: { category_id: categoryId } })
 export const getNailDesigns = (styleTag) => request('/nail-designs', { params: { style_tag: styleTag } })
 export const getShopSettings = () => request('/shop-settings')
+export const getPublicHolidays = () => request('/holidays')
 export const getAvailability = (date, durationMinutes, categoryId, excludeBookingId) =>
   request('/availability', {
     params: { date, duration_minutes: durationMinutes, category_id: categoryId, exclude_booking_id: excludeBookingId },

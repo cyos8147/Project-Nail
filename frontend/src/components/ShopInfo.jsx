@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { getShopSettings } from '../api/client.js'
+import { getPublicHolidays, getShopSettings } from '../api/client.js'
+import { longDate } from '../utils/dashboardFormat.js'
 
 // ลิงก์โซเชียลของร้าน ใส่เพิ่มได้ตรงนี้ เช่น { label: 'Facebook', href: 'https://facebook.com/ชื่อเพจ' }
 // ถ้าปล่อยว่างไว้จะไม่แสดงส่วนนี้
@@ -80,6 +81,7 @@ const ContactHeading = () => (
 export default function ShopInfo() {
   const [settings, setSettings] = useState(null)
   const [failed, setFailed] = useState(false)
+  const [holidays, setHolidays] = useState([]) // วันหยุดพิเศษที่ยังไม่ถึง (โหลดไม่ได้ก็ไม่เป็นไร แค่ไม่แสดงส่วนนี้)
 
   useEffect(() => {
     let alive = true
@@ -90,6 +92,11 @@ export default function ShopInfo() {
       .catch(() => {
         if (alive) setFailed(true)
       })
+    getPublicHolidays()
+      .then((list) => {
+        if (alive && Array.isArray(list)) setHolidays(list)
+      })
+      .catch(() => {})
     return () => {
       alive = false
     }
@@ -153,6 +160,21 @@ export default function ShopInfo() {
               </li>
             ))}
           </ul>
+          {holidays.length > 0 && (
+            <div className="mt-5 rounded-xl bg-blush-50 px-4 py-3">
+              <p className="text-sm font-semibold text-gray-800">วันหยุดพิเศษที่ร้านแจ้งไว้</p>
+              <ul className="mt-2 space-y-1.5">
+                {holidays.slice(0, 8).map((h) => (
+                  <li key={h.holiday_date} className="flex items-baseline justify-between gap-3 text-sm">
+                    <span className="font-medium tabular-nums text-gray-700">{longDate(h.holiday_date)}</span>
+                    <span className="text-right text-gray-500">{h.note || 'ร้านหยุด'}</span>
+                  </li>
+                ))}
+              </ul>
+              {holidays.length > 8 && <p className="mt-2 text-xs text-gray-400">และอีก {holidays.length - 8} วัน</p>}
+              <p className="mt-2 text-xs text-gray-400">วันเหล่านี้จองคิวออนไลน์ไม่ได้</p>
+            </div>
+          )}
         </div>
 
         {hasContact && (

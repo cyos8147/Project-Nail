@@ -68,3 +68,13 @@ export function shiftIso(iso, days) {
   const [y, m, d] = iso.split('-').map(Number)
   return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10)
 }
+
+const WEEKDAYS_SUN_FIRST = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.']
+
+/** '2033-03-05' → 'เสาร์ที่... ' แบบสั้น: 'ส. 5 มี.ค. 2576' (ปี พ.ศ. 4 หลัก ใช้กับลูกค้าที่ต้องเห็นปีชัด) */
+export function longDate(iso) {
+  const [y, m, d] = String(iso).split('-').map(Number)
+  if (!y || !m || !d) return ''
+  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay()
+  return `${WEEKDAYS_SUN_FIRST[dow]} ${d} ${THAI_MONTHS[m]} ${y + 543}`
+}

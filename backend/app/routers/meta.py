@@ -7,6 +7,7 @@ from .. import models, schemas
 from ..availability import compute_available_slots, get_shop_settings
 from ..database import get_db
 from ..policy import shop_settings_out
+from ..timeutil import today_th
 
 router = APIRouter(tags=["meta"])
 
@@ -35,6 +36,18 @@ def list_nail_designs(style_tag: str | None = None, db: Session = Depends(get_db
 @router.get("/shop-settings", response_model=schemas.ShopSettingsOut)
 def shop_settings(db: Session = Depends(get_db)):
     return shop_settings_out(db, get_shop_settings(db))
+
+
+@router.get("/holidays", response_model=list[schemas.PublicHolidayOut])
+def upcoming_holidays(db: Session = Depends(get_db)):
+    """วันหยุดพิเศษที่ยังไม่ถึง (รวมวันนี้) สำหรับแสดงให้ลูกค้าเห็นล่วงหน้า วันที่ผ่านไปแล้วไม่ส่ง"""
+    return (
+        db.query(models.ShopHoliday)
+        .filter(models.ShopHoliday.holiday_date >= today_th())
+        .order_by(models.ShopHoliday.holiday_date)
+        .limit(60)
+        .all()
+    )
 
 
 @router.get("/availability", response_model=schemas.AvailabilityOut)
