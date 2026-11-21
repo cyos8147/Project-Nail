@@ -49,6 +49,10 @@ class ShopSettings(Base):
     # ตารางเดิมให้เองตอนเริ่มเซิร์ฟเวอร์ (migrations.py) และตั้งเป็น deferred: query ปกติไม่ดึงคอลัมน์นี้ ถ้าเพิ่มไม่สำเร็จเว็บส่วนอื่นยังใช้ได้
     # (อ่านค่าผ่าน policy.get_cancel_cutoff_hours เท่านั้น)
     cancel_cutoff_hours: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"), deferred=True)
+    # เวลาเปิด-ปิดแยกรายวัน {"0": {"open": "09:00", "close": "20:00"}, ...} (คีย์ = วันแบบ JS 0=อาทิตย์)
+    # วันที่ไม่มีในนี้ใช้ opening_time/closing_time ด้านบน ส่วนวันปิดยังกำหนดที่ closed_weekdays ที่เดียว
+    # คอลัมน์ที่เพิ่มทีหลัง: deferred + อ่านผ่าน availability.get_weekly_hours เท่านั้น (ถ้าเพิ่มคอลัมน์ไม่สำเร็จ เว็บยังใช้เวลาเดิมได้)
+    weekly_hours: Mapped[dict | None] = mapped_column(JSON, nullable=True, deferred=True)
     # เก็บไว้เผื่อข้อมูลเก่า — ของจริงย้ายไปตาราง ShopLineRecipient ด้านล่างแล้ว (รองรับผูกได้หลายคน)
     owner_line_user_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

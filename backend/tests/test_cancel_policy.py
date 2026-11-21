@@ -126,7 +126,7 @@ def _legacy_engine(tmp_path):
 
 def test_migration_adds_the_missing_column_and_keeps_existing_rows(tmp_path):
     engine = _legacy_engine(tmp_path)
-    assert migrations.ensure_columns(engine) == ["shop_settings.cancel_cutoff_hours"]
+    assert migrations.ensure_columns(engine) == ["shop_settings.cancel_cutoff_hours", "shop_settings.weekly_hours"]
     assert "cancel_cutoff_hours" in {c["name"] for c in inspect(engine).get_columns("shop_settings")}
     with engine.connect() as conn:
         assert conn.execute(text("SELECT shop_name, cancel_cutoff_hours FROM shop_settings")).one() == ("Lucky Salon", 0)

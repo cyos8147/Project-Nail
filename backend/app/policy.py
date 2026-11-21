@@ -10,7 +10,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from . import schemas
-from .availability import get_shop_settings
+from .availability import get_shop_settings, get_weekly_hours
 from .timeutil import now_th
 
 
@@ -33,6 +33,7 @@ def shop_settings_out(db: Session, settings) -> schemas.ShopSettingsOut:
         closing_time=settings.closing_time,
         slot_interval_minutes=settings.slot_interval_minutes,
         closed_weekdays=list(settings.closed_weekdays or []),
+        weekly_hours=get_weekly_hours(db, settings),
         cancel_cutoff_hours=get_cancel_cutoff_hours(db),
     )
 

@@ -106,6 +106,7 @@ class ShopSettingsOut(BaseModel):
     closing_time: TimeStr
     slot_interval_minutes: int
     closed_weekdays: list[int]
+    weekly_hours: dict[str, dict] = Field(default_factory=dict)  # เวลาแยกรายวัน (ว่าง = ใช้ opening/closing ทุกวัน)
     cancel_cutoff_hours: int = 0  # ลูกค้ายกเลิก/เลื่อนคิวผ่านเว็บได้ล่วงหน้าอย่างน้อยกี่ชั่วโมง (0 = ไม่จำกัด)
 
 
@@ -118,7 +119,28 @@ class ShopSettingsIn(BaseModel):
     closing_time: Optional[str] = None
     slot_interval_minutes: Optional[int] = None
     closed_weekdays: Optional[list[int]] = None
+    weekly_hours: Optional[dict[str, "DayHours"]] = None
     cancel_cutoff_hours: Optional[int] = Field(default=None, ge=0, le=168)
+
+
+class DayHours(BaseModel):
+    open: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    close: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+
+
+class ScheduleConflict(BaseModel):
+    """คิวที่ยังรอทำแต่ตกอยู่ในวันหยุด/นอกเวลาทำการตามการตั้งค่าปัจจุบัน (ระบบไม่ยกเลิกให้เอง แอดมินต้องติดต่อลูกค้า)"""
+    id: str
+    booking_code: str
+    customer_name: str
+    customer_phone: str
+    service_name: str
+    booking_date: date
+    booking_time: str
+    reason: str
+
+
+ShopSettingsIn.model_rebuild()
 
 
 class HolidayOut(BaseModel):

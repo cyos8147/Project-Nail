@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getPublicHolidays, getShopSettings } from '../api/client.js'
 import { longDate } from '../utils/dashboardFormat.js'
+import { toWeekRows } from '../utils/shopHours.js'
 
 // ลิงก์โซเชียลของร้าน ใส่เพิ่มได้ตรงนี้ เช่น { label: 'Facebook', href: 'https://facebook.com/ชื่อเพจ' }
 // ถ้าปล่อยว่างไว้จะไม่แสดงส่วนนี้
@@ -17,23 +18,26 @@ const DAYS_MON_FIRST = [
   { js: 0, name: 'อาทิตย์' },
 ]
 
-// รวมวันที่ติดกันและเปิด/หยุดเหมือนกันเป็นบรรทัดเดียว เช่น "พุธ – อาทิตย์"
-function groupDays(closedWeekdays) {
+// รวมวันที่ติดกันและเวลาเหมือนกัน (หรือหยุดเหมือนกัน) เป็นบรรทัดเดียว เช่น "จันทร์ – ศุกร์ 10:00 – 19:00"
+// เวลาแยกรายวันมาจาก weekly_hours (ข้อ 4.2) วันที่ไม่ได้ตั้งใช้เวลาเริ่มต้นของร้าน
+function groupDays(settings) {
+  const rows = toWeekRows(settings)
   const groups = []
   DAYS_MON_FIRST.forEach((d) => {
-    const closed = closedWeekdays.includes(d.js)
+    const r = rows[d.js]
+    const hours = r.open ? `${r.openTime} – ${r.closeTime} น.` : null
     const last = groups[groups.length - 1]
-    if (last && last.closed === closed) last.days.push(d.name)
-    else groups.push({ closed, days: [d.name] })
+    if (last && last.hours === hours) last.days.push(d.name)
+    else groups.push({ closed: !r.open, hours, days: [d.name] })
   })
   return groups.map((g) => ({
     closed: g.closed,
+    hours: g.hours,
     label:
       g.days.length === 7 ? 'ทุกวัน' : g.days.length === 1 ? g.days[0] : `${g.days[0]} – ${g.days[g.days.length - 1]}`,
   }))
 }
 
-const formatTime = (t) => String(t || '').slice(0, 5)
 
 function Icon({ children }) {
   return (
@@ -128,8 +132,7 @@ export default function ShopInfo() {
   const lineId = settings.line_oa_basic_id?.trim()
   const hasContact = Boolean(address || phone || lineId || SOCIAL_LINKS.length)
 
-  const groups = groupDays(settings.closed_weekdays || [])
-  const hours = `${formatTime(settings.opening_time)} – ${formatTime(settings.closing_time)} น.`
+  const groups = groupDays(settings)
   const mapUrl = address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}` : null
   const telUrl = phone ? `tel:${phone.replace(/[^\d+]/g, '')}` : null
   const lineUrl = lineId
@@ -149,13 +152,13 @@ export default function ShopInfo() {
             เวลาทำการ
           </h3>
           <ul className="mt-4 divide-y divide-blush-100">
-            {groups.map((g) => (
-              <li key={g.label} className="flex items-center justify-between gap-4 py-2.5">
+            {groups.map((g, i) => (
+              <li key={`${g.label}-${i}`} className="flex items-center justify-between gap-4 py-2.5">
                 <span className="text-gray-600">{g.label}</span>
                 {g.closed ? (
                   <span className="rounded-full bg-blush-100 px-3 py-0.5 text-sm font-semibold text-rose-600">หยุด</span>
                 ) : (
-                  <span className="font-semibold tabular-nums text-gray-800">{hours}</span>
+                  <span className="font-semibold tabular-nums text-gray-800">{g.hours}</span>
                 )}
               </li>
             ))}

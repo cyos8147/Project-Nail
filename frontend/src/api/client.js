@@ -175,6 +175,8 @@ export const adminUpdateShopSettings = (payload) =>
   request('/admin/shop-settings', { method: 'PUT', auth: true, body: payload })
 export const adminListHolidays = () => request('/admin/holidays', { auth: true })
 export const adminAddHoliday = (payload) => request('/admin/holidays', { method: 'POST', auth: true, body: payload })
+export const adminUpdateHoliday = (id, payload) => request(`/admin/holidays/${id}`, { method: 'PATCH', auth: true, body: payload })
+export const adminScheduleConflicts = () => request('/admin/schedule-conflicts', { auth: true })
 export const adminDeleteHoliday = (id) => request(`/admin/holidays/${id}`, { method: 'DELETE', auth: true })
 
 // --- Admin dashboard ------------------------------------------------------

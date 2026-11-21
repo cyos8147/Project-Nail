@@ -32,6 +32,34 @@ def get_shop_settings(db: Session) -> ShopSettings:
     return settings
 
 
+def get_weekly_hours(db: Session, settings: ShopSettings | None = None) -> dict:
+    """เวลาแยกรายวันที่ตั้งไว้ (คีย์ "0".."6" แบบ JS) ถ้าคอลัมน์ยังไม่มีในฐานข้อมูลหรือข้อมูลเสีย คืน {} (= ใช้เวลาเดียวทุกวัน)"""
+    settings = settings or get_shop_settings(db)
+    try:
+        raw = settings.weekly_hours or {}
+    except Exception:
+        db.rollback()
+        return {}
+    clean = {}
+    for key, value in (raw.items() if isinstance(raw, dict) else []):
+        try:
+            if str(key) in {str(i) for i in range(7)} and _time_to_minutes(value["open"]) < _time_to_minutes(value["close"]):
+                clean[str(key)] = {"open": value["open"], "close": value["close"]}
+        except (KeyError, TypeError, ValueError, AttributeError):
+            continue
+    return clean
+
+
+def day_hours(db: Session, target_date: date, settings: ShopSettings | None = None, weekly: dict | None = None) -> tuple[int, int]:
+    """(นาทีเปิด, นาทีปิด) ของวันนั้น -- ใช้เวลาของวันนั้นถ้าตั้งไว้ ไม่งั้นใช้เวลาเริ่มต้นของร้าน"""
+    settings = settings or get_shop_settings(db)
+    weekly = get_weekly_hours(db, settings) if weekly is None else weekly
+    js_weekday = str((target_date.weekday() + 1) % 7)
+    if js_weekday in weekly:
+        return _time_to_minutes(weekly[js_weekday]["open"]), _time_to_minutes(weekly[js_weekday]["close"])
+    return _time_to_minutes(settings.opening_time), _time_to_minutes(settings.closing_time)
+
+
 def is_shop_open(db: Session, target_date: date) -> bool:
     settings = get_shop_settings(db)
     # python date.weekday(): 0=จันทร์..6=อาทิตย์ ส่วนฝั่ง frontend ใช้แบบ JS: 0=อาทิตย์..6=เสาร์
@@ -59,8 +87,7 @@ def compute_available_slots(
     category = db.get(ServiceCategory, category_id)
     capacity = category.staff_count if category else 0
 
-    open_min = _time_to_minutes(settings.opening_time)
-    close_min = _time_to_minutes(settings.closing_time)
+    open_min, close_min = day_hours(db, target_date, settings)
     step = settings.slot_interval_minutes or 60
 
     existing_query = db.query(Booking).filter(
@@ -150,8 +177,7 @@ def compute_chain_slots(
     if not items or any(d <= 0 for _c, d in items) or not is_shop_open(db, target_date):
         return []
     settings = get_shop_settings(db)
-    open_min = _time_to_minutes(settings.opening_time)
-    close_min = _time_to_minutes(settings.closing_time)
+    open_min, close_min = day_hours(db, target_date, settings)
     step = settings.slot_interval_minutes or 60
     total = sum(d for _c, d in items)
     exclude = exclude_booking_ids or set()
