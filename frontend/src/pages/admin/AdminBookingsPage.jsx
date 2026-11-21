@@ -3,12 +3,14 @@ import {
   adminCreateBooking,
   adminDeleteBooking,
   adminListBookings,
+  adminRescheduleBooking,
   adminUpdateBooking,
   getServiceCategories,
   getServices,
   getShopSettings,
 } from '../../api/client.js'
 import DateTimePicker from '../../components/booking/DateTimePicker.jsx'
+import ZoomableImage from '../../components/ZoomableImage.jsx'
 
 const STATUS_OPTIONS = ['pending', 'confirmed', 'completed', 'cancelled', 'no_show']
 const STATUS_LABEL = {
@@ -142,6 +144,56 @@ function CreateBookingForm({ onCreated, onCancel }) {
   )
 }
 
+// แผงเลื่อนนัดของคิวเดียว: ใช้ปฏิทินคิวว่างตัวเดียวกับหน้าจอง (ไม่นับคิวเดิมของตัวเอง) จึงเลือกได้เฉพาะเวลาที่ว่างจริง
+function ReschedulePanel({ booking, closedWeekdays, onDone, onCancel }) {
+  const [selectedDate, setSelectedDate] = useState(booking.booking_date)
+  const [selectedTime, setSelectedTime] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+
+  async function handleSave() {
+    if (!selectedDate || !selectedTime) {
+      setError('เลือกวันและเวลาใหม่ก่อน')
+      return
+    }
+    setSaving(true)
+    setError(null)
+    try {
+      onDone(await adminRescheduleBooking(booking.id, selectedDate, selectedTime))
+    } catch (err) {
+      setError(err.message || 'เลื่อนนัดไม่สำเร็จ')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50/40 p-4 space-y-3">
+      <p className="text-sm font-semibold text-gray-700">
+        เลื่อนนัด · เดิม {booking.booking_date} {booking.booking_time} น. ({booking.estimated_duration_minutes} นาที)
+      </p>
+      <DateTimePicker
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+        selectedTime={selectedTime}
+        setSelectedTime={setSelectedTime}
+        serviceDurationMinutes={booking.estimated_duration_minutes}
+        categoryId={booking.category_id}
+        closedWeekdays={closedWeekdays}
+        excludeBookingId={booking.id}
+      />
+      <p className="text-xs text-gray-500">สถานะคิวคงเดิม ระบบบันทึกวันเวลาเดิมไว้ในหมายเหตุ และแจ้งลูกค้าทาง LINE ให้ถ้าลูกค้าผูกไว้</p>
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="button" onClick={handleSave} disabled={saving || !selectedTime} className="bg-rose-500 hover:bg-rose-600 disabled:bg-blush-200 text-white text-sm font-semibold px-5 py-2.5 rounded-xl">
+          {saving ? 'กำลังบันทึก...' : selectedTime ? `ย้ายไป ${selectedDate} ${selectedTime} น.` : 'เลือกเวลาใหม่'}
+        </button>
+        <button type="button" onClick={onCancel} className="text-sm text-gray-500 hover:text-gray-700 px-2 py-2">ยกเลิก</button>
+        {error && <span className="text-sm text-red-500" role="alert">{error}</span>}
+      </div>
+    </div>
+  )
+}
+
 // วันที่ตามเวลาไทย (YYYY-MM-DD) offsetDays วันจากวันนี้ -- บวก 7 ชม. แล้วอ่านเป็น UTC จึงไม่ขึ้นกับเขตเวลาของเครื่อง
 function thaiDate(offsetDays = 0) {
   return new Date(Date.now() + 7 * 3600 * 1000 + offsetDays * 86400000).toISOString().slice(0, 10)
@@ -175,6 +227,8 @@ export default function AdminBookingsPage() {
   const [loadError, setLoadError] = useState(null)
   const [noteDraft, setNoteDraft] = useState({})
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [rescheduling, setRescheduling] = useState(null) // id ของคิวที่กำลังเลื่อนนัด
+  const [closedWeekdays, setClosedWeekdays] = useState(null)
 
   // มีช่วงวันที่ -> เรียงตามเวลานัด, ไม่มี -> ใหม่สุดก่อน
   const byAppointment = Boolean(filters.date_from || filters.date_to)
@@ -189,6 +243,9 @@ export default function AdminBookingsPage() {
   }
 
   useEffect(() => load(), [])
+  useEffect(() => {
+    getShopSettings().then((st) => setClosedWeekdays(st.closed_weekdays)).catch(() => setClosedWeekdays([]))
+  }, [])
 
   function applyQuick(key) {
     const [from, to] = QUICK_FILTERS.find((f) => f.key === key).range()
@@ -338,6 +395,16 @@ export default function AdminBookingsPage() {
                 {b.ai_style_tag && <p className="text-xs text-gray-400">AI style: {b.ai_style_tag} (+{b.ai_extra_minutes} นาที)</p>}
               </div>
               <div className="flex items-center gap-2">
+                {['pending', 'confirmed'].includes(b.status) && (
+                  <button
+                    type="button"
+                    onClick={() => setRescheduling(rescheduling === b.id ? null : b.id)}
+                    aria-expanded={rescheduling === b.id}
+                    className="rounded-full border border-blush-200 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-blush-100"
+                  >
+                    📅 เลื่อนนัด
+                  </button>
+                )}
                 <select
                   value={b.status}
                   onChange={(e) => handleStatusChange(b, e.target.value)}
@@ -356,8 +423,28 @@ export default function AdminBookingsPage() {
               </div>
             </div>
 
+            {rescheduling === b.id && closedWeekdays !== null && (
+              <ReschedulePanel
+                booking={b}
+                closedWeekdays={closedWeekdays}
+                onCancel={() => setRescheduling(null)}
+                onDone={(updated) => {
+                  setRescheduling(null)
+                  setBookings((prev) => prev.map((x) => (x.id === updated.id ? updated : x)))
+                }}
+              />
+            )}
+
             {b.reference_image_url && (
-              <img loading="lazy" decoding="async" src={b.reference_image_url} alt="รูปที่ลูกค้าแนบ" className="mt-3 w-20 h-20 rounded-lg object-cover" />
+              <div className="mt-3 flex items-end gap-2">
+                <ZoomableImage
+                  src={b.reference_image_url}
+                  alt={`รูปที่ลูกค้าแนบ (${b.customer_name})`}
+                  caption={[b.service_name, b.shade_name].filter(Boolean).join(' · ')}
+                  className="w-28 h-28 rounded-xl border border-blush-200"
+                />
+                <span className="text-[11px] text-gray-400">กดที่รูปเพื่อดูเต็มจอ</span>
+              </div>
             )}
 
             <div className="mt-3 flex gap-2">

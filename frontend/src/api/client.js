@@ -138,6 +138,8 @@ export const adminListBookings = (params) => request('/admin/bookings', { auth: 
 export const adminCreateBooking = (payload) => request('/admin/bookings', { method: 'POST', auth: true, body: payload })
 export const adminUpdateBooking = (id, payload) =>
   request(`/admin/bookings/${id}`, { method: 'PATCH', auth: true, body: payload })
+export const adminRescheduleBooking = (id, bookingDate, bookingTime) =>
+  request(`/admin/bookings/${id}/reschedule`, { method: 'PATCH', auth: true, body: { booking_date: bookingDate, booking_time: bookingTime } })
 export const adminDeleteBooking = (id) => request(`/admin/bookings/${id}`, { method: 'DELETE', auth: true })
 
 // --- Admin users (จัดการบัญชีแอดมิน -- เฉพาะ owner) ------------------------
@@ -229,6 +231,17 @@ export function fileToBase64(file) {
     reader.onerror = reject
     reader.readAsDataURL(file)
   })
+}
+
+// รูปที่ backend เก็บในเครื่องตัวเอง (ตอนไม่ได้ต่อ Supabase Storage) ได้ path แบบ /static/... ซึ่งต้องโหลดจากโดเมนของ API
+// ไม่ใช่โดเมนหน้าเว็บ ส่วน URL เต็ม (Supabase) และ data: ใช้ตามเดิม
+export function assetUrl(src) {
+  if (typeof src !== 'string' || !src.startsWith('/static/')) return src
+  try {
+    return new URL(API_BASE_URL).origin + src
+  } catch {
+    return src
+  }
 }
 
 export { ApiError, API_BASE_URL }

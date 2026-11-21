@@ -193,6 +193,14 @@ class BookingStatusUpdate(BaseModel):
     admin_note: Optional[str] = None
 
 
+class AdminBookingReschedule(BaseModel):
+    """แอดมินเลื่อนวัน/เวลานัด (เช่น ลูกค้าโทรมาขอเลื่อน) -- ต่างจากฝั่งลูกค้าตรงที่ไม่ติดกฎ "ต้องเลื่อนล่วงหน้ากี่ชั่วโมง"
+    และคงสถานะเดิมไว้ (ร้านตกลงกับลูกค้าแล้ว) ส่วนการกันคิวชน/วันหยุด/นอกเวลาทำการยังตรวจเหมือนเดิมทุกอย่าง"""
+
+    booking_date: date
+    booking_time: str = Field(pattern=r"^\d{2}:\d{2}$")
+
+
 class BookingReschedule(BaseModel):
     phone: str
     booking_date: date

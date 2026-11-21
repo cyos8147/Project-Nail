@@ -12,9 +12,11 @@ import {
   getServiceCategories,
   getServices,
   getShopSettings,
+  saveBookingCode,
   savePhone,
 } from '../../api/client.js'
 import { pickNailService, shadeFromCarry, takeCarryDesign } from '../../utils/carryDesign.js'
+import ZoomableImage from '../ZoomableImage.jsx'
 
 const THAI_MONTHS_SHORT = [
   'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
@@ -50,6 +52,7 @@ export default function BookingWizard() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
   const [bookingResult, setBookingResult] = useState(null)
+  const [codeCopied, setCodeCopied] = useState(false)
 
   const [aiStyleTag, setAiStyleTag] = useState(null)
   const [aiExtraMinutes, setAiExtraMinutes] = useState(0)
@@ -222,6 +225,8 @@ export default function BookingWizard() {
       })
 
       savePhone(form.phone)
+      // จำรหัสคิวไว้ในเครื่อง หน้า "ประวัติของฉัน" จะเปิดดู/ยกเลิก/เลื่อนคิวได้ทันทีโดยไม่ต้องพิมพ์รหัสเอง
+      if (result?.booking_code) saveBookingCode(result.booking_code)
       setBookingResult(result)
       setSubmitted(true)
     } catch (err) {
@@ -244,6 +249,7 @@ export default function BookingWizard() {
     setSubmitted(false)
     setSubmitError(null)
     setBookingResult(null)
+    setCodeCopied(false)
     setCarriedDesign(null)
     setAutoPickedName(null)
     setStep(1)
@@ -281,7 +287,27 @@ export default function BookingWizard() {
             )}
           </div>
 
-          <div className="mt-4 max-w-xs mx-auto">
+          <div className="mt-5 max-w-sm mx-auto text-left bg-amber-50 border border-amber-200 rounded-2xl p-4">
+            <p className="text-sm font-semibold text-amber-800">สถานะตอนนี้: รอร้านยืนยันคิว</p>
+            <ul className="mt-2 space-y-1.5 text-xs text-amber-900/80 leading-relaxed list-disc pl-4">
+              <li>เก็บ<b>รหัสคิว</b>ไว้ (แคปหน้าจอนี้ หรือกดคัดลอก) ใช้คู่กับเบอร์โทรเพื่อดูสถานะ เลื่อน หรือยกเลิกคิว</li>
+              <li>ดูได้ตลอดที่หน้า <a href="/history" className="underline font-semibold">ประวัติของฉัน</a> เครื่องนี้จำรหัสคิวไว้ให้แล้ว</li>
+              <li>ถ้ายังไม่ผูก LINE จะไม่มีข้อความแจ้งเตือน กรุณาเข้ามาเช็กสถานะก่อนวันนัด หรือโทรหาร้าน</li>
+            </ul>
+            {bookingResult?.booking_code && (
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard?.writeText(bookingResult.booking_code).then(() => setCodeCopied(true)).catch(() => {})
+                }}
+                className="mt-3 w-full bg-white border border-amber-300 hover:bg-amber-100 text-amber-800 text-sm font-semibold py-2.5 rounded-full transition-colors"
+              >
+                {codeCopied ? '✓ คัดลอกรหัสคิวแล้ว' : `คัดลอกรหัสคิว ${bookingResult.booking_code}`}
+              </button>
+            )}
+          </div>
+
+          <div className="mt-4 max-w-sm mx-auto">
             {shopLineId && bookingResult?.booking_code ? (
               <>
                 <a
@@ -293,15 +319,14 @@ export default function BookingWizard() {
                   💬 ผูก LINE รับแจ้งเตือนคิวอัตโนมัติ
                 </a>
                 <p className="text-[11px] text-gray-400 mt-2">
-                  เปิดแชท LINE ร้านพร้อมกรอกรหัสคิวให้แล้ว กดส่งได้เลย
+                  เปิดแชท LINE ร้านพร้อมกรอกรหัสคิวให้แล้ว กดส่งได้เลย (ไม่บังคับ)
                 </p>
               </>
             ) : (
               <div className="bg-white border border-blush-200 rounded-2xl p-4 flex gap-3 text-left">
                 <span className="text-lg leading-none">💡</span>
                 <p className="text-xs text-gray-500 leading-relaxed">
-                  เพิ่มเพื่อน LINE ของร้าน (ดูไอดีได้ที่ท้ายเว็บไซต์) แล้วพิมพ์รหัสคิวส่งในแชท
-                  เพื่อรับแจ้งเตือนอัตโนมัติเมื่อร้านยืนยันหรือแก้ไขคิว
+                  อยากได้แจ้งเตือนอัตโนมัติ: เพิ่มเพื่อน LINE ของร้าน (ดูไอดีได้ที่ท้ายเว็บไซต์) แล้วพิมพ์รหัสคิวส่งในแชท
                 </p>
               </div>
             )}
@@ -339,7 +364,7 @@ export default function BookingWizard() {
               {carriedDesign && (
                 <div className="mb-6 flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4">
                   {carriedDesign.reference_image_base64 ? (
-                    <img src={carriedDesign.reference_image_base64} alt="รูปที่ลองสีจาก AI" className="w-14 h-14 rounded-xl object-cover flex-shrink-0 bg-white" />
+                    <ZoomableImage src={carriedDesign.reference_image_base64} alt="รูปที่ลองสีจาก AI" caption={carriedDesign.summary} className="w-16 h-16 rounded-xl flex-shrink-0 bg-white" />
                   ) : (
                     <span className="w-14 h-14 rounded-xl border border-black/10 flex-shrink-0" style={{ backgroundColor: carriedShade?.hex || carriedDesign.color_hex || '#F4C6CE' }} />
                   )}

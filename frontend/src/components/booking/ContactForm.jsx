@@ -1,3 +1,4 @@
+import ZoomableImage from '../ZoomableImage.jsx'
 const THAI_MONTHS_SHORT = [
   'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
   'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.',
@@ -33,11 +34,12 @@ export default function ContactForm({
           {referenceImage && (
             <div>
               <p className="text-xs text-gray-500 mb-1.5">รูปที่แนบไปกับการจอง</p>
-              <img
+              <ZoomableImage
                 src={referenceImage}
                 alt="รูปที่แนบไปกับการจอง"
-                className="w-full max-h-72 object-contain rounded-xl bg-white border border-blush-200"
+                className="block w-full h-56 rounded-xl bg-white border border-blush-200"
               />
+              <p className="text-[11px] text-gray-400 mt-1">กดที่รูปเพื่อดูเต็มจอ</p>
             </div>
           )}
           <div className="flex justify-between text-sm">

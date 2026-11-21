@@ -14,6 +14,7 @@ import {
   savePhone,
 } from '../api/client.js'
 import { isTooLateToChange } from '../utils/cancelPolicy.js'
+import ZoomableImage from '../components/ZoomableImage.jsx'
 
 const STATUS_LABEL = {
   pending: 'รอยืนยัน', confirmed: 'ยืนยันแล้ว', completed: 'เสร็จสิ้น', cancelled: 'ยกเลิกแล้ว', no_show: 'ไม่มาตามนัด',
@@ -195,7 +196,7 @@ export default function CustomerHistoryPage() {
                       {b.booking_code} · {b.booking_date} {b.booking_time} น. · {b.price} บาท
                     </p>
                     {b.reference_image_url && (
-                      <img loading="lazy" decoding="async" src={b.reference_image_url} alt="รูปที่แนบ" className="mt-2 w-16 h-16 rounded-lg object-cover" />
+                      <ZoomableImage src={b.reference_image_url} alt="รูปที่แนบ" caption={b.service_name} className="mt-2 block w-20 h-20 rounded-lg" />
                     )}
                     {b.admin_note && (
                       <p className="text-xs text-gray-500 mt-2 pt-2 border-t border-blush-100">

@@ -143,6 +143,54 @@ def update_booking_status(
     return booking
 
 
+@router.patch("/{booking_id}/reschedule", response_model=schemas.BookingOut)
+def reschedule_booking_by_admin(
+    booking_id: str,
+    payload: schemas.AdminBookingReschedule,
+    db: Session = Depends(get_db),
+    admin: models.AdminUser = Depends(get_current_admin),
+):
+    """แอดมินเลื่อนนัดให้ลูกค้า ใช้การตรวจคิวว่างแบบเดียวกับตอนจอง (ไม่นับคิวเดิมของตัวเอง) จึงไม่ซ้อนเกินจำนวนช่าง
+    ไม่ตรงวันหยุด และไม่เลยเวลาปิดร้าน ต่างจากฝั่งลูกค้าตรงที่ไม่ติดกฎเลื่อนล่วงหน้า และคงสถานะเดิม (ร้านตกลงกับลูกค้าเองแล้ว)"""
+    booking = db.get(models.Booking, booking_id)
+    if booking is None:
+        raise HTTPException(404, "ไม่พบข้อมูลการจอง")
+    if booking.status not in ("pending", "confirmed"):
+        raise HTTPException(400, "เลื่อนได้เฉพาะคิวที่ยังรอทำ (รอยืนยัน/ยืนยันแล้ว)")
+    if not is_shop_open(db, payload.booking_date):
+        raise HTTPException(400, "ร้านปิดในวันที่เลือก กรุณาเลือกวันอื่น")
+
+    unchanged = booking.booking_date == payload.booking_date and booking.booking_time == payload.booking_time
+    if unchanged:
+        return booking
+
+    lock_slot(db, booking.category_id, payload.booking_date, payload.booking_time)
+    slots = compute_available_slots(
+        db,
+        payload.booking_date,
+        booking.estimated_duration_minutes,
+        booking.category_id,
+        exclude_booking_id=booking.id,
+    )
+    chosen = next((s for s in slots if s["time"] == payload.booking_time), None)
+    if chosen is None or not chosen["available"]:
+        db.rollback()
+        raise HTTPException(409, SLOT_TAKEN_MESSAGE)
+
+    old = f"{booking.booking_date} {booking.booking_time}"
+    booking.booking_date = payload.booking_date
+    booking.booking_time = payload.booking_time
+    booking.reminder_sent = False  # วันนัดใหม่ต้องได้ข้อความเตือนล่วงหน้าอีกครั้ง
+    note = f"[เลื่อนนัดโดยร้าน จาก {old} น.]"
+    booking.admin_note = f"{booking.admin_note}\n{note}".strip() if booking.admin_note else note
+    db.commit()
+    db.refresh(booking)
+
+    customer = db.get(models.Customer, booking.customer_id)
+    line_notify.notify_status_changed(booking, customer.line_user_id if customer else None)
+    return booking
+
+
 @router.delete("/{booking_id}", status_code=204)
 def delete_booking(
     booking_id: str, db: Session = Depends(get_db), admin: models.AdminUser = Depends(get_current_admin)

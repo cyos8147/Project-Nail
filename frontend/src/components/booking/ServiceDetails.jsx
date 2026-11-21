@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { colorShades } from '../../data/bookingData.js'
 import { aiAnalyzeStyle, fileToBase64 } from '../../api/client.js'
+import ZoomableImage from '../ZoomableImage.jsx'
 
 export default function ServiceDetails({
   category,
@@ -63,10 +64,11 @@ export default function ServiceDetails({
 
       {isNail && carriedDesign && carriedDesign.reference_image_base64 && (
         <div className="mb-6 flex items-center gap-3 bg-rose-50 border border-rose-200 rounded-xl p-4">
-          <img
+          <ZoomableImage
             src={carriedDesign.reference_image_base64}
             alt="รูปที่ลองสีจาก AI"
-            className="w-20 h-20 rounded-xl object-cover flex-shrink-0 bg-white"
+            caption={carriedDesign.summary}
+            className="w-24 h-24 rounded-xl flex-shrink-0 bg-white"
           />
           <div className="flex-1">
             <p className="text-sm font-medium text-gray-800">ใช้รูปที่ลองสีจาก AI{carriedDesign.summary ? `: ${carriedDesign.summary}` : ''}</p>

@@ -206,6 +206,7 @@ def reschedule_booking(
 
     booking.booking_date = payload.booking_date
     booking.booking_time = payload.booking_time
+    booking.reminder_sent = False  # วันนัดใหม่ต้องได้ข้อความเตือนล่วงหน้าอีกครั้ง
     # ให้ทางร้านยืนยันเวลาที่แก้ไขใหม่อีกครั้งเสมอ แม้คิวเดิมจะเคย "ยืนยันแล้ว" ก็ตาม
     booking.status = "pending"
     db.commit()
