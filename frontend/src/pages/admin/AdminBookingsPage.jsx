@@ -16,6 +16,14 @@ const STATUS_OPTIONS = ['pending', 'confirmed', 'completed', 'cancelled', 'no_sh
 const STATUS_LABEL = {
   pending: 'รอยืนยัน', confirmed: 'ยืนยันแล้ว', completed: 'เสร็จสิ้น', cancelled: 'ยกเลิกแล้ว', no_show: 'ไม่มาตามนัด',
 }
+// สีประจำสถานะ: แถบซ้ายของการ์ด ป้าย และช่องเลือกสถานะ (สีเดียวกับกราฟสถานะในหน้าภาพรวม)
+const STATUS_STYLE = {
+  pending: { border: 'border-l-amber-400', badge: 'bg-amber-100 text-amber-800', select: 'border-amber-300 bg-amber-50 text-amber-800' },
+  confirmed: { border: 'border-l-sky-400', badge: 'bg-sky-100 text-sky-800', select: 'border-sky-300 bg-sky-50 text-sky-800' },
+  completed: { border: 'border-l-green-400', badge: 'bg-green-100 text-green-800', select: 'border-green-300 bg-green-50 text-green-800' },
+  cancelled: { border: 'border-l-gray-300', badge: 'bg-gray-100 text-gray-500', select: 'border-gray-300 bg-gray-50 text-gray-500' },
+  no_show: { border: 'border-l-red-400', badge: 'bg-red-100 text-red-700', select: 'border-red-300 bg-red-50 text-red-700' },
+}
 
 // คิวที่เลยเวลานัดไปแล้วแต่ยังไม่ถูกปิดสถานะ (pending/confirmed ค้างอยู่) -- แค่จุดสังเกตให้แอดมินเห็นง่าย
 // ว่าควรตามเรื่อง ไม่ได้เปลี่ยนสถานะให้อัตโนมัติ (แอดมินเป็นคนตัดสินใจเองว่าลูกค้ามาจริงหรือไม่มา)
@@ -318,14 +326,14 @@ export default function AdminBookingsPage() {
       )}
 
       <div className="bg-white rounded-2xl shadow-card p-4 space-y-4">
-        <div className="flex flex-wrap items-center gap-2" role="group" aria-label="เลือกช่วงวันที่ของคิว">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1" role="group" aria-label="เลือกช่วงวันที่ของคิว">
           {QUICK_FILTERS.map((f) => (
             <button
               key={f.key}
               type="button"
               onClick={() => applyQuick(f.key)}
               aria-pressed={quick === f.key}
-              className={`text-sm font-semibold px-4 py-2 rounded-full border transition-colors ${
+              className={`whitespace-nowrap text-sm font-semibold px-4 py-2 rounded-full border transition-colors ${
                 quick === f.key ? 'bg-rose-500 text-white border-rose-500' : 'bg-white text-rose-600 border-blush-200 hover:bg-blush-100'
               }`}
             >
@@ -342,7 +350,8 @@ export default function AdminBookingsPage() {
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="rounded-xl border border-blush-200 px-3 py-2 text-sm"
+              className="w-full sm:w-56 rounded-xl border border-blush-200 px-3 py-2 text-sm"
+              placeholder="เช่น 0812345678"
             />
           </div>
           <div>
@@ -379,23 +388,37 @@ export default function AdminBookingsPage() {
               </span>
             </h2>
           )}
-          <div className={`bg-white rounded-2xl shadow-card p-5 ${isOverdue(b) ? 'ring-1 ring-amber-300' : ''}`}>
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="font-medium text-gray-800">
-                  {b.customer_name} · {b.customer_phone}
+          <div className={`bg-white rounded-2xl shadow-card border-l-4 ${STATUS_STYLE[b.status]?.border || 'border-gray-200'} p-4 sm:p-5 transition-shadow hover:shadow-lg ${isOverdue(b) ? 'ring-1 ring-amber-300' : ''}`}>
+            <div className="flex flex-wrap items-start gap-4">
+              {/* เวลานัดเด่นที่สุด แอดมินกวาดตาดูตารางวันได้เร็ว */}
+              <div className="w-20 flex-shrink-0 text-center rounded-xl bg-blush-50 border border-blush-100 py-2">
+                <p className="font-display text-xl font-bold text-gray-800 leading-none">{b.booking_time}</p>
+                <p className="text-[11px] text-gray-400 mt-1">{b.estimated_duration_minutes} นาที</p>
+                {!byAppointment && <p className="text-[10px] text-gray-400 mt-0.5">{b.booking_date}</p>}
+              </div>
+
+              <div className="flex-1 min-w-[12rem]">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-semibold text-gray-800">{b.customer_name}</p>
+                  <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${STATUS_STYLE[b.status]?.badge || 'bg-gray-100 text-gray-600'}`}>
+                    {STATUS_LABEL[b.status] || b.status}
+                  </span>
                   {isOverdue(b) && (
-                    <span className="ml-2 text-[10px] font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full align-middle">
-                      ⚠️ เลยเวลานัดแล้ว
-                    </span>
+                    <span className="text-[11px] font-semibold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">⚠️ เลยเวลานัดแล้ว</span>
                   )}
+                </div>
+                <p className="text-sm text-gray-700 mt-1">
+                  {b.service_name} <span className="text-rose-600 font-semibold">· {Number(b.price).toLocaleString()} บาท</span>
                 </p>
-                <p className="text-xs text-gray-400 mt-0.5">{b.booking_code} · {b.service_name} · {b.booking_date} {b.booking_time} น. · {b.price} บาท</p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  <a href={`tel:${b.customer_phone}`} className="hover:text-rose-600 underline-offset-2 hover:underline">📞 {b.customer_phone}</a>
+                  {b.line_id ? ` · LINE ${b.line_id}` : ''} · {b.booking_code}
+                </p>
                 {b.group_id && (() => {
                   const group = bookings.filter((x) => x.group_id === b.group_id)
                   const others = group.filter((x) => x.id !== b.id)
                   return (
-                    <p className="mt-1 inline-flex flex-wrap items-center gap-1 text-[11px] font-semibold text-violet-700 bg-violet-50 border border-violet-200 rounded-full px-2.5 py-0.5">
+                    <p className="mt-1.5 inline-flex flex-wrap items-center gap-1 text-[11px] font-semibold text-violet-700 bg-violet-50 border border-violet-200 rounded-full px-2.5 py-0.5">
                       🔗 จองต่อเนื่องหลายบริการ
                       {others.length > 0 && (
                         <span className="font-normal text-violet-600">
@@ -405,16 +428,21 @@ export default function AdminBookingsPage() {
                     </p>
                   )
                 })()}
-                {b.shade_name && <p className="text-xs text-gray-400">โทนสี: {b.shade_name}</p>}
-                {b.ai_style_tag && <p className="text-xs text-gray-400">AI style: {b.ai_style_tag} (+{b.ai_extra_minutes} นาที)</p>}
+                {(b.shade_name || b.ai_style_tag) && (
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    {b.shade_name && <span className="text-[11px] bg-rose-50 text-rose-700 border border-rose-100 rounded-full px-2 py-0.5">🎨 {b.shade_name}</span>}
+                    {b.ai_style_tag && <span className="text-[11px] bg-gray-50 text-gray-600 border border-gray-200 rounded-full px-2 py-0.5">AI: {b.ai_style_tag} (+{b.ai_extra_minutes} นาที)</span>}
+                  </div>
+                )}
               </div>
-              <div className="flex items-center gap-2">
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
                 {['pending', 'confirmed'].includes(b.status) && (
                   <button
                     type="button"
                     onClick={() => setRescheduling(rescheduling === b.id ? null : b.id)}
                     aria-expanded={rescheduling === b.id}
-                    className="rounded-full border border-blush-200 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-blush-100"
+                    className="rounded-full border border-blush-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-blush-100"
                   >
                     📅 เลื่อนนัด
                   </button>
@@ -422,7 +450,8 @@ export default function AdminBookingsPage() {
                 <select
                   value={b.status}
                   onChange={(e) => handleStatusChange(b, e.target.value)}
-                  className="rounded-full border border-blush-200 px-3 py-1.5 text-xs font-semibold"
+                  aria-label={`สถานะคิว ${b.booking_code}`}
+                  className={`flex-1 sm:flex-none rounded-full border px-3 py-2 text-xs font-semibold ${STATUS_STYLE[b.status]?.select || 'border-blush-200'}`}
                 >
                   {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
                 </select>
@@ -430,7 +459,8 @@ export default function AdminBookingsPage() {
                   type="button"
                   onClick={() => handleDelete(b)}
                   title="ลบคิวนี้ถาวร"
-                  className="text-gray-300 hover:text-red-500 text-lg leading-none px-1.5 transition-colors"
+                  aria-label={`ลบคิว ${b.booking_code}`}
+                  className="w-9 h-9 rounded-full text-gray-300 hover:text-red-500 hover:bg-red-50 text-lg leading-none transition-colors"
                 >
                   ✕
                 </button>

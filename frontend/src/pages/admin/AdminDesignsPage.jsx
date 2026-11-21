@@ -70,7 +70,8 @@ export default function AdminDesignsPage() {
         <p className="text-gray-500 text-sm mt-1">แคตตาล็อกที่ใช้ในระบบแนะนำลาย (AI) และ Virtual Try-On</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-card p-5 grid sm:grid-cols-3 gap-3">
+      <form onSubmit={handleSubmit} className={`bg-white rounded-2xl shadow-card p-5 grid sm:grid-cols-3 gap-3 ${editingId ? 'ring-2 ring-rose-300' : ''}`}>
+        <p className="sm:col-span-3 font-medium text-gray-700">{editingId ? '✏️ แก้ไขลายเล็บ' : '➕ เพิ่มลายเล็บใหม่'}</p>
         <input placeholder="ชื่อลาย" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded-xl border border-blush-200 px-3 py-2 text-sm" required />
         <input type="number" placeholder="ราคา" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="rounded-xl border border-blush-200 px-3 py-2 text-sm" required />
         <input type="number" placeholder="ระยะเวลา (นาที)" value={form.duration_minutes} onChange={(e) => setForm({ ...form, duration_minutes: e.target.value })} className="rounded-xl border border-blush-200 px-3 py-2 text-sm" required />

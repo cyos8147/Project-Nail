@@ -60,7 +60,7 @@ function BackupSection() {
   }
 
   return (
-    <div id="backup" className="bg-white rounded-2xl shadow-card p-6 space-y-4">
+    <div id="backup" className="scroll-mt-24 bg-white rounded-2xl shadow-card p-6 space-y-4">
       <div>
         <p className="font-medium text-gray-700">สำรองข้อมูลร้าน</p>
         <p className="text-sm text-gray-500 mt-1">
@@ -314,50 +314,22 @@ export default function AdminSettingsPage() {
         <p className="text-gray-500 text-sm mt-1">เวลาทำการ วันหยุดประจำสัปดาห์ และข้อมูลติดต่อ</p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-card p-6">
-        <p className="font-medium text-gray-700 mb-3">เปลี่ยนรหัสผ่านแอดมิน</p>
-        <form onSubmit={handleChangePassword} className="grid sm:grid-cols-3 gap-3">
-          <div>
-            <label className="text-xs text-gray-500 block mb-1">รหัสผ่านเดิม</label>
-            <input
-              type="password"
-              value={pwForm.current_password}
-              onChange={(e) => setPwForm({ ...pwForm, current_password: e.target.value })}
-              className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm"
-              required
-            />
-          </div>
-          <div>
-            <label className="text-xs text-gray-500 block mb-1">รหัสผ่านใหม่ (8 ตัวขึ้นไป)</label>
-            <input
-              type="password"
-              value={pwForm.new_password}
-              onChange={(e) => setPwForm({ ...pwForm, new_password: e.target.value })}
-              className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm"
-              required
-            />
-          </div>
-          <div>
-            <label className="text-xs text-gray-500 block mb-1">ยืนยันรหัสผ่านใหม่</label>
-            <input
-              type="password"
-              value={pwForm.confirm_password}
-              onChange={(e) => setPwForm({ ...pwForm, confirm_password: e.target.value })}
-              className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm"
-              required
-            />
-          </div>
-          <div className="sm:col-span-3 flex items-center gap-3">
-            <button type="submit" className="bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-6 py-2.5 rounded-xl">
-              เปลี่ยนรหัสผ่าน
-            </button>
-            {pwSaved && <span className="text-sm text-green-600">✅ เปลี่ยนรหัสผ่านแล้ว</span>}
-            {pwError && <span className="text-sm text-red-500">{pwError}</span>}
-          </div>
-        </form>
-      </div>
+      <nav className="flex gap-2 overflow-x-auto pb-1 -mt-4" aria-label="ไปยังหัวข้อ">
+        {[
+          ['#shop', '🏪 ข้อมูลร้านและเวลาทำการ'],
+          ['#holidays', '📅 วันหยุดพิเศษ'],
+          ['#staff', '💇 จำนวนช่าง'],
+          ...(admin?.role === 'owner' ? [['#backup', '💾 สำรองข้อมูล'], ['#users', '👤 บัญชีแอดมิน']] : []),
+          ['#password', '🔒 รหัสผ่าน'],
+        ].map(([href, label]) => (
+          <a key={href} href={href} className="whitespace-nowrap text-xs font-semibold text-gray-600 bg-white border border-blush-200 hover:border-rose-300 hover:text-rose-600 rounded-full px-3.5 py-2 shadow-sm">
+            {label}
+          </a>
+        ))}
+      </nav>
 
-      <form onSubmit={handleSave} className="bg-white rounded-2xl shadow-card p-6 space-y-4">
+      <form id="shop" onSubmit={handleSave} className="scroll-mt-24 bg-white rounded-2xl shadow-card p-6 space-y-4">
+        <p className="font-medium text-gray-700">🏪 ข้อมูลร้านและเวลาทำการ</p>
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <label className="text-xs text-gray-500 block mb-1">เบอร์โทรร้าน</label>
@@ -428,8 +400,8 @@ export default function AdminSettingsPage() {
         {error && <p className="text-sm text-red-500">{error}</p>}
       </form>
 
-      <div className="bg-white rounded-2xl shadow-card p-6">
-        <p className="font-medium text-gray-700 mb-3">วันหยุดพิเศษ</p>
+      <div id="holidays" className="scroll-mt-24 bg-white rounded-2xl shadow-card p-6">
+        <p className="font-medium text-gray-700 mb-3">📅 วันหยุดพิเศษ</p>
         <form onSubmit={handleAddHoliday} className="flex flex-wrap gap-2 mb-4">
           <input type="date" value={newHoliday.holiday_date} onChange={(e) => setNewHoliday({ ...newHoliday, holiday_date: e.target.value })} className="rounded-xl border border-blush-200 px-3 py-2 text-sm" required />
           <input type="text" placeholder="หมายเหตุ" value={newHoliday.note} onChange={(e) => setNewHoliday({ ...newHoliday, note: e.target.value })} className="rounded-xl border border-blush-200 px-3 py-2 text-sm flex-1" />
@@ -446,11 +418,54 @@ export default function AdminSettingsPage() {
         </div>
       </div>
 
-      <CategoryStaffSection />
+      <div id="staff" className="scroll-mt-24"><CategoryStaffSection /></div>
 
       {admin?.role === 'owner' && <BackupSection />}
 
-      {admin?.role === 'owner' && <AdminUsersSection />}
+      {admin?.role === 'owner' && <div id="users" className="scroll-mt-24"><AdminUsersSection /></div>}
+
+      <div id="password" className="scroll-mt-24 bg-white rounded-2xl shadow-card p-6">
+        <p className="font-medium text-gray-700 mb-3">🔒 เปลี่ยนรหัสผ่านแอดมิน</p>
+        <form onSubmit={handleChangePassword} className="grid sm:grid-cols-3 gap-3">
+          <div>
+            <label className="text-xs text-gray-500 block mb-1">รหัสผ่านเดิม</label>
+            <input
+              type="password"
+              value={pwForm.current_password}
+              onChange={(e) => setPwForm({ ...pwForm, current_password: e.target.value })}
+              className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm"
+              required
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 block mb-1">รหัสผ่านใหม่ (8 ตัวขึ้นไป)</label>
+            <input
+              type="password"
+              value={pwForm.new_password}
+              onChange={(e) => setPwForm({ ...pwForm, new_password: e.target.value })}
+              className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm"
+              required
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 block mb-1">ยืนยันรหัสผ่านใหม่</label>
+            <input
+              type="password"
+              value={pwForm.confirm_password}
+              onChange={(e) => setPwForm({ ...pwForm, confirm_password: e.target.value })}
+              className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm"
+              required
+            />
+          </div>
+          <div className="sm:col-span-3 flex items-center gap-3">
+            <button type="submit" className="bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold px-6 py-2.5 rounded-xl">
+              เปลี่ยนรหัสผ่าน
+            </button>
+            {pwSaved && <span className="text-sm text-green-600">✅ เปลี่ยนรหัสผ่านแล้ว</span>}
+            {pwError && <span className="text-sm text-red-500">{pwError}</span>}
+          </div>
+        </form>
+      </div>
     </div>
   )
 }

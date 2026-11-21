@@ -88,7 +88,12 @@ export default function AdminCustomersPage() {
         </div>
 
         <div>
-          {!selected && <p className="text-sm text-gray-400 p-4">เลือกลูกค้าทางซ้ายเพื่อดูรายละเอียด</p>}
+          {!selected && (
+            <div className="h-full min-h-[200px] rounded-2xl border-2 border-dashed border-blush-200 bg-white/60 flex flex-col items-center justify-center gap-2 text-center p-6">
+              <span className="text-3xl" aria-hidden="true">👥</span>
+              <p className="text-sm text-gray-500">เลือกลูกค้าจากรายชื่อเพื่อดูประวัติการจอง แก้ไขข้อมูล และยอดใช้จ่าย</p>
+            </div>
+          )}
           {selected && (
             <div className="bg-white rounded-2xl shadow-card p-5 space-y-5">
               {!editing && (

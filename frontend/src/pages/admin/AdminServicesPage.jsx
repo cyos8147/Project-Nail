@@ -65,7 +65,8 @@ export default function AdminServicesPage() {
         <p className="text-gray-500 text-sm mt-1">ราคา ระยะเวลา และหมวดหมู่ของบริการทั้งหมด</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-card p-5 grid sm:grid-cols-2 gap-3">
+      <form onSubmit={handleSubmit} className={`bg-white rounded-2xl shadow-card p-5 grid sm:grid-cols-2 gap-3 ${editingId ? 'ring-2 ring-rose-300' : ''}`}>
+        <p className="sm:col-span-2 font-medium text-gray-700">{editingId ? '✏️ แก้ไขบริการ' : '➕ เพิ่มบริการใหม่'}</p>
         <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} className="rounded-xl border border-blush-200 px-3 py-2 text-sm">
           <option value="hair">ทำผม</option>
           <option value="nail">ทำเล็บ</option>
@@ -100,6 +101,7 @@ export default function AdminServicesPage() {
         {error && <p className="text-sm text-red-500 sm:col-span-2">{error}</p>}
       </form>
 
+      <p className="font-medium text-gray-700 -mb-3">บริการทั้งหมด <span className="text-sm font-normal text-gray-400">({services.length})</span></p>
       <div className="bg-white rounded-2xl shadow-card divide-y divide-blush-50">
         {services.map((s) => (
           <div key={s.id} className="p-4 flex items-center justify-between gap-3">
