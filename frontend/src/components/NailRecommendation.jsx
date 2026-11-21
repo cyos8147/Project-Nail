@@ -66,7 +66,7 @@ export default function NailRecommendation({ skinTone }) {
         </p>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mt-8">
         {ranked.map((d, i) => (
           <div
             key={d.id ?? d.name}
@@ -84,8 +84,8 @@ export default function NailRecommendation({ skinTone }) {
                 <NailThumb label={d.name} accent={d.color_hex || ACCENTS[i % ACCENTS.length]} />
               )}
             </div>
-            <div className="p-4 flex flex-col gap-2 flex-1">
-              <p className="font-semibold text-gray-800 text-sm">{d.name}</p>
+            <div className="p-3 sm:p-4 flex flex-col gap-2 flex-1">
+              <p className="font-semibold text-gray-800 text-sm leading-snug">{d.name}</p>
               <div>
                 <div className="flex items-baseline justify-between">
                   <span className="text-[11px] text-gray-400">{personalized ? 'คะแนนที่ AI แนะนำ' : 'คะแนนความนิยม'}</span>
