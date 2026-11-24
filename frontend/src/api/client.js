@@ -224,6 +224,14 @@ export async function adminDownloadFile(path, filename) {
     }
   }
 }
+// --- สำรองและกู้คืนแบบครบถ้วน (ส่วนที่ 6) ---
+export const adminPreviewRestore = (fileBase64) =>
+  request('/admin/backup/restore/preview', { method: 'POST', auth: true, body: { file_base64: fileBase64 } })
+export const adminApplyRestore = (fileBase64, confirm) =>
+  request('/admin/backup/restore', { method: 'POST', auth: true, body: { file_base64: fileBase64, confirm } })
+// ข้อมูลในไฟล์ที่อ่านจาก FileReader เป็น data URL (มีคำนำหน้า) ต้องตัดออกก่อนส่ง
+export const dataUrlToBase64 = (dataUrl) => String(dataUrl).split(',')[1] || ''
+
 export const adminListExpenses = (params) => request('/admin/expenses', { auth: true, params })
 export const adminCreateExpense = (payload) => request('/admin/expenses', { method: 'POST', auth: true, body: payload })
 export const adminDeleteExpense = (id) => request(`/admin/expenses/${id}`, { method: 'DELETE', auth: true })

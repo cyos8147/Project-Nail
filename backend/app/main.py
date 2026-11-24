@@ -24,6 +24,7 @@ from .routers import (
     admin_customers,
     admin_dashboard,
     admin_export,
+    admin_backup,
     ai,
     bookings,
     line,
@@ -68,6 +69,7 @@ app.include_router(admin_customers.router, prefix="/api")
 app.include_router(admin_catalog.router, prefix="/api")
 app.include_router(admin_dashboard.router, prefix="/api")
 app.include_router(admin_export.router, prefix="/api")
+app.include_router(admin_backup.router, prefix="/api")
 
 
 def _warm_up_models():

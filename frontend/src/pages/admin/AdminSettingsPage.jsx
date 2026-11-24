@@ -18,6 +18,7 @@ import {
   getShopSettings,
 } from '../../api/client.js'
 import { DAY_NAMES, DISPLAY_ORDER, fromWeekRows, toWeekRows, validateRows } from '../../utils/shopHours.js'
+import RestorePanel from '../../components/admin/RestorePanel.jsx'
 
 const ROLE_LABEL = { owner: 'เจ้าของร้าน', staff: 'พนักงาน' }
 
@@ -66,23 +67,10 @@ function BackupSection() {
           (เช่น Google Drive ส่วนตัว) ไฟล์เปิดด้วย Excel หรือ Google Sheets ได้ และใช้ทำบัญชีรายเดือนได้ด้วย
         </p>
       </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          disabled={busy !== null}
-          onClick={() => download('/admin/export/all.zip', backupFileName('backup', 'zip'), 'ไฟล์สำรองข้อมูลทั้งหมด')}
-          className="bg-rose-500 hover:bg-rose-600 disabled:bg-blush-200 text-white text-sm font-semibold px-6 py-2.5 rounded-xl"
-        >
-          {busy?.endsWith('.zip') ? 'กำลังเตรียมไฟล์...' : '⬇ ดาวน์โหลดสำรองข้อมูลทั้งหมด (.zip)'}
-        </button>
-        <span className="text-xs text-gray-400">
-          {lastBackup
-            ? `ดาวน์โหลดล่าสุดจากเครื่องนี้: ${new Date(lastBackup).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })}`
-            : 'เครื่องนี้ยังไม่เคยดาวน์โหลดไฟล์สำรอง'}
-        </span>
-      </div>
+      <RestorePanel />
+
       <div>
-        <p className="text-xs text-gray-500 mb-2">หรือเลือกดาวน์โหลดทีละอย่าง (เป็นไฟล์ CSV)</p>
+        <p className="text-xs text-gray-500 mb-2">ไฟล์ CSV สำหรับเปิดดูและทำบัญชีใน Excel (กู้คืนจากไฟล์เหล่านี้ไม่ได้)</p>
         <div className="flex flex-wrap gap-2">
           {BACKUP_TABLES.map((t) => (
             <button
