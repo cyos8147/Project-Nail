@@ -4,6 +4,7 @@ import {
   adminDeleteBooking,
   adminListBookings,
   adminRescheduleBooking,
+  adminSetPaidAmount,
   adminUpdateBooking,
   getServiceCategories,
   getServices,
@@ -198,6 +199,60 @@ function ReschedulePanel({ booking, closedWeekdays, onDone, onCancel }) {
         <button type="button" onClick={onCancel} className="text-sm text-gray-500 hover:text-gray-700 px-2 py-2">ยกเลิก</button>
         {error && <span className="text-sm text-red-500" role="alert">{error}</span>}
       </div>
+    </div>
+  )
+}
+
+// ยอดรับจริงของคิวที่เสร็จแล้ว (ข้อ 5.7): ว่าง = ใช้ราคาบริการ, กรอกแล้วรายงานจะใช้ยอดนี้
+function PaidAmountRow({ booking, onSaved }) {
+  const [value, setValue] = useState(booking.paid_amount ?? '')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+  const price = Number(booking.price)
+  const actual = value === '' ? null : Number(value)
+  const diff = actual === null || Number.isNaN(actual) ? null : actual - price
+
+  async function save(next) {
+    setSaving(true)
+    setError(null)
+    try {
+      onSaved(await adminSetPaidAmount(booking.id, next))
+    } catch (err) {
+      setError(err.message || 'บันทึกยอดรับจริงไม่สำเร็จ')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-green-50/60 border border-green-100 px-3 py-2">
+      <span className="text-xs font-semibold text-green-800">ยอดรับจริง</span>
+      <input
+        type="number"
+        min="0"
+        step="1"
+        inputMode="numeric"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder={`ตามราคา ${price}`}
+        aria-label={`ยอดรับจริงของคิว ${booking.booking_code}`}
+        className="w-28 rounded-lg border border-green-200 bg-white px-2.5 py-1.5 text-sm"
+      />
+      <span className="text-xs text-gray-400">บาท</span>
+      {diff !== null && diff !== 0 && (
+        <span className={`text-xs font-semibold ${diff > 0 ? 'text-green-700' : 'text-amber-700'}`}>
+          {diff > 0 ? `+${diff}` : diff} จากราคาบริการ
+        </span>
+      )}
+      <button type="button" disabled={saving || actual === null || Number.isNaN(actual) || actual < 0} onClick={() => save(actual)} className="text-xs font-semibold text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-300 rounded-lg px-3 py-1.5">
+        บันทึกยอด
+      </button>
+      {booking.paid_amount !== null && booking.paid_amount !== undefined && (
+        <button type="button" disabled={saving} onClick={() => { setValue(''); save(null) }} className="text-xs text-gray-500 hover:text-red-600 px-1">
+          ใช้ราคาบริการ
+        </button>
+      )}
+      {error && <span className="text-xs text-red-500 w-full" role="alert">{error}</span>}
     </div>
   )
 }
@@ -466,6 +521,14 @@ export default function AdminBookingsPage() {
                 </button>
               </div>
             </div>
+
+            {b.status === 'completed' && (
+              <PaidAmountRow
+                key={`${b.id}-${b.paid_amount}`}
+                booking={b}
+                onSaved={(updated) => setBookings((prev) => prev.map((x) => (x.id === updated.id ? updated : x)))}
+              />
+            )}
 
             {rescheduling === b.id && closedWeekdays !== null && (
               <ReschedulePanel

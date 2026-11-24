@@ -191,6 +191,26 @@ def reschedule_booking_by_admin(
     return booking
 
 
+@router.patch("/{booking_id}/paid", response_model=schemas.BookingOut)
+def set_paid_amount(
+    booking_id: str,
+    payload: schemas.BookingPaidUpdate,
+    db: Session = Depends(get_db),
+    admin: models.AdminUser = Depends(get_current_admin),
+):
+    """บันทึกยอดรับจริงของคิวที่เสร็จแล้ว (ข้อ 5.7) ส่ง null เพื่อกลับไปใช้ราคาบริการ
+    รายงานรายได้และแดชบอร์ดจะใช้ยอดนี้แทนราคาบริการเมื่อกรอกไว้"""
+    booking = db.get(models.Booking, booking_id)
+    if booking is None:
+        raise HTTPException(404, "ไม่พบข้อมูลการจอง")
+    if booking.status != "completed":
+        raise HTTPException(400, "บันทึกยอดรับจริงได้เฉพาะคิวที่ 'เสร็จแล้ว' เท่านั้น")
+    booking.paid_amount = payload.paid_amount
+    db.commit()
+    db.refresh(booking)
+    return booking
+
+
 @router.delete("/{booking_id}", status_code=204)
 def delete_booking(
     booking_id: str, db: Session = Depends(get_db), admin: models.AdminUser = Depends(get_current_admin)

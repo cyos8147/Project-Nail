@@ -7,6 +7,7 @@ const NAV = [
   { group: 'งานประจำวัน', items: [
     { to: '/admin', icon: '📊', label: 'ภาพรวม', end: true },
     { to: '/admin/bookings', icon: '📅', label: 'การจองคิว' },
+    { to: '/admin/reports', icon: '💰', label: 'รายงานรายได้' },
     { to: '/admin/customers', icon: '👥', label: 'ลูกค้า' },
   ] },
   { group: 'ข้อมูลร้าน', items: [

@@ -78,6 +78,7 @@ def customer_detail(
                 "booking_code": b.booking_code,
                 "service_name": b.service_name,
                 "price": float(b.price),
+                "paid_amount": float(b.paid_amount) if b.paid_amount is not None else None,
                 "booking_date": b.booking_date.isoformat(),
                 "booking_time": b.booking_time,
                 "status": b.status,

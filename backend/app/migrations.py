@@ -18,7 +18,8 @@ log = logging.getLogger("uvicorn.error")
 COLUMN_ADDITIONS = [
     ("shop_settings", "cancel_cutoff_hours", "INTEGER NOT NULL DEFAULT 0"),
     ("bookings", "group_id", "VARCHAR(36)"),
-    ("shop_settings", "weekly_hours", "JSON"),  # เวลาเปิด-ปิดแยกรายวัน (NULL = ใช้เวลาเดียวทุกวันเหมือนเดิม)  # จองหลายบริการต่อกัน (NULL = คิวเดี่ยว แถวเดิมทั้งหมดเป็นคิวเดี่ยว)
+    ("shop_settings", "weekly_hours", "JSON"),
+    ("bookings", "paid_amount", "NUMERIC(10, 2)"),  # ยอดรับจริงตอนกดเสร็จ (NULL = ใช้ราคาบริการ)  # เวลาเปิด-ปิดแยกรายวัน (NULL = ใช้เวลาเดียวทุกวันเหมือนเดิม)  # จองหลายบริการต่อกัน (NULL = คิวเดี่ยว แถวเดิมทั้งหมดเป็นคิวเดี่ยว)
 ]
 
 

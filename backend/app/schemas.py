@@ -227,10 +227,16 @@ class BookingOut(BaseModel):
     status: str
     admin_note: str
     group_id: Optional[str] = None
+    paid_amount: Optional[float] = None
     created_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class BookingPaidUpdate(BaseModel):
+    """ยอดรับจริงของคิวที่เสร็จแล้ว (ข้อ 5.7) -- ส่ง null เพื่อกลับไปใช้ราคาบริการ"""
+    paid_amount: Optional[float] = Field(default=None, ge=0, le=1000000)
 
 
 class BookingStatusUpdate(BaseModel):

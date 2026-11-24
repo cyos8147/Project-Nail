@@ -142,6 +142,8 @@ export const adminUpdateBooking = (id, payload) =>
   request(`/admin/bookings/${id}`, { method: 'PATCH', auth: true, body: payload })
 export const adminRescheduleBooking = (id, bookingDate, bookingTime) =>
   request(`/admin/bookings/${id}/reschedule`, { method: 'PATCH', auth: true, body: { booking_date: bookingDate, booking_time: bookingTime } })
+export const adminSetPaidAmount = (id, paidAmount) =>
+  request(`/admin/bookings/${id}/paid`, { method: 'PATCH', auth: true, body: { paid_amount: paidAmount } })
 export const adminDeleteBooking = (id) => request(`/admin/bookings/${id}`, { method: 'DELETE', auth: true })
 
 // --- Admin users (จัดการบัญชีแอดมิน -- เฉพาะ owner) ------------------------
@@ -182,6 +184,7 @@ export const adminDeleteHoliday = (id) => request(`/admin/holidays/${id}`, { met
 // --- Admin dashboard ------------------------------------------------------
 export const adminDashboardSummary = () => request('/admin/dashboard/summary', { auth: true })
 export const adminDashboardReport = (params) => request('/admin/dashboard/report', { auth: true, params })
+export const adminRevenueReport = (params) => request('/admin/reports/revenue', { auth: true, params })
 export const adminDashboardRrd = (params) => request('/admin/dashboard/rrd', { auth: true, params })
 
 // --- Admin export / backup (เฉพาะ owner) ---------------------------------------

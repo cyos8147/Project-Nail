@@ -11,6 +11,7 @@ from .. import models, schemas
 from .. import rrd
 from ..availability import get_shop_settings
 from ..database import get_db
+from ..models import REVENUE_EXPR
 from ..security import get_current_admin
 from ..timeutil import today_th
 
@@ -26,7 +27,7 @@ DAILY_TREND_MAX_DAYS = 62  # ยาวกว่านี้สรุปราย
 
 def _revenue_between(db: Session, start: date, end: date) -> float:
     total = (
-        db.query(func.coalesce(func.sum(models.Booking.price), 0))
+        db.query(func.coalesce(func.sum(REVENUE_EXPR), 0))
         .filter(models.Booking.status == COMPLETED, models.Booking.booking_date.between(start, end))
         .scalar()
     )
@@ -51,10 +52,10 @@ def dashboard_summary(db: Session = Depends(get_db), admin: models.AdminUser = D
     )
 
     top_services_rows = (
-        db.query(models.Booking.service_name, func.sum(models.Booking.price).label("revenue"), func.count(models.Booking.id).label("count"))
+        db.query(models.Booking.service_name, func.sum(REVENUE_EXPR).label("revenue"), func.count(models.Booking.id).label("count"))
         .filter(models.Booking.status == COMPLETED, models.Booking.booking_date.between(month_start, today))
         .group_by(models.Booking.service_name)
-        .order_by(func.sum(models.Booking.price).desc())
+        .order_by(func.sum(REVENUE_EXPR).desc())
         .limit(5)
         .all()
     )
@@ -69,7 +70,7 @@ def dashboard_summary(db: Session = Depends(get_db), admin: models.AdminUser = D
 
     trend_start = today - timedelta(days=29)
     trend_rows = (
-        db.query(models.Booking.booking_date, func.sum(models.Booking.price))
+        db.query(models.Booking.booking_date, func.sum(REVENUE_EXPR))
         .filter(models.Booking.status == COMPLETED, models.Booking.booking_date.between(trend_start, today))
         .group_by(models.Booking.booking_date)
         .all()
@@ -195,7 +196,7 @@ def resolve_window(period: str, today: date, date_from: date | None, date_to: da
 
 def _aggregate(db: Session, start: date, end: date) -> tuple[float, int, float]:
     revenue, completed = (
-        db.query(func.coalesce(func.sum(models.Booking.price), 0), func.count(models.Booking.id))
+        db.query(func.coalesce(func.sum(REVENUE_EXPR), 0), func.count(models.Booking.id))
         .filter(models.Booking.status == COMPLETED, models.Booking.booking_date.between(start, end))
         .one()
     )
@@ -231,7 +232,7 @@ def dashboard_report(
             models.Booking.booking_date,
             models.Booking.booking_time,
             models.Booking.status,
-            models.Booking.price,
+            REVENUE_EXPR,
             models.Booking.category_id,
             models.Booking.service_name,
             models.Booking.customer_id,
@@ -317,12 +318,12 @@ def dashboard_report(
     expense_buckets = {(c or "อื่นๆ"): {"label": c or "อื่นๆ", "revenue": float(total or 0), "count": int(n)} for c, total, n in expense_rows}
 
     upcoming_value, upcoming_count = (
-        db.query(func.coalesce(func.sum(models.Booking.price), 0), func.count(models.Booking.id))
+        db.query(func.coalesce(func.sum(REVENUE_EXPR), 0), func.count(models.Booking.id))
         .filter(models.Booking.status.in_(OPEN_STATUSES), models.Booking.booking_date >= today)
         .one()
     )
     today_value, today_count = (
-        db.query(func.coalesce(func.sum(models.Booking.price), 0), func.count(models.Booking.id))
+        db.query(func.coalesce(func.sum(REVENUE_EXPR), 0), func.count(models.Booking.id))
         .filter(models.Booking.status.in_(OPEN_STATUSES), models.Booking.booking_date == today)
         .one()
     )
@@ -392,7 +393,7 @@ def dashboard_rrd(
     start, end = window[0].start, window[-1].end
 
     rows = (
-        db.query(models.Booking.booking_date, models.Booking.price)
+        db.query(models.Booking.booking_date, REVENUE_EXPR)
         .filter(models.Booking.status == COMPLETED, models.Booking.booking_date.between(start, end))
         .all()
     )

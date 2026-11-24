@@ -15,6 +15,7 @@ import AdminServicesPage from './pages/admin/AdminServicesPage.jsx'
 import AdminDesignsPage from './pages/admin/AdminDesignsPage.jsx'
 import AdminReviewsPage from './pages/admin/AdminReviewsPage.jsx'
 import AdminSettingsPage from './pages/admin/AdminSettingsPage.jsx'
+import AdminReportsPage from './pages/admin/AdminReportsPage.jsx'
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
       <Route path="/admin/login" element={<AdminLoginPage />} />
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<DashboardPage />} />
+        <Route path="reports" element={<AdminReportsPage />} />
         <Route path="bookings" element={<AdminBookingsPage />} />
         <Route path="customers" element={<AdminCustomersPage />} />
         <Route path="services" element={<AdminServicesPage />} />

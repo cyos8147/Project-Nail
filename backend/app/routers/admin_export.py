@@ -17,6 +17,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from .. import models
+from ..models import REVENUE_EXPR
 from ..database import get_db
 from ..rate_limit import limiter
 from ..security import require_owner
@@ -66,11 +67,11 @@ def _csv_bytes(headers: list[str], rows: list[list]) -> bytes:
 def _bookings(db: Session):
     categories = {c.id: c.name for c in db.query(models.ServiceCategory).all()}
     headers = ["รหัสคิว", "วันที่นัด", "เวลานัด", "สถานะ", "ชื่อลูกค้า", "เบอร์โทร", "LINE ID", "หมวด", "บริการ", "ราคา (บาท)",
-               "ระยะเวลา (นาที)", "โทนสี/เฉดสี", "หมายเหตุจากร้าน", "ส่งแจ้งเตือนแล้ว", "สร้างเมื่อ (เวลาไทย)", "ลิงก์รูปอ้างอิง"]
+               "ระยะเวลา (นาที)", "โทนสี/เฉดสี", "หมายเหตุจากร้าน", "ส่งแจ้งเตือนแล้ว", "สร้างเมื่อ (เวลาไทย)", "ลิงก์รูปอ้างอิง", "ยอดรับจริง (บาท)"]
     rows = [
         [b.booking_code, b.booking_date.isoformat(), b.booking_time, STATUS_LABEL_TH.get(b.status, b.status), b.customer_name,
          b.customer_phone, b.line_id, categories.get(b.category_id, b.category_id), b.service_name, b.price,
-         b.estimated_duration_minutes, b.shade_name, b.admin_note, b.reminder_sent, _thai_time(b.created_at), b.reference_image_url]
+         b.estimated_duration_minutes, b.shade_name, b.admin_note, b.reminder_sent, _thai_time(b.created_at), b.reference_image_url, b.paid_amount]
         for b in db.query(models.Booking).order_by(models.Booking.booking_date, models.Booking.booking_time).all()
     ]
     return headers, rows
@@ -82,7 +83,7 @@ def _customers(db: Session):
     done = {
         customer_id: (count, revenue)
         for customer_id, count, revenue in db.query(
-            models.Booking.customer_id, func.count(models.Booking.id), func.coalesce(func.sum(models.Booking.price), 0)
+            models.Booking.customer_id, func.count(models.Booking.id), func.coalesce(func.sum(REVENUE_EXPR), 0)
         ).filter(models.Booking.status == "completed").group_by(models.Booking.customer_id)
     }
     headers = ["ชื่อ", "เบอร์โทร", "LINE ID", "ผูก LINE รับแจ้งเตือนแล้ว", "จำนวนคิวทั้งหมด", "คิวที่เสร็จสิ้น", "ยอดรวมที่เสร็จสิ้น (บาท)", "สร้างเมื่อ (เวลาไทย)"]

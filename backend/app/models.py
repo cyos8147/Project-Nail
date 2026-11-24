@@ -11,6 +11,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    func,
     text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -174,6 +175,8 @@ class Booking(Base):
     # สถานะแยกกัน รายงาน/คิวว่างเดิมจึงใช้ได้ทันที) แล้วผูกกันด้วย group_id เดียวกัน -- คิวเดี่ยวเป็น NULL
     # คอลัมน์ที่เพิ่มทีหลัง: migrations.py เพิ่มให้ตารางเดิมอัตโนมัติตอนเริ่มเซิร์ฟเวอร์
     group_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    # ยอดที่รับจริงตอนกดเสร็จงาน (ข้อ 5.7) -- ว่าง = ใช้ราคาบริการ (price) ตามเดิม ดู revenue_expr ด้านล่าง
+    paid_amount: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -185,6 +188,15 @@ class Booking(Base):
     # มากกว่า 1 คน จึงย้ายไปกันด้วย advisory lock ต่อ (หมวดหมู่, วันที่, เวลา) แทน -- ดู
     # availability.py lock_slot() และ routers/bookings.py create_booking (รองรับ "จำนวนที่ซ้อนกันได้"
     # ตาม service_categories.staff_count ซึ่ง unique index ทำไม่ได้)
+
+
+# รายได้ของคิวหนึ่งรายการ = ยอดรับจริงถ้ากรอกไว้ ไม่งั้นใช้ราคาบริการ (ใช้ใน SQL ทุกที่ที่รวมรายได้)
+REVENUE_EXPR = func.coalesce(Booking.paid_amount, Booking.price)
+
+
+def booking_revenue(booking) -> float:
+    value = booking.paid_amount if booking.paid_amount is not None else booking.price
+    return float(value or 0)
 
 
 class Review(Base):
