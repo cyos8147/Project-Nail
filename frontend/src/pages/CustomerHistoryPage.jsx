@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Icon from '../components/Icon.jsx'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header.jsx'
 import Footer from '../components/Footer.jsx'
@@ -130,13 +131,13 @@ export default function CustomerHistoryPage() {
       <Header />
       <section className="max-w-3xl mx-auto px-6 py-16">
         <div className="text-center mb-8">
-          <h1 className="font-display text-3xl font-bold text-gray-800">ประวัติของฉัน</h1>
+          <h1 className="font-display text-3xl font-semibold text-gray-800">ประวัติของฉัน</h1>
           <p className="text-gray-500 mt-2">
             กรอกเบอร์โทรเพื่อดูสรุปคิวที่เคยจอง หรือใส่รหัสคิวด้วยเพื่อดูรายละเอียด แก้ไข ยกเลิก และให้รีวิว
           </p>
         </div>
 
-        <form onSubmit={handleSearch} className="bg-white rounded-3xl shadow-card p-6 flex flex-col sm:flex-row gap-3">
+        <form onSubmit={handleSearch} className="bg-white rounded-[20px] border border-[#1f1b16]/[0.06] shadow-soft p-6 flex flex-col sm:flex-row gap-3">
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -165,36 +166,36 @@ export default function CustomerHistoryPage() {
 
         {data && !data.verified && (
           <p className="text-xs text-gold bg-gold/10 border border-gold/30 rounded-xl px-4 py-2.5 mt-3 text-center">
-            🔒 นี่คือสรุปแบบย่อ — กรอก "รหัสคิว" ในช่องด้านบนด้วย เพื่อดูเวลา/ราคา/แก้ไข/ยกเลิก/ให้รีวิว/รูป AI
+            <Icon name="lock" className="inline h-4 w-4 -mt-0.5 mr-1" />นี่คือสรุปแบบย่อ — กรอก "รหัสคิว" ในช่องด้านบนด้วย เพื่อดูเวลา/ราคา/แก้ไข/ยกเลิก/ให้รีวิว/รูป AI
           </p>
         )}
 
         {data && (
           <div className="mt-8 space-y-8">
             <div>
-              <h2 className="font-display text-xl font-bold text-gray-800 mb-4">ประวัติการจอง ({data.bookings.length})</h2>
+              <h2 className="font-display text-xl font-semibold text-gray-800 mb-4">ประวัติการจอง ({data.bookings.length})</h2>
               <div className="space-y-3">
-                {data.bookings.length === 0 && <p className="text-sm text-gray-400">ยังไม่มีประวัติการจอง</p>}
+                {data.bookings.length === 0 && <p className="text-sm text-gray-500">ยังไม่มีประวัติการจอง</p>}
                 {!data.verified && data.bookings.map((b, i) => (
-                  <div key={i} className="bg-white rounded-2xl shadow-card p-5">
+                  <div key={i} className="bg-white rounded-[20px] border border-[#1f1b16]/[0.06] shadow-soft p-5">
                     <div className="flex items-center justify-between mb-1">
                       <p className="font-medium text-gray-800">{b.service_name}</p>
                       <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-blush-100 text-rose-600">
                         {STATUS_LABEL[b.status] || b.status}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-400">{b.booking_date}</p>
+                    <p className="text-xs text-gray-500">{b.booking_date}</p>
                   </div>
                 ))}
                 {data.verified && data.bookings.map((b) => (
-                  <div key={b.id} className="bg-white rounded-2xl shadow-card p-5">
+                  <div key={b.id} className="bg-white rounded-[20px] border border-[#1f1b16]/[0.06] shadow-soft p-5">
                     <div className="flex items-center justify-between mb-2">
                       <p className="font-medium text-gray-800">{b.service_name}</p>
                       <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-blush-100 text-rose-600">
                         {STATUS_LABEL[b.status] || b.status}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-500">
                       {b.booking_code} · {b.booking_date} {b.booking_time} น. · {b.price} บาท
                     </p>
                     {b.reference_image_url && (
@@ -216,16 +217,16 @@ export default function CustomerHistoryPage() {
                       <div className="mt-3 flex items-center gap-4">
                         <Link
                           to={`/booking/edit?code=${encodeURIComponent(b.booking_code)}&phone=${encodeURIComponent(phone.trim())}`}
-                          className="text-xs font-semibold text-rose-600 hover:underline"
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:underline"
                         >
-                          ✏️ แก้ไขวันเวลา
+                          <Icon name="edit" className="h-4 w-4" /> แก้ไขวันเวลา
                         </Link>
                         <button
                           type="button"
                           onClick={() => handleCancel(b)}
-                          className="text-xs font-semibold text-red-500 hover:underline"
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 hover:underline"
                         >
-                          ✕ ยกเลิกคิวนี้
+                          <Icon name="x" className="h-4 w-4" /> ยกเลิกคิวนี้
                         </button>
                       </div>
                     )}
@@ -244,9 +245,9 @@ export default function CustomerHistoryPage() {
                         <button
                           type="button"
                           onClick={() => setReviewingBookingId(b.id)}
-                          className="mt-3 text-xs font-semibold text-rose-600 hover:underline"
+                          className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:underline"
                         >
-                          ⭐ ให้คะแนนบริการนี้
+                          <Icon name="star" className="h-4 w-4" /> ให้คะแนนบริการนี้
                         </button>
                       )
                     )}
@@ -257,10 +258,10 @@ export default function CustomerHistoryPage() {
 
             {data.tryon_history.length > 0 && (
               <div>
-                <h2 className="font-display text-xl font-bold text-gray-800 mb-4">ประวัติการทดลองลายเล็บ (AI)</h2>
+                <h2 className="font-display text-xl font-semibold text-gray-800 mb-4">ประวัติการทดลองลายเล็บ (AI)</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {data.tryon_history.map((t) => (
-                    <div key={t.id} className="bg-white rounded-xl shadow-card overflow-hidden">
+                    <div key={t.id} className="bg-white rounded-2xl border border-[#1f1b16]/[0.06] shadow-soft overflow-hidden">
                       {t.result_image_url && <img loading="lazy" decoding="async" src={t.result_image_url} alt="ผลลัพธ์ AI" className="w-full aspect-square object-cover" />}
                       <div className="p-2">
                         <p className="text-[11px] text-gray-500">{t.pattern} · {t.nail_shape}</p>
@@ -273,10 +274,10 @@ export default function CustomerHistoryPage() {
 
             {data.reviews.length > 0 && (
               <div>
-                <h2 className="font-display text-xl font-bold text-gray-800 mb-4">รีวิวที่เคยให้</h2>
+                <h2 className="font-display text-xl font-semibold text-gray-800 mb-4">รีวิวที่เคยให้</h2>
                 <div className="space-y-3">
                   {data.reviews.map((r) => (
-                    <div key={r.id} className="bg-white rounded-2xl shadow-card p-4">
+                    <div key={r.id} className="bg-white rounded-[20px] border border-[#1f1b16]/[0.06] shadow-soft p-4">
                       <p className="text-gold text-sm">{'★'.repeat(r.rating)}<span className="text-blush-200">{'★'.repeat(5 - r.rating)}</span></p>
                       {r.comment && <p className="text-sm text-gray-600 mt-1">{r.comment}</p>}
                     </div>

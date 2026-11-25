@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Icon from '../components/Icon.jsx'
 import { Link, useSearchParams } from 'react-router-dom'
 import Header from '../components/Header.jsx'
 import Footer from '../components/Footer.jsx'
@@ -79,12 +80,12 @@ export default function EditBookingPage() {
       <Header />
       <section className="max-w-2xl mx-auto px-6 py-16">
         <div className="text-center mb-8">
-          <h1 className="font-display text-3xl font-bold text-gray-800">แก้ไขวันเวลาการจอง</h1>
+          <h1 className="font-display text-3xl font-semibold text-gray-800">แก้ไขวันเวลาการจอง</h1>
           <p className="text-gray-500 mt-2">กรอกรหัสคิวและเบอร์โทรที่ใช้ตอนจอง</p>
         </div>
 
         {!booking && (
-          <form onSubmit={handleSearch} className="bg-white rounded-3xl shadow-card p-6 sm:p-8 space-y-4">
+          <form onSubmit={handleSearch} className="bg-white rounded-[20px] border border-[#1f1b16]/[0.06] shadow-soft p-6 sm:p-8 space-y-4">
             <div>
               <label htmlFor="edit-code" className="block text-sm font-medium text-gray-700 mb-1.5">รหัสคิว</label>
               <input
@@ -119,9 +120,9 @@ export default function EditBookingPage() {
         )}
 
         {booking && !saved && isTooLateToChange(booking, shop?.cancel_cutoff_hours) && (
-          <div className="bg-white rounded-3xl shadow-card p-6 sm:p-8 text-center space-y-3">
+          <div className="bg-white rounded-[20px] border border-[#1f1b16]/[0.06] shadow-soft p-6 sm:p-8 text-center space-y-3">
             <div className="text-4xl">⏳</div>
-            <h2 className="font-display text-xl font-bold text-gray-800">ใกล้เวลานัดแล้ว เลื่อนคิวผ่านเว็บไม่ได้</h2>
+            <h2 className="font-display text-xl font-semibold text-gray-800">ใกล้เวลานัดแล้ว เลื่อนคิวผ่านเว็บไม่ได้</h2>
             <p className="text-sm text-gray-500">
               คิว {booking.booking_code} นัดวันที่ {booking.booking_date} เวลา {booking.booking_time} น.
               ร้านกำหนดให้เลื่อนหรือยกเลิกผ่านเว็บได้ล่วงหน้าอย่างน้อย {shop.cancel_cutoff_hours} ชั่วโมง
@@ -134,13 +135,13 @@ export default function EditBookingPage() {
         )}
 
         {booking && !saved && !isTooLateToChange(booking, shop?.cancel_cutoff_hours) && (
-          <div className="bg-white rounded-3xl shadow-card p-6 sm:p-8">
+          <div className="bg-white rounded-[20px] border border-[#1f1b16]/[0.06] shadow-soft p-6 sm:p-8">
             <div className="flex items-center justify-between mb-6 pb-6 border-b border-blush-100">
               <div>
-                <p className="font-display text-xl font-bold text-gray-800">{booking.booking_code}</p>
+                <p className="font-display text-xl font-semibold text-gray-800">{booking.booking_code}</p>
                 <p className="text-sm text-gray-500 mt-1">{booking.service_name}</p>
               </div>
-              <div className="text-right text-sm text-gray-400">
+              <div className="text-right text-sm text-gray-500">
                 <p>เดิม: {booking.booking_date}</p>
                 <p>{booking.booking_time} น.</p>
               </div>
@@ -167,16 +168,18 @@ export default function EditBookingPage() {
               {saving ? 'กำลังบันทึก...' : 'ยืนยันวันเวลาใหม่'}
             </button>
             {saveError && <p className="text-sm text-red-500 text-center mt-3">{saveError}</p>}
-            <p className="text-xs text-gray-400 text-center mt-4">
+            <p className="text-xs text-gray-500 text-center mt-4">
               เมื่อยืนยันแล้ว สถานะคิวจะกลับเป็น "รอยืนยัน" อีกครั้ง ทางร้านจะติดต่อยืนยันเวลาใหม่ให้เร็วที่สุด
             </p>
           </div>
         )}
 
         {saved && (
-          <div className="bg-white rounded-3xl shadow-card p-8 text-center">
-            <div className="text-5xl mb-4">✅</div>
-            <h2 className="font-display text-xl font-bold text-gray-800">แก้ไขวันเวลาสำเร็จ</h2>
+          <div className="bg-white rounded-[20px] border border-[#1f1b16]/[0.06] shadow-soft p-8 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-rose-50 text-rose-600">
+              <Icon name="check" className="h-7 w-7" strokeWidth={2} />
+            </div>
+            <h2 className="font-display text-xl font-semibold text-gray-800">แก้ไขวันเวลาสำเร็จ</h2>
             <p className="text-gray-500 mt-2">
               {booking.booking_code} วันที่ {booking.booking_date} เวลา {booking.booking_time} น.
             </p>

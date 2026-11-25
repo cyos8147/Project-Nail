@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import Icon from './Icon.jsx'
 import { createPortal } from 'react-dom'
 import { assetUrl } from '../api/client.js'
 
@@ -54,10 +55,10 @@ export default function ZoomableImage({ src: rawSrc, alt, className = '', captio
             ref={closeRef}
             type="button"
             onClick={() => setOpen(false)}
-            className="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/90 text-gray-800 text-xl font-semibold shadow-lg hover:bg-white"
+            className="absolute top-4 right-4 w-11 h-11 flex items-center justify-center rounded-full bg-white/90 text-gray-800 shadow-soft transition-colors hover:bg-white"
             aria-label="ปิดรูป"
           >
-            ✕
+            <Icon name="x" className="h-5 w-5" />
           </button>
           <img
             src={src}

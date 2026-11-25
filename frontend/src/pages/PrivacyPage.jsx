@@ -9,7 +9,7 @@ const UPDATED_AT = '30 กันยายน 2569'
 function Section({ title, children }) {
   return (
     <section className="mt-10">
-      <h2 className="font-display text-xl font-bold text-gray-800">{title}</h2>
+      <h2 className="font-display text-xl font-semibold text-gray-800">{title}</h2>
       <div className="mt-3 space-y-3 leading-relaxed text-gray-600">{children}</div>
     </section>
   )
@@ -52,8 +52,8 @@ export default function PrivacyPage() {
       <Header />
 
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <h1 className="font-display text-3xl font-bold text-gray-800">นโยบายความเป็นส่วนตัว</h1>
-        <p className="mt-2 text-sm text-gray-400">ปรับปรุงล่าสุด {UPDATED_AT}</p>
+        <h1 className="font-display text-3xl font-semibold text-gray-800">นโยบายความเป็นส่วนตัว</h1>
+        <p className="mt-2 text-sm text-gray-500">ปรับปรุงล่าสุด {UPDATED_AT}</p>
         <p className="mt-6 leading-relaxed text-gray-600">
           Lucky Salon (&ldquo;ร้าน&rdquo;) ให้ความสำคัญกับข้อมูลส่วนบุคคลของคุณ
           หน้านี้อธิบายว่าเว็บไซต์นี้เก็บข้อมูลอะไร เก็บไปทำอะไร ใครดูได้ และคุณมีสิทธิ์อะไรบ้าง

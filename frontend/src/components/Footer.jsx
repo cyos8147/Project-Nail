@@ -11,8 +11,7 @@ export default function Footer() {
   }, [])
 
   return (
-    <footer className="relative bg-white/70 backdrop-blur-sm border-t border-white/80 py-8">
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-400 via-peach to-rose-400" />
+    <footer className="relative bg-white/75 backdrop-blur-sm border-t border-[#1f1b16]/[0.06] py-8">
       <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
         <BrandLogo size="sm" />
         <p className="text-center">

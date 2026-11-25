@@ -120,7 +120,7 @@ export default function ShopInfo() {
     return (
       <section id="contact" className="max-w-6xl mx-auto px-6 py-16 scroll-mt-16">
         <ContactHeading />
-        <p className="mx-auto max-w-md rounded-2xl bg-white p-6 text-center text-gray-500 shadow-card">
+        <p className="mx-auto max-w-md rounded-[20px] border border-[#1f1b16]/[0.06] bg-white p-6 text-center text-gray-500 shadow-soft">
           {failed ? 'โหลดเวลาทำการไม่สำเร็จ รีเฟรชหน้านี้อีกครั้ง' : 'กำลังโหลดเวลาทำการและช่องทางติดต่อ...'}
         </p>
       </section>
@@ -144,7 +144,7 @@ export default function ShopInfo() {
       <ContactHeading />
 
       <div className={hasContact ? 'grid gap-5 md:grid-cols-2' : 'mx-auto max-w-md'}>
-        <div className="rounded-2xl bg-white p-6 shadow-card">
+        <div className="rounded-[20px] border border-[#1f1b16]/[0.06] bg-white p-6 shadow-soft">
           <h3 className="flex items-center gap-2 font-semibold text-gray-800">
             <span className="text-rose-500">
               <ClockIcon />
@@ -174,14 +174,14 @@ export default function ShopInfo() {
                   </li>
                 ))}
               </ul>
-              {holidays.length > 8 && <p className="mt-2 text-xs text-gray-400">และอีก {holidays.length - 8} วัน</p>}
-              <p className="mt-2 text-xs text-gray-400">วันเหล่านี้จองคิวออนไลน์ไม่ได้</p>
+              {holidays.length > 8 && <p className="mt-2 text-xs text-gray-500">และอีก {holidays.length - 8} วัน</p>}
+              <p className="mt-2 text-xs text-gray-500">วันเหล่านี้จองคิวออนไลน์ไม่ได้</p>
             </div>
           )}
         </div>
 
         {hasContact && (
-          <div className="rounded-2xl bg-white p-6 shadow-card">
+          <div className="rounded-[20px] border border-[#1f1b16]/[0.06] bg-white p-6 shadow-soft">
             <h3 className="flex items-center gap-2 font-semibold text-gray-800">
               <span className="text-rose-500">
                 <PinIcon />

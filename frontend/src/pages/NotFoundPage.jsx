@@ -14,9 +14,9 @@ export default function NotFoundPage() {
   return (
     <div className="relative isolate flex min-h-screen flex-col items-center justify-center overflow-x-clip px-6 text-center text-gray-800">
       <DreamyBackground />
-      <img src="/logo.jpg" alt="Lucky Salon" className="h-20 w-20 rounded-full object-cover shadow-card" />
-      <p className="mt-6 font-display text-6xl font-bold text-rose-500">404</p>
-      <h1 className="mt-2 font-display text-2xl font-bold">ไม่พบหน้าที่คุณกำลังหา</h1>
+      <img src="/logo.jpg" alt="Lucky Salon" className="h-20 w-20 rounded-full object-cover shadow-soft" />
+      <p className="mt-6 font-display text-6xl font-semibold text-rose-500">404</p>
+      <h1 className="mt-2 font-display text-2xl font-semibold">ไม่พบหน้าที่คุณกำลังหา</h1>
       <p className="mt-3 max-w-sm text-gray-500">
         ลิงก์อาจพิมพ์ไม่ครบหรือหน้านี้ถูกย้ายไปแล้ว ลองกลับไปหน้าแรก หรือจองคิวได้เลย
       </p>
