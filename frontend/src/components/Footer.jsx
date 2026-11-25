@@ -17,6 +17,10 @@ export default function Footer() {
         <BrandLogo size="sm" />
         <p className="text-center">
           © 2026 Lucky Salon. สงวนลิขสิทธิ์. ·{' '}
+          <Link to="/gallery" className="underline decoration-blush-200 underline-offset-2 hover:text-rose-600 transition-colors">
+            แกลเลอรี
+          </Link>{' '}
+          ·{' '}
           <Link to="/privacy" className="underline decoration-blush-200 underline-offset-2 hover:text-rose-600 transition-colors">
             นโยบายความเป็นส่วนตัว
           </Link>

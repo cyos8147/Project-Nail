@@ -4,10 +4,10 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ['Mali', '"Baloo 2"', 'sans-serif'],
+        display: ['Mali', 'Prompt', 'sans-serif'],
         body: ['"Prompt"', 'sans-serif'],
         serif: ['"Playfair Display"', 'Georgia', 'serif'],
-        script: ['"Great Vibes"', '"Dancing Script"', 'cursive'],
+        script: ['"Great Vibes"', 'cursive'],
       },
       colors: {
         blush: {

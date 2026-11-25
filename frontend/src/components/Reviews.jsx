@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getReviews } from '../api/client.js'
+import { Bone } from './Skeleton.jsx'
 
 const fallbackReviews = [
   { name: 'Maylada', rating: 5, text: 'AI แนะนำสีให้ตรงใจมาก ทำเล็บออกมาสวยตามที่ดูตัวอย่างเลยค่ะ' },
@@ -17,12 +18,14 @@ function Stars({ count }) {
 }
 
 export default function Reviews() {
-  const [reviews, setReviews] = useState(fallbackReviews)
+  const [reviews, setReviews] = useState(null) // null = กำลังโหลด
 
   useEffect(() => {
     getReviews(6)
       .then((data) => {
-        if (data?.length) {
+        if (!data?.length) {
+          setReviews(fallbackReviews)
+        } else {
           setReviews(
             data.map((r) => ({
               name: r.customer_name || 'ลูกค้า Lucky Salon',
@@ -33,21 +36,34 @@ export default function Reviews() {
           )
         }
       })
-      .catch(() => {
-        /* ใช้ fallbackReviews ต่อไปถ้าเรียก backend ไม่สำเร็จ */
-      })
+      .catch(() => setReviews(fallbackReviews))
   }, [])
 
   return (
     <section id="reviews" className="py-16 scroll-mt-20">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-10">
-          <h2 className="font-display text-3xl font-bold text-gray-800">รีวิวจากลูกค้า</h2>
+          <p className="font-script text-4xl text-rose-500">Reviews</p>
+          <h2 className="font-display text-3xl font-bold text-gray-800 mt-1">รีวิวจากลูกค้า</h2>
           <p className="text-gray-500 mt-2">เสียงตอบรับจริงจากลูกค้าที่ใช้บริการ</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {reviews.map((r, i) => (
+        <div className="grid md:grid-cols-3 gap-6" aria-busy={!reviews}>
+          {!reviews &&
+            Array.from({ length: 3 }, (_, i) => (
+              <div key={i} aria-hidden="true" className="bg-white/60 rounded-2xl border border-white p-6 space-y-3">
+                <div className="flex items-center gap-3">
+                  <Bone className="w-10 h-10 !rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Bone className="h-4 w-1/2" />
+                    <Bone className="h-3 w-1/3" />
+                  </div>
+                </div>
+                <Bone className="h-4 w-full" />
+                <Bone className="h-4 w-4/5" />
+              </div>
+            ))}
+          {(reviews || []).map((r, i) => (
             <div key={`${r.name}-${i}`} className="bg-white rounded-2xl shadow-card p-6 hover:-translate-y-1 hover:shadow-lg transition-all duration-200">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-full bg-rose-200 flex items-center justify-center font-display font-bold text-rose-600">

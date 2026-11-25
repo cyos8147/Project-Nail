@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getServiceCategories, getServices } from '../api/client.js'
 import ServiceArt from './ServiceArt.jsx'
+import { Bone, SlowNote, useSlow } from './Skeleton.jsx'
 
 const FALLBACK_CATEGORIES = [
   { id: 'hair', name: 'ทำผม', icon: '💇‍♀️' },
@@ -106,6 +107,8 @@ export default function Services() {
   const [services, setServices] = useState(FALLBACK_SERVICES)
   const [activeId, setActiveId] = useState(null)
   const [expanded, setExpanded] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const slow = useSlow(loading)
   const tabRefs = useRef({})
 
   useEffect(() => {
@@ -115,6 +118,7 @@ export default function Services() {
       if (!alive) return
       if (cats.status === 'fulfilled' && cats.value?.length) setCategories(cats.value)
       if (svcs.status === 'fulfilled' && svcs.value?.length) setServices(svcs.value)
+      setLoading(false)
     })
     return () => {
       alive = false
@@ -125,6 +129,37 @@ export default function Services() {
     .map((c) => ({ ...c, items: services.filter((s) => s.category_id === c.id) }))
     .filter((t) => t.items.length > 0)
   const active = tabs.find((t) => t.id === activeId) || tabs[0]
+  const header = (
+    <div className="text-center mb-8">
+      <p className="font-script text-4xl text-rose-500">Our Services</p>
+      <h2 className="font-display text-3xl font-bold text-gray-800 mt-1">บริการของร้าน</h2>
+      <p className="text-gray-500 mt-2">เลือกหมวดที่สนใจ แล้วจองคิวได้ทันที</p>
+    </div>
+  )
+
+  // ระหว่างโหลด: โครงการ์ดแทนข้อมูลตัวอย่าง (ข้อมูลตัวอย่างใช้เมื่อโหลดไม่สำเร็จเท่านั้น จะได้ไม่เห็นราคาที่ไม่ใช่ของจริง)
+  if (loading) {
+    return (
+      <section id="services" aria-busy="true" className="max-w-7xl mx-auto px-4 sm:px-6 py-16 scroll-mt-20">
+        {header}
+        <Bone className="mx-auto mb-8 h-14 w-full max-w-lg !rounded-full" />
+        <ul className="grid gap-4 md:grid-cols-2">
+          {Array.from({ length: 4 }, (_, i) => (
+            <li key={i} className="flex items-center gap-4 rounded-[1.6rem] border-2 border-white/90 bg-white/50 p-3">
+              <Bone className="h-20 w-24 sm:h-24 sm:w-32 shrink-0 !rounded-[1.1rem]" />
+              <div className="flex-1 space-y-2.5">
+                <Bone className="h-5 w-2/3" />
+                <Bone className="h-4 w-1/3" />
+                <Bone className="h-4 w-1/4" />
+              </div>
+              <Bone className="h-10 w-10 shrink-0 !rounded-full" />
+            </li>
+          ))}
+        </ul>
+        <SlowNote show={slow} />
+      </section>
+    )
+  }
   if (!active) return null
 
   const collapsible = active.items.length > COLLAPSE_OVER
@@ -146,11 +181,7 @@ export default function Services() {
 
   return (
     <section id="services" className="max-w-7xl mx-auto px-4 sm:px-6 py-16 scroll-mt-20">
-      <div className="text-center mb-8">
-        <p className="font-script text-4xl text-rose-500">Our Services</p>
-        <h2 className="font-display text-3xl font-bold text-gray-800 mt-1">บริการของร้าน</h2>
-        <p className="text-gray-500 mt-2">เลือกหมวดที่สนใจ แล้วจองคิวได้ทันที</p>
-      </div>
+      {header}
 
       {tabs.length > 1 && (
         <div

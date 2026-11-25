@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getNailDesigns } from '../api/client.js'
+import { Bone } from './Skeleton.jsx'
 
 // การ์ดลายเล็บยอดนิยม (หน้าแรก) แบบสไลด์โชว์
 // - เปลี่ยนภาพเองทุก SLIDE_MS: ภาพใหม่ค่อย ๆ จางเข้า + ซูมช้า ๆ + แสงสะท้อนวิ่งผ่านหนึ่งครั้ง
@@ -31,6 +32,7 @@ function Spark({ className = '', style }) {
 
 export default function PopularStylesCard() {
   const [designs, setDesigns] = useState([])
+  const [loaded, setLoaded] = useState(false)
   const [index, setIndex] = useState(0)
   const [hovering, setHovering] = useState(false) // เมาส์/นิ้วอยู่บนการ์ด
   const [focused, setFocused] = useState(false) // คีย์บอร์ดโฟกัสอยู่ในการ์ด (แยกจากเมาส์ ไม่ให้ล้างกันเอง)
@@ -42,6 +44,7 @@ export default function PopularStylesCard() {
     getNailDesigns()
       .then((data) => setDesigns((data || []).filter((d) => d.image_url).slice(0, 6)))
       .catch(() => {})
+      .finally(() => setLoaded(true))
   }, [])
 
   useEffect(() => {
@@ -113,7 +116,8 @@ export default function PopularStylesCard() {
           onPointerUp={onPointerUp}
           onPointerCancel={() => (pointerX.current = null)}
         >
-          {count === 0 && <div className="w-full h-full flex items-center justify-center text-rose-400 text-sm">ลายเล็บยอดนิยม</div>}
+          {count === 0 && !loaded && <Bone className="absolute inset-0 !rounded-2xl" />}
+          {count === 0 && loaded && <div className="w-full h-full flex items-center justify-center text-rose-400 text-sm">ลายเล็บยอดนิยม</div>}
 
           {/* ทุกภาพซ้อนกันอยู่ ภาพที่แสดงจะจางเข้า ภาพอื่นจางออก */}
           {designs.map((d, i) => {

@@ -3,6 +3,7 @@ import HomePage from './pages/HomePage.jsx'
 import BookingPage from './pages/BookingPage.jsx'
 import EditBookingPage from './pages/EditBookingPage.jsx'
 import AiStudioPage from './pages/AiStudioPage.jsx'
+import GalleryPage from './pages/GalleryPage.jsx'
 import CustomerHistoryPage from './pages/CustomerHistoryPage.jsx'
 import PrivacyPage from './pages/PrivacyPage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
@@ -27,6 +28,7 @@ export default function App() {
       <Route path="/booking" element={<BookingPage />} />
       <Route path="/booking/edit" element={<EditBookingPage />} />
       <Route path="/ai" element={<AiStudioPage />} />
+      <Route path="/gallery" element={<GalleryPage />} />
       <Route path="/history" element={<CustomerHistoryPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
 

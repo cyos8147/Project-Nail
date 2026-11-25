@@ -12,7 +12,7 @@ body {
 }
 
 h1, h2, h3, .font-display {
-  font-family: 'Mali', 'Baloo 2', sans-serif;
+  font-family: 'Mali', 'Prompt', sans-serif;
 }
 
 /* ===== ปุ่มแบบ "ลูกอม": ขอบล่างหนาให้ดูนูน กดแล้วยุบ มีรอยเย็บเส้นปะด้านในเหมือนริบบิ้น ===== */
@@ -114,6 +114,16 @@ h1, h2, h3, .font-display {
   50% { opacity: 1; transform: scale(1.15) rotate(25deg); }
 }
 
+@keyframes lucky-skeleton {
+  from { background-position: 100% 50%; }
+  to { background-position: 0% 50%; }
+}
+.lucky-skeleton {
+  background: linear-gradient(90deg, rgba(251, 207, 224, 0.55) 25%, rgba(255, 244, 248, 0.95) 37%, rgba(251, 207, 224, 0.55) 63%);
+  background-size: 400% 100%;
+  animation: lucky-skeleton 1.4s ease-in-out infinite;
+}
+
 .lucky-fade-up { animation: lucky-fade-up 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 .lucky-kenburns { animation: lucky-kenburns 6s ease-out both; }
 .lucky-progress { transform-origin: left; animation: lucky-progress linear both; }
@@ -138,6 +148,7 @@ h1, h2, h3, .font-display {
   .lucky-splash__crown,
   .lucky-splash__heart,
   .lucky-shine,
+  .lucky-skeleton,
   .lucky-kenburns,
   .lucky-progress,
   .lucky-sweep,
