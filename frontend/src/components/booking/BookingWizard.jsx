@@ -117,6 +117,21 @@ export default function BookingWizard() {
     }
   }, [carriedDesign, servicesLoaded, servicesByCategory])
 
+  // กดลูกศรจากการ์ดบริการหน้าแรก (/booking?service=<id>) → เลือกบริการนั้นให้เลย ทำครั้งเดียว
+  // ถ้ามีสีที่ส่งมาจากหน้า AI ให้ใช้ทางนั้นก่อน (ลูกค้าเปลี่ยนบริการเองได้เสมอ)
+  const urlServiceAppliedRef = useRef(false)
+  useEffect(() => {
+    if (urlServiceAppliedRef.current || !servicesLoaded || carriedDesign) return
+    urlServiceAppliedRef.current = true
+    const wanted = new URLSearchParams(window.location.search).get('service')
+    if (!wanted) return
+    const found = Object.values(servicesByCategory).flat().find((s) => String(s.id) === wanted)
+    if (found) {
+      setCategory(found.category_id)
+      setService(found)
+    }
+  }, [servicesLoaded, servicesByCategory, carriedDesign])
+
   // สีจาก AI ที่จะบันทึกในใบจอง ใช้เฉพาะบริการทำเล็บ (ถ้าลูกค้าเปลี่ยนไปทำผม สีเล็บไม่เกี่ยว)
   const carriedShade = useMemo(() => (category === 'nail' ? shadeFromCarry(carriedDesign) : null), [carriedDesign, category])
 

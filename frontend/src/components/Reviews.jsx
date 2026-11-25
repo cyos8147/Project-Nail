@@ -39,7 +39,7 @@ export default function Reviews() {
   }, [])
 
   return (
-    <section id="reviews" className="bg-blush-100/60 py-16">
+    <section id="reviews" className="py-16 scroll-mt-20">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-10">
           <h2 className="font-display text-3xl font-bold text-gray-800">รีวิวจากลูกค้า</h2>

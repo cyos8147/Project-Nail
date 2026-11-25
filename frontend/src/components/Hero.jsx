@@ -57,10 +57,8 @@ function PopularStylesCard() {
 
 export default function Hero() {
   return (
-    <section id="home" className="relative overflow-hidden">
-      {/* ของตกแต่งพื้นหลัง: ไม่มีปุ่มหรือการโต้ตอบ */}
-      <div aria-hidden="true" className="pointer-events-none absolute -top-24 -right-20 w-[28rem] h-[28rem] rounded-full bg-rose-200/50 blur-3xl" />
-      <div aria-hidden="true" className="pointer-events-none absolute top-1/2 -left-32 w-[24rem] h-[24rem] rounded-full bg-pink-200/50 blur-3xl" />
+    <section id="home" className="relative">
+      {/* ของตกแต่ง: ไม่มีปุ่มหรือการโต้ตอบ (พื้นหลังหลักอยู่ใน DreamyBackground) */}
       <span aria-hidden="true" className="pointer-events-none absolute top-16 left-[46%] text-2xl text-rose-300 animate-float">✦</span>
       <span aria-hidden="true" className="pointer-events-none absolute bottom-10 right-[42%] text-xl text-rose-300 animate-float">♡</span>
 

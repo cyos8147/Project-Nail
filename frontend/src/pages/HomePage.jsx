@@ -8,6 +8,7 @@ import Reviews from '../components/Reviews.jsx'
 import ShopInfo from '../components/ShopInfo.jsx'
 import Footer from '../components/Footer.jsx'
 import MobileStickyBar from '../components/MobileStickyBar.jsx'
+import DreamyBackground from '../components/DreamyBackground.jsx'
 
 // จุดเด่นของร้าน (ข้อความอย่างเดียว ไม่มีปุ่ม)
 const HIGHLIGHTS = [
@@ -20,7 +21,7 @@ const HIGHLIGHTS = [
 function HighlightBar() {
   return (
     <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-4">
-      <ul className="bg-white/80 backdrop-blur rounded-full border border-white shadow-card px-4 py-4 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-0 md:divide-x md:divide-rose-100">
+      <ul className="bg-white/60 backdrop-blur-sm rounded-[2rem] md:rounded-full border border-white/80 shadow-card px-4 py-4 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-0 md:divide-x md:divide-rose-100">
         {HIGHLIGHTS.map((h) => (
           <li key={h.title} className="flex items-center gap-3 justify-center px-3">
             <span aria-hidden="true" className="text-2xl">{h.icon}</span>
@@ -37,7 +38,8 @@ function HighlightBar() {
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-rose-50 via-pink-50/60 to-rose-50 text-gray-800 pb-20 md:pb-0 overflow-x-clip">
+    <div className="relative isolate min-h-screen text-gray-800 pb-20 md:pb-0 overflow-x-clip">
+      <DreamyBackground />
       <Header />
       <Hero />
       <TryOnColorCard />

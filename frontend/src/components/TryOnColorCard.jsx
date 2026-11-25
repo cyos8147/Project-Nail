@@ -18,7 +18,7 @@ export default function TryOnColorCard() {
 
   return (
     <section className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      <div className="bg-white/80 backdrop-blur rounded-[2rem] border border-white shadow-card p-6 sm:p-10 grid md:grid-cols-2 gap-8 items-center">
+      <div className="bg-white/60 backdrop-blur-sm rounded-[2rem] border border-white/80 shadow-card p-6 sm:p-10 grid md:grid-cols-2 gap-8 items-center">
         <div>
           <p className="font-serif italic text-2xl text-rose-700">Try On Color</p>
           <h2 className="mt-2 font-display text-2xl sm:text-3xl font-bold text-gray-800">ลองเลือกสีที่ชอบ</h2>

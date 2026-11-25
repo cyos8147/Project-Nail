@@ -1306,7 +1306,8 @@
    Visual polish pass -- appearance only, no layout/behavior changes
    ===================================================================== */
 
-.page { padding-top: 8px; padding-bottom: 56px; min-height: 0; }
+/* พื้นหลังของหน้าใช้ DreamyBackground ร่วมกับหน้าแรก ส่วนนี้จึงโปร่งใส (ตัวแปร --bg ยังใช้กับปุ่มด้านใน) */
+.page { padding-top: 8px; padding-bottom: 56px; min-height: 0; background: transparent; }
 
 /* gradient frame with a soft colored halo */
 .card {
