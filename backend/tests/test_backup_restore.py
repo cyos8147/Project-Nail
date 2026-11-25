@@ -153,3 +153,13 @@ def test_zip_builds_even_with_unusual_value_types():
     row = data["tables"]["t"][0]
     assert row["amount"] == "12.50" and row["when"].startswith("2030-01-02") and row["raw"] == "YWI="
     assert sorted(row["tags"]) == ["a", "b"]
+
+
+def test_the_unzipped_backup_json_is_accepted_too(client, owner_headers):
+    """ไอแพดแตก .zip ให้อัตโนมัติ -- ไฟล์ backup.json ที่แตกแล้วต้องใช้กู้คืนได้เหมือนกัน"""
+    raw = _download(client, owner_headers)
+    data = zipfile.ZipFile(io.BytesIO(raw)).read("backup.json")
+    r = client.post("/api/admin/backup/restore/preview", headers=owner_headers, json={"file_base64": _b64(data)})
+    assert r.status_code == 200 and r.json()["ok"] is True
+    bad = client.post("/api/admin/backup/restore/preview", headers=owner_headers, json={"file_base64": _b64(b'{"format":"other"}')})
+    assert bad.status_code == 422

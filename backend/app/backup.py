@@ -125,6 +125,15 @@ def read_zip(file_base64: str) -> dict:
         raise BackupError("ไฟล์ไม่ถูกต้อง อัปโหลดใหม่อีกครั้ง")
     if len(raw) > MAX_ZIP_BYTES:
         raise BackupError("ไฟล์ใหญ่เกิน 20 MB ไม่ใช่ไฟล์สำรองของร้านหรือเปล่า")
+    # ไอแพดมักแตก .zip ให้อัตโนมัติ จึงรับ backup.json ที่แตกแล้วได้ด้วย (ต้องเป็นไฟล์สำรองของระบบเท่านั้น)
+    if raw.lstrip()[:1] == b"{":
+        if len(raw) > MAX_JSON_BYTES:
+            raise BackupError("ข้อมูลในไฟล์ใหญ่เกินที่รองรับ")
+        try:
+            payload = json.loads(raw.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            raise BackupError("ไฟล์ backup.json เสียหาย อ่านไม่ได้")
+        return _check_payload(payload)
     try:
         archive = zipfile.ZipFile(io.BytesIO(raw))
     except zipfile.BadZipFile:
@@ -144,6 +153,10 @@ def read_zip(file_base64: str) -> dict:
         payload = json.loads(archive.read("backup.json").decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError):
         raise BackupError("ไฟล์ backup.json เสียหาย อ่านไม่ได้")
+    return _check_payload(payload)
+
+
+def _check_payload(payload) -> dict:
     if not isinstance(payload, dict) or payload.get("format") != FORMAT:
         raise BackupError("ไฟล์นี้ไม่ใช่ไฟล์สำรองของ Lucky Salon")
     if payload.get("version") != VERSION:

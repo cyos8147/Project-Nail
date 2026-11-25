@@ -60,8 +60,9 @@ export default function RestorePanel() {
     setConfirmText('')
     setMessage(null)
     if (!picked) return
-    if (!picked.name.toLowerCase().endsWith('.zip')) {
-      setMessage({ ok: false, text: 'ต้องเป็นไฟล์ .zip ที่ดาวน์โหลดจากปุ่มสำรองแบบกู้คืนได้' })
+    const lower = picked.name.toLowerCase()
+    if (!lower.endsWith('.zip') && !lower.endsWith('.json')) {
+      setMessage({ ok: false, text: 'ต้องเป็นไฟล์ .zip หรือ backup.json ที่สำรองจากปุ่มสำรองแบบกู้คืนได้' })
       return
     }
     setBusy('preview')
@@ -126,7 +127,7 @@ export default function RestorePanel() {
           <p className="text-sm text-gray-500 mt-1">ระบบจะตรวจไฟล์และแสดงจำนวนข้อมูลให้ดูก่อน ยังไม่แก้ไขข้อมูลใดๆ จนกว่าจะยืนยันในขั้นที่ 3</p>
         </div>
         <label className="block w-full max-w-full cursor-pointer rounded-xl border border-dashed border-blush-200 px-4 py-3 hover:bg-blush-50">
-          <input type="file" accept=".zip,application/zip" onChange={chooseFile} disabled={busy !== null} className="block w-full max-w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-blush-100 file:px-3 file:py-1.5 file:text-rose-600" />
+          <input type="file" accept=".zip,.json,application/zip,application/json" onChange={chooseFile} disabled={busy !== null} className="block w-full max-w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-blush-100 file:px-3 file:py-1.5 file:text-rose-600" />
         </label>
 
         {busy === 'preview' && <p className="text-sm text-gray-400">กำลังตรวจไฟล์...</p>}
