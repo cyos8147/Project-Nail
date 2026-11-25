@@ -2100,6 +2100,23 @@ export default function NailTryOn({ onBookDesign, onSkinAnalyzed } = {}) {
     setSelectedHex(hex);
   }
 
+  // เปลี่ยนพื้นผิวแล้วลงกับเล็บที่ทาสีไว้ทันที (สีเดิมไม่เปลี่ยน) ไม่ต้องกดเลือกสีซ้ำ
+  // โหมดหลายสี: ถ้าเลือกนิ้วไว้ เปลี่ยนเฉพาะนิ้วนั้น ถ้าไม่ได้เลือก เปลี่ยนทุกนิ้วที่ทาแล้ว
+  function chooseFinish(key) {
+    setActiveFinish(key);
+    setNailColors((prev) => {
+      if (!prev.some(Boolean)) return prev;
+      const onlyFinger = mode !== 'single' && selectedFinger !== null && prev[selectedFinger] ? selectedFinger : null;
+      let changed = false;
+      const next = prev.map((c, i) => {
+        if (!c || c.finish === key || (onlyFinger !== null && i !== onlyFinger)) return c;
+        changed = true;
+        return { ...c, finish: key };
+      });
+      return changed ? next : prev;
+    });
+  }
+
   function onCanvasClick(e) {
     if (nailRegionsRef.current.length === 0) return;
     if (flipPick) {
@@ -2720,7 +2737,7 @@ export default function NailTryOn({ onBookDesign, onSkinAnalyzed } = {}) {
                   key={key}
                   type="button"
                   className={`finish-chip ${activeFinish === key ? 'active' : ''}`}
-                  onClick={() => setActiveFinish(key)}
+                  onClick={() => chooseFinish(key)}
                 >
                   <span className={`finish-preview ${key}`} />
                   <span className="finish-label">{label}</span>
