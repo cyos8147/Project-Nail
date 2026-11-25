@@ -1,0 +1,2 @@
+unslop by Damir Sokolovsky (@heydamir), https://github.com/heydamir/unslop
+Copied from commit 620163e under CC BY 4.0 (see LICENSE). Unmodified.
