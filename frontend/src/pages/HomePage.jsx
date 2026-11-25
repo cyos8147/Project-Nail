@@ -9,6 +9,7 @@ import ShopInfo from '../components/ShopInfo.jsx'
 import Footer from '../components/Footer.jsx'
 import MobileStickyBar from '../components/MobileStickyBar.jsx'
 import DreamyBackground from '../components/DreamyBackground.jsx'
+import Reveal from '../components/Reveal.jsx'
 
 // จุดเด่นของร้าน (ข้อความอย่างเดียว ไม่มีปุ่ม)
 const HIGHLIGHTS = [
@@ -42,13 +43,13 @@ export default function HomePage() {
       <DreamyBackground />
       <Header />
       <Hero />
-      <TryOnColorCard />
-      <HighlightBar />
-      <FeatureHighlights />
-      <Services />
-      <PopularNails />
-      <Reviews />
-      <ShopInfo />
+      <Reveal><TryOnColorCard /></Reveal>
+      <Reveal><HighlightBar /></Reveal>
+      <Reveal><FeatureHighlights /></Reveal>
+      <Reveal><Services /></Reveal>
+      <Reveal><PopularNails /></Reveal>
+      <Reveal><Reviews /></Reveal>
+      <Reveal><ShopInfo /></Reveal>
       <Footer />
       <MobileStickyBar />
     </div>

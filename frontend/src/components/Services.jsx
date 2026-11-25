@@ -33,7 +33,7 @@ function formatDuration(minutes) {
 function Thumb({ src, icon, name }) {
   const [failed, setFailed] = useState(false)
   return (
-    <div className="flex h-20 w-20 sm:h-28 sm:w-36 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-rose-100 via-pink-100 to-white text-3xl ring-1 ring-white/80">
+    <div className="flex h-20 w-20 sm:h-24 sm:w-32 xl:h-28 xl:w-36 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-rose-100 via-pink-100 to-white text-3xl ring-1 ring-white/80">
       {src && !failed ? (
         <img src={src} alt={name} loading="lazy" onError={() => setFailed(true)} className="h-full w-full object-cover" />
       ) : (
@@ -65,7 +65,7 @@ function ServiceRow({ service, icon }) {
           <p className="mt-0.5 line-clamp-2 text-xs sm:text-sm text-gray-500">{description}</p>
         )}
         {duration && (
-          <p className="mt-1.5 flex items-center gap-1.5 text-xs sm:text-sm text-gray-500">
+          <p className="mt-1.5 flex items-center gap-1.5 whitespace-nowrap text-xs sm:text-sm text-gray-500">
             <ClockIcon />
             {duration}
           </p>
@@ -77,7 +77,7 @@ function ServiceRow({ service, icon }) {
       </div>
       <div className="hidden sm:block shrink-0 text-right">
         <p className="text-[11px] leading-none text-gray-500">เริ่มต้น</p>
-        <p className="mt-1 font-bold leading-none text-rose-600 text-lg sm:text-2xl">
+        <p className="mt-1 whitespace-nowrap font-bold leading-none text-rose-600 text-lg sm:text-2xl">
           {formatPrice(service.price)}
           <span className="ml-0.5 text-xs sm:text-sm font-semibold">บาท</span>
         </p>
@@ -188,7 +188,7 @@ export default function Services() {
       )}
 
       <div id="services-panel" role="tabpanel" aria-labelledby={`services-tab-${active.id}`}>
-        <ul className="grid gap-4 md:grid-cols-2">
+        <ul className="grid gap-4 lg:grid-cols-2">
           {visible.map((s) => (
             <ServiceRow key={s.id} service={s} icon={active.icon} />
           ))}

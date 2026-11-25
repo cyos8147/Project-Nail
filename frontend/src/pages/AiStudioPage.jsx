@@ -5,6 +5,7 @@ import AdvancedRecommend from '../components/AdvancedRecommend.jsx'
 import NailTryOn from '../components/NailTryOn/NailTryOn.jsx'
 import Footer from '../components/Footer.jsx'
 import DreamyBackground from '../components/DreamyBackground.jsx'
+import Reveal from '../components/Reveal.jsx'
 import { saveCarryDesign } from '../utils/carryDesign.js'
 
 export default function AiStudioPage() {
@@ -39,16 +40,16 @@ export default function AiStudioPage() {
         </header>
 
         <section className="max-w-4xl mx-auto px-4 sm:px-6 pt-12 pb-10 text-center">
-          <p className="text-xs tracking-[0.35em] uppercase text-rose-500">Lucky Salon AI Beauty Studio</p>
-          <h1 className="mt-4 font-serif text-5xl sm:text-6xl font-semibold text-gray-800 leading-[1.1] text-balance">
+          <p className="lucky-fade-up text-xs tracking-[0.35em] uppercase text-rose-500" style={{ animationDelay: '0.1s' }}>Lucky Salon AI Beauty Studio</p>
+          <h1 style={{ animationDelay: '0.25s' }} className="lucky-fade-up mt-4 font-serif text-5xl sm:text-6xl font-semibold text-gray-800 leading-[1.1] text-balance">
             Find your perfect look,
             <span className="block font-script text-6xl sm:text-7xl text-rose-500 leading-[1.15] mt-1 pb-1">with AI ♡</span>
           </h1>
-          <p className="text-gray-500 mt-5 max-w-xl mx-auto text-base leading-relaxed">
+          <p style={{ animationDelay: '0.4s' }} className="lucky-fade-up text-gray-500 mt-5 max-w-xl mx-auto text-base leading-relaxed">
             วิเคราะห์สีผิว ลองสีเล็บบนรูปมือจริงของคุณ และรับคำแนะนำลายที่เหมาะกับคุณ แล้วจองคิวต่อได้ทันที
           </p>
 
-          <ol className="mt-9 grid grid-cols-2 sm:grid-cols-4 gap-3 text-left">
+          <ol style={{ animationDelay: '0.55s' }} className="lucky-fade-up mt-9 grid grid-cols-2 sm:grid-cols-4 gap-3 text-left">
             {[
               ['🎨', 'วิเคราะห์สีผิว', 'รู้โทนผิวและสีที่เข้ากับคุณ'],
               ['💅', 'ลองสีเล็บ', 'ลงสีบนรูปมือจริงของคุณ'],
@@ -73,8 +74,8 @@ export default function AiStudioPage() {
         </section>
 
         <NailTryOn onBookDesign={handleBookDesign} onSkinAnalyzed={setSkin} />
-        <NailRecommendation skinTone={skin?.undertone ?? null} />
-        <AdvancedRecommend skinTone={skin?.undertone ?? null} />
+        <Reveal><NailRecommendation skinTone={skin?.undertone ?? null} /></Reveal>
+        <Reveal><AdvancedRecommend skinTone={skin?.undertone ?? null} /></Reveal>
 
         <Footer />
       </div>

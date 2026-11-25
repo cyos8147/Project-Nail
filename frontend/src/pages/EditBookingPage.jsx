@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import Header from '../components/Header.jsx'
 import Footer from '../components/Footer.jsx'
+import DreamyBackground from '../components/DreamyBackground.jsx'
 import DateTimePicker from '../components/booking/DateTimePicker.jsx'
 import CancelPolicyNote from '../components/CancelPolicyNote.jsx'
 import { getBookingStatus, getSavedPhone, getShopSettings, rescheduleBooking, savePhone } from '../api/client.js'
@@ -73,7 +74,8 @@ export default function EditBookingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-blush-50 text-gray-800">
+    <div className="relative isolate min-h-screen text-gray-800 overflow-x-clip">
+      <DreamyBackground />
       <Header />
       <section className="max-w-2xl mx-auto px-6 py-16">
         <div className="text-center mb-8">

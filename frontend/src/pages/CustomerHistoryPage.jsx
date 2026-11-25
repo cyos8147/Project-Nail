@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header.jsx'
 import Footer from '../components/Footer.jsx'
+import DreamyBackground from '../components/DreamyBackground.jsx'
 import {
   cancelBooking,
   createReview,
@@ -124,7 +125,8 @@ export default function CustomerHistoryPage() {
   const reviewedBookingIds = new Set((data?.reviews || []).map((r) => r.booking_id))
 
   return (
-    <div className="min-h-screen bg-blush-50 text-gray-800">
+    <div className="relative isolate min-h-screen text-gray-800 overflow-x-clip">
+      <DreamyBackground />
       <Header />
       <section className="max-w-3xl mx-auto px-6 py-16">
         <div className="text-center mb-8">

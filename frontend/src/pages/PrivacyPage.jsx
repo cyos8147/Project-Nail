@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getShopSettings } from '../api/client.js'
 import Header from '../components/Header.jsx'
 import Footer from '../components/Footer.jsx'
+import DreamyBackground from '../components/DreamyBackground.jsx'
 
 const UPDATED_AT = '30 กันยายน 2569'
 
@@ -46,7 +47,8 @@ export default function PrivacyPage() {
   const lineId = settings?.line_oa_basic_id?.trim()
 
   return (
-    <div className="min-h-screen bg-blush-50 text-gray-800">
+    <div className="relative isolate min-h-screen text-gray-800 overflow-x-clip">
+      <DreamyBackground />
       <Header />
 
       <main className="mx-auto max-w-3xl px-6 py-12">

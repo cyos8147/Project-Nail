@@ -64,18 +64,19 @@ export default function Hero() {
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-12 sm:pt-16 sm:pb-16 grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
         <div className="text-center lg:text-left">
-          <p className="text-xs sm:text-sm tracking-[0.35em] uppercase text-rose-500">Welcome to Lucky Salon</p>
-          <h1 className="mt-4 font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold text-gray-800 leading-[1.1] text-balance">
+          <p className="lucky-fade-up text-xs sm:text-sm tracking-[0.35em] uppercase text-rose-500" style={{ animationDelay: '0.1s' }}>Welcome to Lucky Salon</p>
+          <h1 style={{ animationDelay: '0.25s' }} className="lucky-fade-up mt-4 font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold text-gray-800 leading-[1.1] text-balance">
             More than just nails,
           </h1>
-          <p className="mt-1 font-script text-5xl sm:text-6xl lg:text-7xl text-rose-500 leading-tight">It's your style ♡</p>
-          <p className="mt-5 text-gray-600 text-base sm:text-lg">สวยได้ในแบบที่เป็นคุณ กับบริการทำเล็บคุณภาพ</p>
+          <p style={{ animationDelay: '0.45s' }} className="lucky-fade-up mt-1 font-script text-5xl sm:text-6xl lg:text-7xl text-rose-500 leading-tight">It's your style ♡</p>
+          <p style={{ animationDelay: '0.6s' }} className="lucky-fade-up mt-5 text-gray-600 text-base sm:text-lg">สวยได้ในแบบที่เป็นคุณ กับบริการทำเล็บคุณภาพ</p>
 
-          <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4">
+          <div style={{ animationDelay: '0.75s' }} className="lucky-fade-up mt-8 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4">
             <Link
               to="/booking"
-              className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-semibold px-8 py-3.5 rounded-full shadow-card transition-colors"
+              className="relative overflow-hidden inline-flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-semibold px-8 py-3.5 rounded-full shadow-card transition-colors"
             >
+              <span aria-hidden="true" className="lucky-shine pointer-events-none absolute inset-0" />
               จองคิวออนไลน์ →
             </Link>
             <a
@@ -87,7 +88,7 @@ export default function Hero() {
           </div>
         </div>
 
-        <div className="relative pt-4">
+        <div style={{ animationDelay: '0.5s' }} className="lucky-fade-up relative pt-4">
           <PopularStylesCard />
         </div>
       </div>

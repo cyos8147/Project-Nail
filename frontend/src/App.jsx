@@ -16,9 +16,12 @@ import AdminDesignsPage from './pages/admin/AdminDesignsPage.jsx'
 import AdminReviewsPage from './pages/admin/AdminReviewsPage.jsx'
 import AdminSettingsPage from './pages/admin/AdminSettingsPage.jsx'
 import AdminReportsPage from './pages/admin/AdminReportsPage.jsx'
+import SplashIntro from './components/SplashIntro.jsx'
 
 export default function App() {
   return (
+    <>
+    <SplashIntro />
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/booking" element={<BookingPage />} />
@@ -41,5 +44,6 @@ export default function App() {
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    </>
   )
 }
