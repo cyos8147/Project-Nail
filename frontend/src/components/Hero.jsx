@@ -37,8 +37,8 @@ function HeroHand() {
 export default function Hero() {
   return (
     <section id="home" className="relative scroll-mt-24">
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-10 sm:pt-10 lg:pt-2 lg:pb-6 grid items-center gap-10 md:grid-cols-2 lg:grid-cols-[1.1fr_0.8fr_1fr] lg:gap-6">
-        <div className="relative z-10 text-center md:text-left">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-10 sm:pt-10 lg:pt-2 lg:pb-6 grid items-center gap-10 lg:grid-cols-[1.1fr_0.8fr_1fr] lg:gap-6">
+        <div className="relative z-10 text-center lg:text-left">
           <h1 className="lucky-fade-up font-display text-[2.15rem]/[1.4] sm:text-5xl/[1.4] lg:text-[2.4rem]/[1.4] xl:text-[2.75rem]/[1.4] font-semibold text-[#3D2230] text-balance [text-shadow:0_2px_0_rgba(255,255,255,0.7)]">
             <span className="sm:whitespace-nowrap">ลองสีเล็บบนมือคุณ</span>
             <br />
@@ -48,11 +48,11 @@ export default function Hero() {
             It's your style
             <Icon name="heart" className="ml-2 inline-block h-8 w-8 sm:h-10 sm:w-10 -translate-y-2 text-rose-400" strokeWidth={1.5} />
           </p>
-          <p style={{ animationDelay: '0.16s' }} className="lucky-fade-up mt-3 max-w-[30rem] mx-auto md:mx-0 text-[#6E4255] text-lg leading-8">
+          <p style={{ animationDelay: '0.16s' }} className="lucky-fade-up mt-3 max-w-[30rem] mx-auto lg:mx-0 text-[#6E4255] text-lg leading-8">
             ดูราคาบริการ เลือกเวลาที่ว่าง และลองสีเล็บบนรูปมือของคุณเองได้ในเว็บเดียว
           </p>
 
-          <div style={{ animationDelay: '0.24s' }} className="lucky-fade-up mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center md:justify-start gap-3">
+          <div style={{ animationDelay: '0.24s' }} className="lucky-fade-up mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
             <Link to="/booking" className="btn-candy px-9 py-3.5 text-base">
               <Icon name="calendar" /> จองคิวออนไลน์
               <Icon name="arrow" className="h-4 w-4" />

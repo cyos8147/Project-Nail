@@ -76,7 +76,7 @@ export default function PopularStylesCard() {
   }
 
   return (
-    <div className="relative mx-auto w-full max-w-sm lg:max-w-none lg:rotate-[4deg]">
+    <div className="relative mx-auto w-full max-w-sm md:max-w-md lg:max-w-none lg:rotate-[4deg]">
       {/* โบว์ซาตินที่มุมการ์ด */}
       <SatinBow className="pointer-events-none absolute -top-16 -right-10 z-20 w-28 xl:w-36 rotate-[18deg]" />
       <GlassHeart className="pointer-events-none absolute -top-5 -left-3 z-20 w-10 -rotate-12" />
