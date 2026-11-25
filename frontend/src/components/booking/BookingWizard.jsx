@@ -21,6 +21,7 @@ import { pickNailService, shadeFromCarry, takeCarryDesign } from '../../utils/ca
 import { buildChain, chainParam, chainTotals } from '../../utils/multiBooking.js'
 import ZoomableImage from '../ZoomableImage.jsx'
 import { CrownBear } from '../Decor.jsx'
+import CarriedDesignThumb from './CarriedDesignThumb.jsx'
 
 const THAI_MONTHS_SHORT = [
   'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
@@ -449,11 +450,17 @@ export default function BookingWizard() {
                 <div className="mb-6 flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4">
                   {carriedDesign.reference_image_base64 ? (
                     <ZoomableImage src={carriedDesign.reference_image_base64} alt="รูปที่ลองสีจาก AI" caption={carriedDesign.summary} className="w-16 h-16 rounded-xl flex-shrink-0 bg-white" />
+                  ) : carriedDesign.source === 'design' && carriedDesign.nail_design_id ? (
+                    <CarriedDesignThumb designId={carriedDesign.nail_design_id} name={carriedDesign.nail_design_name} fallbackHex={carriedDesign.color_hex} />
                   ) : (
                     <span className="w-14 h-14 rounded-xl border border-black/10 flex-shrink-0" style={{ backgroundColor: carriedShade?.hex || carriedDesign.color_hex || '#F4C6CE' }} />
                   )}
                   <div className="flex-1 min-w-0 text-sm">
-                    <p className="font-semibold text-gray-800">จองต่อจาก AI Studio{carriedDesign.summary ? `: ${carriedDesign.summary}` : ''}</p>
+                    <p className="font-semibold text-[#4A2A37]">
+                      {carriedDesign.source === 'design'
+                        ? `ลายที่เลือก: ${carriedDesign.nail_design_name || carriedDesign.summary || 'ลายเล็บ'}`
+                        : `จองต่อจาก AI Studio${carriedDesign.summary ? `: ${carriedDesign.summary}` : ''}`}
+                    </p>
                     <p className="text-xs text-gray-500 mt-0.5">
                       {autoPickedName ? `เลือกบริการ “${autoPickedName}” ให้แล้ว เปลี่ยนเป็นบริการอื่นได้` : 'เลือกบริการที่ต้องการด้านล่าง'}
                     </p>

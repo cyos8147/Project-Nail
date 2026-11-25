@@ -40,10 +40,12 @@ export default function NextFreeSlot({ className = '' }) {
         const ordered = [...(cats || [])].sort((a, b) => (a.id === 'nail' ? -1 : b.id === 'nail' ? 1 : 0))
         const found = await Promise.all(
           ordered.map(async (c) => {
-            const durations = (services || []).filter((s) => s.category_id === c.id).map((s) => s.duration_minutes)
-            if (!durations.length) return null
-            const when = await findNext(c.id, Math.min(...durations)).catch(() => null)
-            return when ? { id: c.id, name: c.name, when } : null
+            const list = (services || []).filter((s) => s.category_id === c.id && s.duration_minutes)
+            if (!list.length) return null
+            const shortest = list.reduce((a, b) => (b.duration_minutes < a.duration_minutes ? b : a))
+            // API คิวว่างรับขั้นต่ำ 15 นาที
+            const when = await findNext(c.id, Math.max(15, shortest.duration_minutes)).catch(() => null)
+            return when ? { id: c.id, name: c.name, when, serviceId: shortest.id } : null
           }),
         )
         if (alive) setItems(found.filter(Boolean))
@@ -58,7 +60,7 @@ export default function NextFreeSlot({ className = '' }) {
 
   return (
     <Link
-      to="/booking"
+      to={`/booking?service=${encodeURIComponent(items[0].serviceId)}`}
       className={`glass group inline-flex max-w-full items-center gap-3 rounded-full py-2 pl-2 pr-4 text-left transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-rose-300 ${className}`}
     >
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/90 text-berry">

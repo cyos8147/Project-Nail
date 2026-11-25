@@ -126,7 +126,7 @@ export default function TryOnColorCard() {
             const inner = (
               <>
                 <span className="glass-btn h-10 w-10"><Icon name={t.icon} /></span>
-                <span className="text-[10px] font-display font-semibold leading-none text-[#4A2A37]">{t.label}</span>
+                <span className="text-[11px] font-display font-semibold leading-none text-[#4A2A37]">{t.label}</span>
               </>
             )
             const cls = 'flex flex-col items-center gap-1 rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-400'
@@ -140,7 +140,7 @@ export default function TryOnColorCard() {
       </div>
 
       <Link to="/ai" className="btn-candy mt-5 self-start px-7 py-3">
-        <Icon name="hand" /> ลองสีนี้บนมือคุณ
+        <Icon name="hand" /> ลองบนมือคุณ
       </Link>
     </div>
   )

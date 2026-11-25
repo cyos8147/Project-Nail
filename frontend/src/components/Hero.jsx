@@ -3,6 +3,7 @@ import PopularStylesCard from './PopularStylesCard.jsx'
 import Icon from './Icon.jsx'
 import NextFreeSlot from './NextFreeSlot.jsx'
 import { GlassHeart, Sparkle } from './Decor.jsx'
+import HeroDesignStrip from './HeroDesignStrip.jsx'
 
 // Hero ตามภาพตัวอย่าง: ข้อความซ้าย · รูปมือทำเล็บกลาง (มีวงโคจรประกาย) · การ์ดลายเล็บยอดนิยมขวา
 // รูปมือเป็นรูปชั่วคราว (public/photos/hero-hand.webp) เปลี่ยนเป็นผลงานจริงได้โดยใช้ชื่อไฟล์เดิม
@@ -65,7 +66,7 @@ export default function Hero() {
             <br />
             <span className="sm:whitespace-nowrap">แล้วจองคิวได้ทันที</span>
           </h1>
-          <p style={{ animationDelay: '0.08s' }} className="lucky-fade-up mt-1 font-script text-[3.2rem] sm:text-6xl xl:text-7xl text-rose-500 leading-tight [text-shadow:0_2px_0_rgba(255,255,255,0.8)]">
+          <p style={{ animationDelay: '0.08s' }} className="lucky-fade-up mt-1 font-script text-[3.2rem] sm:text-6xl xl:text-7xl text-[#D6336C] leading-tight [text-shadow:0_2px_0_rgba(255,255,255,0.8)]">
             It's your style
             <Icon name="heart" className="ml-2 inline-block h-8 w-8 sm:h-10 sm:w-10 -translate-y-2 text-rose-400" strokeWidth={1.5} />
           </p>
@@ -73,7 +74,9 @@ export default function Hero() {
             ดูราคาบริการ เลือกเวลาที่ว่าง และลองสีเล็บบนรูปมือของคุณเองได้ในเว็บเดียว
           </p>
 
-          <div style={{ animationDelay: '0.24s' }} className="lucky-fade-up mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
+          <HeroDesignStrip className="lucky-fade-up mt-6 sm:hidden" />
+
+          <div style={{ animationDelay: '0.24s' }} className="lucky-fade-up mt-8 hidden sm:flex flex-row items-center justify-center lg:justify-start gap-3">
             <Link to="/booking" className="btn-candy px-9 py-3.5 text-base">
               <Icon name="calendar" /> จองคิวเลย
               <Icon name="arrow" className="h-4 w-4" />

@@ -46,11 +46,11 @@ export default function PopularNails() {
         <div>
           <h2 className="flex items-center gap-2 font-display text-2xl font-semibold text-[#4A2A37]">
             <Sparkle className="h-6 w-6 text-rose-400" />
-            ลายเล็บยอดนิยม
+            ผลงานของร้าน
           </h2>
           <p className="mt-1 text-sm text-[#7A4A5E]">แตะลายที่ชอบเพื่อจองได้เลย</p>
         </div>
-        <Link to="/gallery" className="glass-btn gap-1.5 px-4 py-2 text-sm font-display font-semibold">
+        <Link to="/gallery" className="glass-btn min-h-[44px] gap-1.5 px-4 py-2 text-sm font-display font-semibold">
           ดูทั้งหมด <Icon name="arrow" className="h-4 w-4" />
         </Link>
       </div>
@@ -84,7 +84,7 @@ export default function PopularNails() {
                 </div>
                 <div className="flex items-baseline justify-between gap-2 px-1.5 pt-2 pb-1">
                   <p className="text-sm font-medium leading-snug text-[#4A2A37] line-clamp-2">{n.name}</p>
-                  {n.price != null && <p className="shrink-0 text-xs font-semibold text-berry tabular-nums">{Number(n.price).toLocaleString('th-TH')}฿</p>}
+                  {n.price != null && <p className="shrink-0 text-xs font-semibold text-berry tabular-nums">{Number(n.price).toLocaleString('th-TH')} บาท</p>}
                 </div>
               </button>
             </li>

@@ -77,7 +77,10 @@ const ChatIcon = () => (
   </Icon>
 )
 
-const ContactHeading = () => <SectionTitle title="ที่ตั้งและเวลาทำการ" sub="แวะมาหาเราได้เลย หรือทักไลน์ถามก่อนก็ได้" />
+// ร้านยังไม่ได้ใส่ LINE ก็ไม่ชวน "ทักไลน์" (ไม่สัญญาสิ่งที่ยังกดไม่ได้)
+const ContactHeading = ({ hasLine = false }) => (
+  <SectionTitle title="เวลาทำการและติดต่อร้าน" sub={hasLine ? 'แวะมาหาเราได้เลย หรือทักไลน์ถามก่อนก็ได้' : 'ดูวันเวลาเปิดร้านก่อนแวะมาได้ที่นี่'} />
+)
 
 export default function ShopInfo({ embedded = false }) {
   const sectionCls = embedded ? 'scroll-mt-24' : 'max-w-6xl mx-auto px-6 py-16 scroll-mt-16'
@@ -139,7 +142,7 @@ export default function ShopInfo({ embedded = false }) {
 
   return (
     <section id="contact" className={sectionCls}>
-      <ContactHeading />
+      <ContactHeading hasLine={Boolean(lineId)} />
 
       <div className={hasContact ? `grid gap-5 ${embedded ? '' : 'md:grid-cols-2'}` : embedded ? '' : 'mx-auto max-w-md'}>
         <div className="relative rounded-[24px] glass-solid p-6">

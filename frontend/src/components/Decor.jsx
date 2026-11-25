@@ -159,3 +159,25 @@ export function CrownBear({ className = '', style }) {
     </svg>
   )
 }
+
+// มงกุฎเล็ก (ใช้แทนตัวอักษร ♛ ในโลโก้และหน้าเปิด)
+export function Crown({ className = '', style }) {
+  return (
+    <svg viewBox="0 0 40 28" className={className} style={style} aria-hidden="true">
+      <path d="M4 24 L 2 6 L 12 14 L 20 2 L 28 14 L 38 6 L 36 24 Z" fill="currentColor" stroke="#fff" strokeOpacity="0.8" strokeWidth="1.5" strokeLinejoin="round" />
+      <circle cx="2" cy="6" r="2.4" fill="currentColor" />
+      <circle cx="20" cy="2" r="2.4" fill="currentColor" />
+      <circle cx="38" cy="6" r="2.4" fill="currentColor" />
+      <path d="M7 20 H 33" stroke="#fff" strokeOpacity="0.85" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+// หัวใจทึบเล็ก (ใช้แทนตัวอักษร ♥)
+export function SolidHeart({ className = '', style }) {
+  return (
+    <svg viewBox="0 0 24 22" className={className} style={style} aria-hidden="true">
+      <path d="M12 21C5 16 1 12 1 7.2 1 3.8 3.6 1.5 6.6 1.5c2.1 0 3.9 1.1 5.4 3 1.5-1.9 3.3-3 5.4-3 3 0 5.6 2.3 5.6 5.7C23 12 19 16 12 21z" fill="currentColor" />
+    </svg>
+  )
+}
