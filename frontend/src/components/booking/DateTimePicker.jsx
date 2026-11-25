@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getAvailability, getChainAvailability } from '../../api/client.js'
 import { CLOSED_WEEKDAY } from '../../data/bookingData.js'
+import Icon from '../Icon.jsx'
 
 const THAI_MONTHS = [
   'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
@@ -110,9 +111,10 @@ export default function DateTimePicker({
               type="button"
               onClick={goPrevMonth}
               disabled={isBeforeCurrentMonth}
-              className="btn-candy-soft w-8 h-8 !p-0"
+              aria-label="เดือนก่อนหน้า"
+              className="glass-btn w-9 h-9"
             >
-              ‹
+              <Icon name="chevronLeft" />
             </button>
             <p className="font-display font-semibold text-gray-800">
               {THAI_MONTHS[viewMonth]} {viewYear + 543}
@@ -120,9 +122,10 @@ export default function DateTimePicker({
             <button
               type="button"
               onClick={goNextMonth}
-              className="btn-candy-soft w-8 h-8 !p-0"
+              aria-label="เดือนถัดไป"
+              className="glass-btn w-9 h-9"
             >
-              ›
+              <Icon name="chevronRight" />
             </button>
           </div>
 

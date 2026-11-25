@@ -4,10 +4,11 @@ import { getServiceCategories, getServices } from '../api/client.js'
 import ServiceArt from './ServiceArt.jsx'
 import { Bone, SlowNote, useSlow } from './Skeleton.jsx'
 import Icon from './Icon.jsx'
+import SectionTitle from './SectionTitle.jsx'
 
 const FALLBACK_CATEGORIES = [
-  { id: 'hair', name: 'ทำผม', icon: '💇‍♀️' },
-  { id: 'nail', name: 'ทำเล็บ', icon: '💅' },
+  { id: 'hair', name: 'ทำผม' },
+  { id: 'nail', name: 'ทำเล็บ' },
 ]
 
 const FALLBACK_SERVICES = [
@@ -55,7 +56,7 @@ function ClockIcon() {
   )
 }
 
-function ServiceRow({ service, icon }) {
+function ServiceRow({ service }) {
   const name = service.name.trim()
   const description = service.description?.trim()
   const duration = formatDuration(service.duration_minutes)
@@ -130,10 +131,7 @@ export default function Services() {
     .filter((t) => t.items.length > 0)
   const active = tabs.find((t) => t.id === activeId) || tabs[0]
   const header = (
-    <div className="text-center mb-8">
-      <h2 className="font-display text-3xl font-semibold text-gray-800">บริการของร้าน</h2>
-      <p className="text-gray-500 mt-2">เลือกหมวดที่สนใจ แล้วจองคิวได้ทันที</p>
-    </div>
+    <SectionTitle title="บริการของร้าน" sub="เลือกหมวดที่สนใจ แล้วจองคิวได้ทันที" />
   )
 
   // ระหว่างโหลด: โครงการ์ดแทนข้อมูลตัวอย่าง (ข้อมูลตัวอย่างใช้เมื่อโหลดไม่สำเร็จเท่านั้น จะได้ไม่เห็นราคาที่ไม่ใช่ของจริง)
@@ -220,7 +218,7 @@ export default function Services() {
       <div id="services-panel" role="tabpanel" aria-labelledby={`services-tab-${active.id}`}>
         <ul className="grid gap-4 md:grid-cols-2">
           {visible.map((s) => (
-            <ServiceRow key={s.id} service={s} icon={active.icon} />
+            <ServiceRow key={s.id} service={s} />
           ))}
         </ul>
 
@@ -253,7 +251,7 @@ export default function Services() {
         >
           <Icon name="calendar" />
           จองคิวเลย
-          <span aria-hidden="true">›</span>
+          <Icon name="chevronRight" className="h-4 w-4" />
         </Link>
       </div>
     </section>

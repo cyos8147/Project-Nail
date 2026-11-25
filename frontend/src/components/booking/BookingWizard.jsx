@@ -20,6 +20,7 @@ import {
 import { pickNailService, shadeFromCarry, takeCarryDesign } from '../../utils/carryDesign.js'
 import { buildChain, chainParam, chainTotals } from '../../utils/multiBooking.js'
 import ZoomableImage from '../ZoomableImage.jsx'
+import { CrownBear } from '../Decor.jsx'
 
 const THAI_MONTHS_SHORT = [
   'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
@@ -325,7 +326,7 @@ export default function BookingWizard() {
     return (
       <section id="booking" className="max-w-2xl mx-auto px-6 py-16 text-center">
         <div className="glass-solid rounded-3xl p-10">
-          <div className="text-5xl mb-4">🎉</div>
+          <CrownBear className="mx-auto mb-2 w-28" />
           <h2 className="font-display text-2xl font-semibold text-gray-800">จองคิวสำเร็จแล้ว</h2>
           <p className="text-gray-500 mt-2">ขอบคุณที่ใช้บริการ Lucky Salon</p>
 
@@ -385,7 +386,7 @@ export default function BookingWizard() {
                 }}
                 className="mt-3 w-full bg-white border border-amber-300 hover:bg-amber-100 text-amber-800 text-sm font-semibold py-2.5 rounded-full transition-colors"
               >
-                {codeCopied ? '✓ คัดลอกรหัสคิวแล้ว' : `คัดลอกรหัสคิว ${bookingResult.booking_code}`}
+                {codeCopied ? 'คัดลอกรหัสคิวแล้ว' : `คัดลอกรหัสคิว ${bookingResult.booking_code}`}
               </button>
             )}
           </div>

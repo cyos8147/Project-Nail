@@ -1,4 +1,5 @@
 import { MAX_SERVICES, addableServices, buildChain, chainTotals, formatMinutes } from '../../utils/multiBooking.js'
+import Icon from '../Icon.jsx'
 
 const CATEGORY_LABEL = { hair: 'ทำผม', nail: 'ทำเล็บ' }
 
@@ -35,9 +36,9 @@ export default function ExtraServicesPicker({ main, extras, setExtras, allServic
             </div>
             {i > 0 && (
               <div className="flex items-center gap-1">
-                <button type="button" onClick={() => move(i - 1, -1)} disabled={i === 1} aria-label={`เลื่อน ${c.service.name} ขึ้น`} className="btn-candy-soft w-9 h-9 !p-0">↑</button>
-                <button type="button" onClick={() => move(i - 1, 1)} disabled={i === chain.length - 1} aria-label={`เลื่อน ${c.service.name} ลง`} className="btn-candy-soft w-9 h-9 !p-0">↓</button>
-                <button type="button" onClick={() => setExtras(extras.filter((s) => s.id !== c.service.id))} aria-label={`เอา ${c.service.name} ออก`} className="btn-candy-soft w-9 h-9 !p-0 hover:!text-red-500">✕</button>
+                <button type="button" onClick={() => move(i - 1, -1)} disabled={i === 1} aria-label={`เลื่อน ${c.service.name} ขึ้น`} className="glass-btn w-9 h-9"><Icon name="arrowUp" className="h-4 w-4" /></button>
+                <button type="button" onClick={() => move(i - 1, 1)} disabled={i === chain.length - 1} aria-label={`เลื่อน ${c.service.name} ลง`} className="glass-btn w-9 h-9"><Icon name="arrowDown" className="h-4 w-4" /></button>
+                <button type="button" onClick={() => setExtras(extras.filter((s) => s.id !== c.service.id))} aria-label={`เอา ${c.service.name} ออก`} className="glass-btn w-9 h-9 hover:!text-red-500"><Icon name="x" className="h-4 w-4" /></button>
               </div>
             )}
             {i === 0 && <span className="text-[11px] text-rose-600 font-semibold bg-rose-50 px-2 py-1 rounded-full">บริการหลัก</span>}

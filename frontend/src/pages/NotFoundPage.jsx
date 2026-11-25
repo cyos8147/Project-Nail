@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import DreamyBackground from '../components/DreamyBackground.jsx'
+import { CrownBear } from '../components/Decor.jsx'
 
 export default function NotFoundPage() {
   useEffect(() => {
@@ -12,12 +13,12 @@ export default function NotFoundPage() {
   }, [])
 
   return (
-    <div className="relative isolate flex min-h-screen flex-col items-center justify-center overflow-x-clip px-6 text-center text-gray-800">
+    <div className="relative isolate flex min-h-screen flex-col items-center justify-center overflow-x-clip px-6 text-center text-[#3D2230]">
       <DreamyBackground />
-      <img src="/logo.jpg" alt="Lucky Salon" className="h-20 w-20 rounded-full object-cover shadow-soft" />
-      <p className="mt-6 font-display text-6xl font-semibold text-rose-500">404</p>
+      <CrownBear className="w-36 sm:w-44" />
+      <p className="mt-2 font-display text-6xl font-semibold text-rose-500 [text-shadow:0_3px_0_#fff]">404</p>
       <h1 className="mt-2 font-display text-2xl font-semibold">ไม่พบหน้าที่คุณกำลังหา</h1>
-      <p className="mt-3 max-w-sm text-gray-500">
+      <p className="mt-3 max-w-sm text-[#7A4A5E]">
         ลิงก์อาจพิมพ์ไม่ครบหรือหน้านี้ถูกย้ายไปแล้ว ลองกลับไปหน้าแรก หรือจองคิวได้เลย
       </p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -29,7 +30,7 @@ export default function NotFoundPage() {
         </Link>
         <Link
           to="/booking"
-          className="btn-candy-soft px-7 py-3"
+          className="glass inline-flex items-center rounded-full px-7 py-3 font-display font-semibold text-rose-600"
         >
           จองคิว
         </Link>

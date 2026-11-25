@@ -26,16 +26,16 @@ export default function AiStudioPage() {
       <DreamyBackground />
 
       <div className="relative z-10">
-        <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-md border-b border-[#1f1b16]/[0.06] shadow-hair">
+        <header className="sticky top-0 z-50 bg-[#FCE6EE]/55 backdrop-blur-md">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
             <Link to="/" className="pt-2" aria-label="Lucky Salon หน้าแรก">
               <BrandLogo subtitle={'AI Beauty Studio'} />
             </Link>
             <Link
               to="/"
-              className="btn-candy-soft text-sm px-4 py-2"
+              className="glass-btn gap-1.5 text-sm font-display font-semibold px-4 py-2"
             >
-              ← กลับหน้าแรก
+              <Icon name="chevronLeft" className="h-4 w-4" /> กลับหน้าแรก
             </Link>
           </div>
         </header>

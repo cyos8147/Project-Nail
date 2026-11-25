@@ -6,7 +6,11 @@ import { GlassHeart, Sparkle } from './Decor.jsx'
 // Hero ตามภาพตัวอย่าง: ข้อความซ้าย · รูปมือทำเล็บกลาง (มีวงโคจรประกาย) · การ์ดลายเล็บยอดนิยมขวา
 // รูปมือเป็นรูปชั่วคราว (public/photos/hero-hand.webp) เปลี่ยนเป็นผลงานจริงได้โดยใช้ชื่อไฟล์เดิม
 
+const ORBIT = 'M8 150 A 292 96 0 1 0 592 150 A 292 96 0 1 0 8 150'
+const prefersReduced = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
 function HeroHand() {
+  const reduced = prefersReduced()
   return (
     <div aria-hidden="true" className="relative h-[520px] xl:h-[580px] -mx-16 xl:-mx-24 pointer-events-none select-none">
       <img
@@ -22,11 +26,16 @@ function HeroHand() {
         }}
       />
       {/* วงโคจรเส้นแสงรอบมือ */}
-      <svg viewBox="0 0 600 300" className="absolute left-[-6%] top-[44%] w-[112%] -rotate-[14deg]" fill="none">
-        <ellipse cx="300" cy="150" rx="292" ry="96" stroke="#fff" strokeOpacity="0.9" strokeWidth="2.5" />
-        <ellipse cx="300" cy="150" rx="292" ry="96" stroke="#F9B4CE" strokeOpacity="0.6" strokeWidth="7" />
+      {/* วงโคจร: ตอนเปิดหน้าเส้นแสงค่อย ๆ วาดขึ้น แล้วประกายดาววิ่งตามวงหนึ่งรอบ (ครั้งเดียว ไม่วนซ้ำ) */}
+      <svg viewBox="0 0 600 300" className="absolute left-[-6%] top-[44%] w-[112%] -rotate-[14deg] overflow-visible" fill="none">
+        <path d={ORBIT} pathLength="1" className="lucky-orbit-draw" stroke="#F9B4CE" strokeOpacity="0.6" strokeWidth="7" />
+        <path d={ORBIT} pathLength="1" className="lucky-orbit-draw" stroke="#fff" strokeOpacity="0.9" strokeWidth="2.5" />
+        <g className={reduced ? 'lucky-orbit-star--still' : undefined} opacity={reduced ? 1 : 0}>
+          <path d="M0 -18 C 1.5 -6 6 -1.5 18 0 C 6 1.5 1.5 6 0 18 C -1.5 6 -6 1.5 -18 0 C -6 -1.5 -1.5 -6 0 -18 Z" fill="#fff" style={{ filter: 'drop-shadow(0 0 6px #fff)' }} />
+          {!reduced && <set attributeName="opacity" to="1" begin="0.9s" fill="freeze" />}
+          {!reduced && <animateMotion dur="1.8s" begin="0.9s" fill="freeze" keyPoints="0;0.62" keyTimes="0;1" calcMode="spline" keySplines="0.22 1 0.36 1" path={ORBIT} />}
+        </g>
       </svg>
-      <Sparkle className="absolute left-[14%] top-[64%] w-9 text-white drop-shadow-[0_0_10px_rgba(255,255,255,1)]" />
       <Sparkle className="absolute right-[18%] top-[14%] w-5 text-white drop-shadow-[0_0_8px_rgba(255,255,255,1)]" />
       <GlassHeart className="absolute right-[12%] top-[2%] w-20 rotate-12" />
       <GlassHeart className="absolute left-[30%] bottom-[4%] w-10 -rotate-12" />
@@ -37,6 +46,17 @@ function HeroHand() {
 export default function Hero() {
   return (
     <section id="home" className="relative scroll-mt-24">
+      {/* มือถือ/แท็บเล็ต: รูปมือทำเล็บจาง ๆ อยู่หลังหัวข้อ ให้บรรยากาศเหมือนภาพตัวอย่าง */}
+      <img
+        src="/photos/hero-hand.webp"
+        alt=""
+        aria-hidden="true"
+        className="lg:hidden pointer-events-none absolute right-[-18%] sm:right-[-4%] top-0 h-[440px] sm:h-[520px] w-auto opacity-40 object-cover"
+        style={{
+          WebkitMaskImage: 'radial-gradient(ellipse 50% 50% at 50% 55%, #000 35%, transparent 78%)',
+          maskImage: 'radial-gradient(ellipse 50% 50% at 50% 55%, #000 35%, transparent 78%)',
+        }}
+      />
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-10 sm:pt-10 lg:pt-2 lg:pb-6 grid items-center gap-10 lg:grid-cols-[1.1fr_0.8fr_1fr] lg:gap-6">
         <div className="relative z-10 text-center lg:text-left">
           <h1 className="lucky-fade-up font-display text-[2.15rem]/[1.4] sm:text-5xl/[1.4] lg:text-[2.4rem]/[1.4] xl:text-[2.75rem]/[1.4] font-semibold text-[#3D2230] text-balance [text-shadow:0_2px_0_rgba(255,255,255,0.7)]">

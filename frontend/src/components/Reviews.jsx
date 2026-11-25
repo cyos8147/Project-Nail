@@ -2,19 +2,20 @@ import { useEffect, useState } from 'react'
 import { getReviews } from '../api/client.js'
 import { Link } from 'react-router-dom'
 import { Bone } from './Skeleton.jsx'
+import StarRow from './Stars.jsx'
+import SectionTitle from './SectionTitle.jsx'
+import Icon from './Icon.jsx'
+import { SatinBow } from './Decor.jsx'
 
 // แสดงเฉพาะรีวิวจริงจากระบบ (ไม่มีรีวิวตัวอย่างที่แต่งขึ้น)
 
 function Stars({ count }) {
   return (
-    <div className="text-gold text-sm">
-      {'★'.repeat(count)}
-      <span className="text-blush-200">{'★'.repeat(5 - count)}</span>
-    </div>
+    <StarRow count={count} />
   )
 }
 
-export default function Reviews() {
+export default function Reviews({ embedded = false }) {
   const [reviews, setReviews] = useState(null) // null = กำลังโหลด
 
   useEffect(() => {
@@ -37,26 +38,27 @@ export default function Reviews() {
   }, [])
 
   return (
-    <section id="reviews" className="py-16 scroll-mt-20">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-10">
-          <h2 className="font-display text-3xl font-semibold text-gray-800">รีวิวจากลูกค้า</h2>
-          <p className="text-gray-600 mt-2">จากลูกค้าที่ใช้บริการและรีวิวผ่านเว็บนี้</p>
-        </div>
+    <section id="reviews" className={`scroll-mt-24 ${embedded ? '' : 'py-16'}`}>
+      <div className={embedded ? '' : 'max-w-6xl mx-auto px-4 sm:px-6'}>
+        <SectionTitle title="รีวิวจากลูกค้า" sub="จากลูกค้าที่ใช้บริการและรีวิวผ่านเว็บนี้" />
 
         {reviews && reviews.length === 0 && (
-          <div className="mx-auto max-w-md rounded-[24px] glass p-8 text-center">
-            <p className="font-display font-semibold text-gray-800">ยังไม่มีรีวิว</p>
-            <p className="mt-2 text-sm text-gray-600">ใช้บริการแล้ว รีวิวได้ที่หน้าประวัติของฉัน</p>
+          <div className={`relative rounded-[24px] glass p-8 text-center ${embedded ? '' : 'mx-auto max-w-md'}`}>
+            <SatinBow className="pointer-events-none absolute -top-7 -right-5 w-20 rotate-[16deg]" />
+            <span className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/80 text-rose-400 shadow-[inset_0_1px_0_#fff,0_8px_18px_-10px_rgba(150,40,85,0.55)]">
+              <Icon name="heart" className="h-7 w-7" />
+            </span>
+            <p className="font-display text-lg font-semibold text-[#4A2A37]">ยังไม่มีรีวิว</p>
+            <p className="mt-1 text-sm text-[#7A4A5E]">ใช้บริการแล้ว มาเล่าให้เราฟังได้ที่หน้าประวัติของฉัน</p>
             <Link to="/history" className="btn-candy-soft mt-5 px-5 py-2.5 text-sm">
               ไปที่ประวัติของฉัน
             </Link>
           </div>
         )}
 
-        <div className="grid md:grid-cols-3 gap-6" aria-busy={!reviews}>
+        <div className={`grid gap-5 ${embedded ? 'sm:grid-cols-2' : 'md:grid-cols-3'}`} aria-busy={!reviews}>
           {!reviews &&
-            Array.from({ length: 3 }, (_, i) => (
+            Array.from({ length: embedded ? 2 : 3 }, (_, i) => (
               <div key={i} aria-hidden="true" className="rounded-[24px] glass p-6 space-y-3">
                 <div className="flex items-center gap-3">
                   <Bone className="w-10 h-10 !rounded-full" />

@@ -215,7 +215,20 @@ html { scrollbar-color: #F09BBD transparent; scrollbar-width: thin; }
   animation: lucky-shine 3.5s linear infinite;
 }
 
+/* เปิดหน้าแรก: วงโคจรวาดเส้น + โบว์เด้งเข้า (ครั้งเดียว) */
+@keyframes lucky-orbit-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.lucky-orbit-draw { stroke-dasharray: 1; stroke-dashoffset: 0; animation: lucky-orbit-draw 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both; }
+.lucky-orbit-star--still { transform: translate(8px, 150px); }
+@keyframes lucky-bow-pop {
+  0% { opacity: 0; transform: scale(0.4) rotate(-20deg); }
+  65% { opacity: 1; transform: scale(1.08) rotate(4deg); }
+  100% { opacity: 1; transform: none; }
+}
+.lucky-bow-pop { animation: lucky-bow-pop 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.6s both; transform-origin: 40% 40%; }
+
 @media (prefers-reduced-motion: reduce) {
+  .lucky-orbit-draw,
+  .lucky-bow-pop { animation: none !important; }
   .lucky-3d-inner { transform: none !important; transition: none !important; }
   .lucky-fade-up,
   .lucky-splash__word,

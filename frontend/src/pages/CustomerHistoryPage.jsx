@@ -17,6 +17,7 @@ import {
 } from '../api/client.js'
 import { isTooLateToChange } from '../utils/cancelPolicy.js'
 import ZoomableImage from '../components/ZoomableImage.jsx'
+import Stars, { Star } from '../components/Stars.jsx'
 
 const STATUS_LABEL = {
   pending: 'รอยืนยัน', confirmed: 'ยืนยันแล้ว', completed: 'เสร็จสิ้น', cancelled: 'ยกเลิกแล้ว', no_show: 'ไม่มาตามนัด',
@@ -54,8 +55,8 @@ function ReviewForm({ booking, phone, onSubmitted }) {
       <p className="text-xs font-medium text-gray-700 mb-2">ให้คะแนนบริการนี้</p>
       <div className="flex gap-1 mb-3">
         {[1, 2, 3, 4, 5].map((n) => (
-          <button key={n} type="button" onClick={() => setRating(n)} className={`text-2xl ${n <= rating ? 'text-gold' : 'text-blush-200'}`}>
-            ★
+          <button key={n} type="button" onClick={() => setRating(n)} aria-label={`${n} ดาว`} aria-pressed={n <= rating} className="rounded-full p-0.5 transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-400">
+            <Star filled={n <= rating} className="h-7 w-7" />
           </button>
         ))}
       </div>
@@ -278,7 +279,7 @@ export default function CustomerHistoryPage() {
                 <div className="space-y-3">
                   {data.reviews.map((r) => (
                     <div key={r.id} className="glass-solid rounded-[24px] p-4">
-                      <p className="text-gold text-sm">{'★'.repeat(r.rating)}<span className="text-blush-200">{'★'.repeat(5 - r.rating)}</span></p>
+                      <Stars count={r.rating} />
                       {r.comment && <p className="text-sm text-gray-600 mt-1">{r.comment}</p>}
                     </div>
                   ))}

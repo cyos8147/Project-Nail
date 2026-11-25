@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { colorShades } from '../../data/bookingData.js'
 import { aiAnalyzeStyle, fileToBase64 } from '../../api/client.js'
 import ZoomableImage from '../ZoomableImage.jsx'
+import Icon from '../Icon.jsx'
 
 export default function ServiceDetails({
   category,
@@ -56,8 +57,8 @@ export default function ServiceDetails({
             <p className="text-sm font-medium text-gray-800">ลายที่เลือกจาก AI: {carriedDesign.nail_design_name}</p>
             <p className="text-xs text-gray-400">จะแนบไปกับการจองคิวนี้โดยอัตโนมัติ</p>
           </div>
-          <button type="button" onClick={onClearCarriedDesign} className="text-xs text-gray-400 hover:text-rose-500">
-            ✕ ล้าง
+          <button type="button" onClick={onClearCarriedDesign} className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-rose-500">
+            <Icon name="x" className="h-3.5 w-3.5" /> ล้าง
           </button>
         </div>
       )}
@@ -74,8 +75,8 @@ export default function ServiceDetails({
             <p className="text-sm font-medium text-gray-800">ใช้รูปที่ลองสีจาก AI{carriedDesign.summary ? `: ${carriedDesign.summary}` : ''}</p>
             <p className="text-xs text-gray-400">จะแนบไปกับการจองคิวนี้โดยอัตโนมัติ</p>
           </div>
-          <button type="button" onClick={onClearCarriedDesign} className="text-xs text-gray-400 hover:text-rose-500">
-            ✕ ล้าง
+          <button type="button" onClick={onClearCarriedDesign} className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-rose-500">
+            <Icon name="x" className="h-3.5 w-3.5" /> ล้าง
           </button>
         </div>
       )}

@@ -1,3 +1,4 @@
+import Icon from '../Icon.jsx'
 export default function StepIndicator({ steps, currentStep }) {
   return (
     <div className="flex items-center justify-center gap-2 mb-10 flex-wrap">
@@ -17,7 +18,7 @@ export default function StepIndicator({ steps, currentStep }) {
                     : 'bg-blush-100 text-gray-400'
                 }`}
               >
-                {isDone ? '✓' : stepNum}
+                {isDone ? <Icon name="check" className="h-4 w-4" strokeWidth={2.5} /> : stepNum}
               </div>
               <span
                 className={`text-xs font-medium hidden sm:inline ${

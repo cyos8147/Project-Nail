@@ -5,6 +5,7 @@ import { nailDesigns as catalog } from '../data/nailCatalog.js'
 import { percentToScore, scoreLabel } from '../utils/recommendScore.js'
 import { saveCarryDesign } from '../utils/carryDesign.js'
 import NailThumb from './NailThumb.jsx'
+import { Star } from './Stars.jsx'
 
 const TONE_LABEL = { warm: 'โทนอุ่น', cool: 'โทนเย็น', neutral: 'โทนกลาง' }
 const ACCENTS = ['#EC4C82', '#D4AF37', '#6B3FA0', '#8B5E3C', '#3B8FA6']
@@ -87,7 +88,7 @@ export default function NailRecommendation({ skinTone }) {
                 <div className="flex items-baseline justify-between">
                   <span className="text-[11px] text-gray-400">{personalized ? 'คะแนนที่ AI แนะนำ' : 'คะแนนความนิยม'}</span>
                   <span className="text-sm font-bold text-rose-600">
-                    ★ {scoreLabel(d.score)}<span className="text-[11px] font-medium text-gray-400">/10</span>
+                    <Star className="h-3.5 w-3.5" /> {scoreLabel(d.score)}<span className="text-[11px] font-medium text-gray-400">/10</span>
                   </span>
                 </div>
                 <div className="w-full h-1.5 bg-blush-100 rounded-full overflow-hidden mt-1">

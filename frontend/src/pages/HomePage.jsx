@@ -1,7 +1,6 @@
 import Header from '../components/Header.jsx'
 import Hero from '../components/Hero.jsx'
 import TryOnColorCard from '../components/TryOnColorCard.jsx'
-import FeatureHighlights from '../components/FeatureHighlights.jsx'
 import Services from '../components/Services.jsx'
 import PopularNails from '../components/PopularNails.jsx'
 import Reviews from '../components/Reviews.jsx'
@@ -59,10 +58,13 @@ export default function HomePage() {
         </section>
       </Reveal>
       <Reveal><HighlightBar /></Reveal>
-      <Reveal><FeatureHighlights /></Reveal>
       <Reveal><Services /></Reveal>
-      <Reveal><Reviews /></Reveal>
-      <Reveal><ShopInfo /></Reveal>
+      <Reveal>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 grid gap-14 lg:gap-8 lg:grid-cols-2 items-start">
+          <Reviews embedded />
+          <ShopInfo embedded />
+        </div>
+      </Reveal>
       <Footer />
       <MobileStickyBar />
     </div>

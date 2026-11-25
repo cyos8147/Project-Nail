@@ -8,6 +8,7 @@ import { aiRecommend, aiRecommendAccept, getSavedPhone } from '../api/client.js'
 import { toRecommendScores, scoreLabel } from '../utils/recommendScore.js'
 import { saveCarryDesign } from '../utils/carryDesign.js'
 import NailThumb from './NailThumb.jsx'
+import { Star } from './Stars.jsx'
 
 const SKIN_TONES = [
   { id: 'warm', label: 'ผิวโทนอุ่น' },
@@ -173,7 +174,7 @@ export default function AdvancedRecommend({ skinTone = null }) {
                       <p className="text-xs text-gray-400">{r.design.duration_minutes} นาที · {Math.round(r.design.price)} บาท</p>
                       <p className="text-xs mt-0.5">
                         <span className="text-gray-400">คะแนนที่ AI แนะนำ </span>
-                        <span className="font-bold text-rose-600">★ {scoreLabel(scores[i])}</span>
+                        <span className="inline-flex items-center gap-1 font-bold text-rose-600"><Star className="h-3.5 w-3.5" /> {scoreLabel(scores[i])}</span>
                         <span className="text-gray-400">/10</span>
                       </p>
                     </div>

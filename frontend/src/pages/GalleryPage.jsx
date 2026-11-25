@@ -69,8 +69,8 @@ function Lightbox({ designs, index, onClose, onStep, onBook }) {
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="relative w-full max-w-3xl">
-        <button ref={closeRef} type="button" onClick={onClose} aria-label="ปิด" className="btn-candy-soft absolute -top-3 -right-1 sm:-right-3 z-10 w-11 h-11 !p-0 text-xl">
-          ✕
+        <button ref={closeRef} type="button" onClick={onClose} aria-label="ปิด" className="glass-btn absolute -top-3 -right-1 sm:-right-3 z-10 w-11 h-11">
+          <Icon name="x" />
         </button>
 
         <div
@@ -104,16 +104,16 @@ function Lightbox({ designs, index, onClose, onStep, onBook }) {
           </div>
           <div className="flex items-center gap-2">
             {many && (
-              <button type="button" onClick={() => onStep(-1)} aria-label="ลายก่อนหน้า" className="btn-candy-soft w-11 h-11 !p-0 text-xl">
-                ‹
+              <button type="button" onClick={() => onStep(-1)} aria-label="ลายก่อนหน้า" className="glass-btn w-11 h-11">
+                <Icon name="chevronLeft" />
               </button>
             )}
             <button type="button" onClick={() => onBook(d)} className="btn-candy px-6 py-3">
               <Icon name="calendar" /> จองลายนี้
             </button>
             {many && (
-              <button type="button" onClick={() => onStep(1)} aria-label="ลายถัดไป" className="btn-candy-soft w-11 h-11 !p-0 text-xl">
-                ›
+              <button type="button" onClick={() => onStep(1)} aria-label="ลายถัดไป" className="glass-btn w-11 h-11">
+                <Icon name="chevronRight" />
               </button>
             )}
           </div>
@@ -222,7 +222,7 @@ export default function GalleryPage() {
               <div className="relative aspect-square overflow-hidden rounded-[12px]">
                 <DesignImage design={d} className="w-full h-full transition-opacity duration-150 group-hover:opacity-90" />
                 <span aria-hidden="true" className="absolute bottom-2 right-2 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-display font-semibold text-rose-600 opacity-0 transition-opacity group-hover:opacity-100">
-                  ดูเต็มจอ ⤢
+                  <Icon name="expand" className="inline h-3.5 w-3.5 -mt-0.5" /> ดูเต็มจอ
                 </span>
               </div>
               <div className="px-2 pt-2.5 pb-1">

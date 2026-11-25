@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { getPublicHolidays, getShopSettings } from '../api/client.js'
 import { longDate } from '../utils/dashboardFormat.js'
 import { toWeekRows } from '../utils/shopHours.js'
+import SectionTitle from './SectionTitle.jsx'
+import { SatinBow } from './Decor.jsx'
 
 // ลิงก์โซเชียลของร้าน ใส่เพิ่มได้ตรงนี้ เช่น { label: 'Facebook', href: 'https://facebook.com/ชื่อเพจ' }
 // ถ้าปล่อยว่างไว้จะไม่แสดงส่วนนี้
@@ -75,14 +77,10 @@ const ChatIcon = () => (
   </Icon>
 )
 
-const ContactHeading = () => (
-  <div className="text-center mb-10">
-    <h2 className="font-display text-3xl font-semibold text-gray-800">ที่ตั้งและเวลาทำการ</h2>
-    <p className="text-gray-500 mt-2">แวะมาหาเราได้เลย หรือทักไลน์ถามก่อนก็ได้</p>
-  </div>
-)
+const ContactHeading = () => <SectionTitle title="ที่ตั้งและเวลาทำการ" sub="แวะมาหาเราได้เลย หรือทักไลน์ถามก่อนก็ได้" />
 
-export default function ShopInfo() {
+export default function ShopInfo({ embedded = false }) {
+  const sectionCls = embedded ? 'scroll-mt-24' : 'max-w-6xl mx-auto px-6 py-16 scroll-mt-16'
   const [settings, setSettings] = useState(null)
   const [failed, setFailed] = useState(false)
   const [holidays, setHolidays] = useState([]) // วันหยุดพิเศษที่ยังไม่ถึง (โหลดไม่ได้ก็ไม่เป็นไร แค่ไม่แสดงส่วนนี้)
@@ -118,7 +116,7 @@ export default function ShopInfo() {
   // เพราะอาจไม่ตรงกับจริง
   if (!settings) {
     return (
-      <section id="contact" className="max-w-6xl mx-auto px-6 py-16 scroll-mt-16">
+      <section id="contact" className={sectionCls}>
         <ContactHeading />
         <p className="mx-auto max-w-md rounded-[24px] glass-solid p-6 text-center text-gray-500">
           {failed ? 'โหลดเวลาทำการไม่สำเร็จ รีเฟรชหน้านี้อีกครั้ง' : 'กำลังโหลดเวลาทำการและช่องทางติดต่อ...'}
@@ -140,11 +138,12 @@ export default function ShopInfo() {
     : null
 
   return (
-    <section id="contact" className="max-w-6xl mx-auto px-6 py-16 scroll-mt-16">
+    <section id="contact" className={sectionCls}>
       <ContactHeading />
 
-      <div className={hasContact ? 'grid gap-5 md:grid-cols-2' : 'mx-auto max-w-md'}>
-        <div className="rounded-[24px] glass-solid p-6">
+      <div className={hasContact ? `grid gap-5 ${embedded ? '' : 'md:grid-cols-2'}` : embedded ? '' : 'mx-auto max-w-md'}>
+        <div className="relative rounded-[24px] glass-solid p-6">
+          <SatinBow className="pointer-events-none absolute -top-7 -right-5 w-20 rotate-[16deg]" />
           <h3 className="flex items-center gap-2 font-semibold text-gray-800">
             <span className="text-rose-500">
               <ClockIcon />
