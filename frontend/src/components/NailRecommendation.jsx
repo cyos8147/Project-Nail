@@ -87,7 +87,7 @@ export default function NailRecommendation({ skinTone }) {
               <div>
                 <div className="flex items-baseline justify-between">
                   <span className="text-[11px] text-gray-400">{personalized ? 'คะแนนที่ AI แนะนำ' : 'คะแนนความนิยม'}</span>
-                  <span className="text-sm font-bold text-rose-600">
+                  <span className="text-sm font-bold text-berry">
                     <Star className="h-3.5 w-3.5" /> {scoreLabel(d.score)}<span className="text-[11px] font-medium text-gray-400">/10</span>
                   </span>
                 </div>

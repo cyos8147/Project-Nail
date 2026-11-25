@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { saveCarryDesign } from '../utils/carryDesign.js'
 import { getNailDesigns } from '../api/client.js'
 import NailThumb from './NailThumb.jsx'
 import { Bone } from './Skeleton.jsx'
@@ -18,6 +19,15 @@ const fallbackNails = [
 export default function PopularNails() {
   const [nails, setNails] = useState(null) // null = กำลังโหลด
   const rowRef = useRef(null)
+  const navigate = useNavigate()
+
+  // แตะลายไหนก็จองลายนั้นได้เลย: ส่งลายไปหน้าจองแบบเดียวกับปุ่ม "จองลายนี้" ในแกลเลอรี
+  function book(n) {
+    if (!String(n.id).startsWith('f')) {
+      saveCarryDesign({ source: 'design', nail_design_id: n.id, nail_design_name: n.name, color_hex: n.color_hex, summary: n.name })
+    }
+    navigate('/booking')
+  }
 
   useEffect(() => {
     getNailDesigns()
@@ -38,7 +48,7 @@ export default function PopularNails() {
             <Sparkle className="h-6 w-6 text-rose-400" />
             ลายเล็บยอดนิยม
           </h2>
-          <p className="mt-1 text-sm text-[#7A4A5E]">ผลงานของร้าน พร้อมให้คุณเลือกจอง</p>
+          <p className="mt-1 text-sm text-[#7A4A5E]">แตะลายที่ชอบเพื่อจองได้เลย</p>
         </div>
         <Link to="/gallery" className="glass-btn gap-1.5 px-4 py-2 text-sm font-display font-semibold">
           ดูทั้งหมด <Icon name="arrow" className="h-4 w-4" />
@@ -56,22 +66,27 @@ export default function PopularNails() {
             ))}
           {(nails || []).map((n) => (
             <li key={n.id} className="w-[44%] sm:w-[30%] lg:w-[31%] shrink-0 snap-start">
-              <Link
-                to="/gallery"
-                className="group block rounded-[18px] bg-white/85 p-1.5 shadow-[0_12px_24px_-16px_rgba(150,40,85,0.6)] transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400"
+              <button
+                type="button"
+                onClick={() => book(n)}
+                aria-label={`จองลาย ${n.name}`}
+                className="group block w-full text-left rounded-[18px] bg-white/85 p-1.5 shadow-[0_12px_24px_-16px_rgba(150,40,85,0.6)] transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400"
               >
-                <div className="aspect-[4/5] overflow-hidden rounded-[13px] bg-rose-50">
+                <div className="relative aspect-[4/5] overflow-hidden rounded-[13px] bg-rose-50">
                   {n.image_url ? (
                     <img loading="lazy" decoding="async" src={n.image_url} alt={n.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   ) : (
                     <NailThumb label={n.name} accent={n.accent || n.color_hex || '#E8C39E'} />
                   )}
+                  <span aria-hidden="true" className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-display font-semibold text-berry shadow-[0_6px_12px_-8px_rgba(150,40,85,0.7)]">
+                    <Icon name="calendar" className="h-3.5 w-3.5" /> จองลายนี้
+                  </span>
                 </div>
                 <div className="flex items-baseline justify-between gap-2 px-1.5 pt-2 pb-1">
-                  <p className="text-sm font-medium text-[#4A2A37] truncate">{n.name}</p>
-                  {n.price != null && <p className="shrink-0 text-xs font-semibold text-rose-600 tabular-nums">{Number(n.price).toLocaleString('th-TH')}฿</p>}
+                  <p className="text-sm font-medium leading-snug text-[#4A2A37] line-clamp-2">{n.name}</p>
+                  {n.price != null && <p className="shrink-0 text-xs font-semibold text-berry tabular-nums">{Number(n.price).toLocaleString('th-TH')}฿</p>}
                 </div>
-              </Link>
+              </button>
             </li>
           ))}
         </ul>

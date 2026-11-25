@@ -118,7 +118,7 @@ export default function ShopInfo({ embedded = false }) {
     return (
       <section id="contact" className={sectionCls}>
         <ContactHeading />
-        <p className="mx-auto max-w-md rounded-[24px] glass-solid p-6 text-center text-gray-500">
+        <p className="mx-auto max-w-md rounded-[24px] glass-solid p-6 text-center text-[#7A4A5E]">
           {failed ? 'โหลดเวลาทำการไม่สำเร็จ รีเฟรชหน้านี้อีกครั้ง' : 'กำลังโหลดเวลาทำการและช่องทางติดต่อ...'}
         </p>
       </section>
@@ -144,7 +144,7 @@ export default function ShopInfo({ embedded = false }) {
       <div className={hasContact ? `grid gap-5 ${embedded ? '' : 'md:grid-cols-2'}` : embedded ? '' : 'mx-auto max-w-md'}>
         <div className="relative rounded-[24px] glass-solid p-6">
           <SatinBow className="pointer-events-none absolute -top-7 -right-5 w-20 rotate-[16deg]" />
-          <h3 className="flex items-center gap-2 font-semibold text-gray-800">
+          <h3 className="flex items-center gap-2 font-semibold text-[#4A2A37]">
             <span className="text-rose-500">
               <ClockIcon />
             </span>
@@ -153,44 +153,44 @@ export default function ShopInfo({ embedded = false }) {
           <ul className="mt-4 divide-y divide-blush-100">
             {groups.map((g, i) => (
               <li key={`${g.label}-${i}`} className="flex items-center justify-between gap-4 py-2.5">
-                <span className="text-gray-600">{g.label}</span>
+                <span className="text-[#7A4A5E]">{g.label}</span>
                 {g.closed ? (
-                  <span className="rounded-full bg-blush-100 px-3 py-0.5 text-sm font-semibold text-rose-600">หยุด</span>
+                  <span className="rounded-full bg-white/80 px-3 py-0.5 text-sm font-semibold text-berry">หยุด</span>
                 ) : (
-                  <span className="font-semibold tabular-nums text-gray-800">{g.hours}</span>
+                  <span className="font-semibold tabular-nums text-[#4A2A37]">{g.hours}</span>
                 )}
               </li>
             ))}
           </ul>
           {holidays.length > 0 && (
             <div className="mt-5 rounded-xl bg-blush-50 px-4 py-3">
-              <p className="text-sm font-semibold text-gray-800">วันหยุดพิเศษที่ร้านแจ้งไว้</p>
+              <p className="text-sm font-semibold text-[#4A2A37]">วันหยุดพิเศษที่ร้านแจ้งไว้</p>
               <ul className="mt-2 space-y-1.5">
                 {holidays.slice(0, 8).map((h) => (
                   <li key={h.holiday_date} className="flex items-baseline justify-between gap-3 text-sm">
-                    <span className="font-medium tabular-nums text-gray-700">{longDate(h.holiday_date)}</span>
-                    <span className="text-right text-gray-500">{h.note || 'ร้านหยุด'}</span>
+                    <span className="font-medium tabular-nums text-[#4A2A37]">{longDate(h.holiday_date)}</span>
+                    <span className="text-right text-[#7A4A5E]">{h.note || 'ร้านหยุด'}</span>
                   </li>
                 ))}
               </ul>
-              {holidays.length > 8 && <p className="mt-2 text-xs text-gray-500">และอีก {holidays.length - 8} วัน</p>}
-              <p className="mt-2 text-xs text-gray-500">วันเหล่านี้จองคิวออนไลน์ไม่ได้</p>
+              {holidays.length > 8 && <p className="mt-2 text-xs text-[#7A4A5E]">และอีก {holidays.length - 8} วัน</p>}
+              <p className="mt-2 text-xs text-[#7A4A5E]">วันเหล่านี้จองคิวออนไลน์ไม่ได้</p>
             </div>
           )}
         </div>
 
         {hasContact && (
           <div className="rounded-[24px] glass-solid p-6">
-            <h3 className="flex items-center gap-2 font-semibold text-gray-800">
+            <h3 className="flex items-center gap-2 font-semibold text-[#4A2A37]">
               <span className="text-rose-500">
                 <PinIcon />
               </span>
               ติดต่อและที่ตั้ง
             </h3>
 
-            {address && <p className="mt-4 whitespace-pre-line leading-relaxed text-gray-600">{address}</p>}
+            {address && <p className="mt-4 whitespace-pre-line leading-relaxed text-[#7A4A5E]">{address}</p>}
             {phone && (
-              <p className="mt-3 flex items-center gap-2 text-gray-600">
+              <p className="mt-3 flex items-center gap-2 text-[#7A4A5E]">
                 <span className="text-rose-500">
                   <PhoneIcon />
                 </span>
@@ -198,7 +198,7 @@ export default function ShopInfo({ embedded = false }) {
               </p>
             )}
             {lineId && (
-              <p className="mt-2 flex items-center gap-2 text-gray-600">
+              <p className="mt-2 flex items-center gap-2 text-[#7A4A5E]">
                 <span className="text-rose-500">
                   <ChatIcon />
                 </span>
@@ -212,7 +212,7 @@ export default function ShopInfo({ embedded = false }) {
                   href={mapUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-candy gap-1.5 px-5 py-2.5 text-sm"
+                  className="glass-btn gap-1.5 px-5 py-2.5 text-sm font-display font-semibold"
                 >
                   <PinIcon />
                   เปิดแผนที่
@@ -221,7 +221,7 @@ export default function ShopInfo({ embedded = false }) {
               {telUrl && (
                 <a
                   href={telUrl}
-                  className="btn-candy-soft gap-1.5 px-5 py-2.5 text-sm"
+                  className="glass-btn gap-1.5 px-5 py-2.5 text-sm font-display font-semibold"
                 >
                   <PhoneIcon />
                   โทรเลย
@@ -244,7 +244,7 @@ export default function ShopInfo({ embedded = false }) {
                   href={s.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center rounded-full border border-blush-200 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-blush-100"
+                  className="inline-flex items-center rounded-full border border-blush-200 bg-white px-5 py-2.5 text-sm font-semibold text-[#4A2A37] transition-colors hover:bg-blush-100"
                 >
                   {s.label}
                 </a>

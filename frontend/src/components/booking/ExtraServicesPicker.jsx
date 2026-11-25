@@ -41,14 +41,14 @@ export default function ExtraServicesPicker({ main, extras, setExtras, allServic
                 <button type="button" onClick={() => setExtras(extras.filter((s) => s.id !== c.service.id))} aria-label={`เอา ${c.service.name} ออก`} className="glass-btn w-9 h-9 hover:!text-red-500"><Icon name="x" className="h-4 w-4" /></button>
               </div>
             )}
-            {i === 0 && <span className="text-[11px] text-rose-600 font-semibold bg-rose-50 px-2 py-1 rounded-full">บริการหลัก</span>}
+            {i === 0 && <span className="text-[11px] text-berry font-semibold bg-rose-50 px-2 py-1 rounded-full">บริการหลัก</span>}
           </li>
         ))}
       </ol>
 
       {extras.length > 0 && (
         <p className="mt-3 text-sm text-gray-600">
-          รวม <b>{chain.length} บริการ</b> · ใช้เวลาประมาณ <b>{formatMinutes(totals.minutes)}</b> · ราคาประมาณ <b className="text-rose-600">{totals.price} บาท</b>
+          รวม <b>{chain.length} บริการ</b> · ใช้เวลาประมาณ <b>{formatMinutes(totals.minutes)}</b> · ราคาประมาณ <b className="text-berry">{totals.price} บาท</b>
         </p>
       )}
 

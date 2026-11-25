@@ -142,7 +142,7 @@ export default function ServiceDetails({
           {aiError && <p className="text-xs text-red-500 mt-2">{aiError}</p>}
           {aiStatus === 'done' && aiResult && (
             <p className="text-xs text-gray-600 mt-3">
-              สไตล์ที่ตรวจพบ: <span className="font-medium text-rose-600">{aiResult.style_tag}</span> ·
+              สไตล์ที่ตรวจพบ: <span className="font-medium text-berry">{aiResult.style_tag}</span> ·
               เวลาทำเพิ่มเติมโดยประมาณ +{aiResult.extra_minutes} นาที
             </p>
           )}

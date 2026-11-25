@@ -62,8 +62,8 @@ function ServiceRow({ service }) {
   const duration = formatDuration(service.duration_minutes)
   const price = (
     <>
-      <span className="font-display font-semibold text-rose-600 tabular-nums">{formatPrice(service.price)}</span>
-      <span className="ml-1 text-sm font-semibold text-rose-500">บาท</span>
+      <span className="font-display font-semibold text-berry tabular-nums">{formatPrice(service.price)}</span>
+      <span className="ml-1 text-sm font-semibold text-berry">บาท</span>
     </>
   )
   return (
@@ -72,28 +72,28 @@ function ServiceRow({ service }) {
     >
       <Thumb src={service.image_url} name={name} categoryId={service.category_id} />
       <div className="min-w-0 flex-1">
-        <h3 className="font-display font-semibold leading-snug text-gray-800 line-clamp-2 text-base sm:text-lg">{name}</h3>
+        <h3 className="font-display font-semibold leading-snug text-[#4A2A37] line-clamp-2 text-base sm:text-lg">{name}</h3>
         {description && description !== name && (
-          <p className="mt-0.5 line-clamp-2 text-xs sm:text-sm text-gray-500">{description}</p>
+          <p className="mt-0.5 line-clamp-2 text-xs sm:text-sm text-[#7A4A5E]">{description}</p>
         )}
         {duration && (
-          <p className="mt-1.5 flex items-center gap-1.5 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+          <p className="mt-1.5 flex items-center gap-1.5 whitespace-nowrap text-xs sm:text-sm text-[#7A4A5E]">
             <ClockIcon />
             {duration}
           </p>
         )}
-        <p className="mt-1 lg:hidden text-xs text-gray-500">
+        <p className="mt-1 lg:hidden text-xs text-[#7A4A5E]">
           เริ่มต้น <span className="text-lg">{price}</span>
         </p>
       </div>
       <div className="hidden lg:block shrink-0 text-right">
-        <p className="text-xs leading-none text-gray-500">เริ่มต้น</p>
+        <p className="text-xs leading-none text-[#7A4A5E]">เริ่มต้น</p>
         <p className="mt-1.5 whitespace-nowrap leading-none text-2xl">{price}</p>
       </div>
       <Link
         to={`/booking?service=${encodeURIComponent(service.id)}`}
         aria-label={`จอง ${name}`}
-        className="btn-candy-soft h-10 w-10 shrink-0 !p-0"
+        className="glass-btn h-11 w-11 shrink-0"
       >
         <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
           <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -129,7 +129,8 @@ export default function Services() {
   const tabs = categories
     .map((c) => ({ ...c, items: services.filter((s) => s.category_id === c.id) }))
     .filter((t) => t.items.length > 0)
-  const active = tabs.find((t) => t.id === activeId) || tabs[0]
+  // เปิดมาที่หมวดทำเล็บก่อน (งานหลักของร้าน) ถ้าไม่มีค่อยใช้หมวดแรก
+  const active = tabs.find((t) => t.id === activeId) || tabs.find((t) => t.id === 'nail') || tabs[0]
   const header = (
     <SectionTitle title="บริการของร้าน" sub="เลือกหมวดที่สนใจ แล้วจองคิวได้ทันที" />
   )
@@ -203,12 +204,12 @@ export default function Services() {
                 onClick={() => selectTab(t.id)}
                 onKeyDown={(e) => onTabKeyDown(e, i)}
                 className={`flex-1 px-4 py-2.5 text-base ${
-                  selected ? 'btn-candy' : 'btn-candy-soft !border-transparent !shadow-none !bg-transparent hover:!bg-white/70 !text-gray-700'
+                  selected ? 'btn-candy' : 'btn-candy-soft !border-transparent !shadow-none !bg-transparent hover:!bg-white/70 !text-[#4A2A37]'
                 }`}
               >
                 <Icon name={t.id === 'hair' ? 'scissors' : t.id === 'nail' ? 'brush' : 'palette'} />
                 {t.name}
-                <span className={`text-xs font-normal tabular-nums ${selected ? 'text-white/80' : 'text-gray-500'}`}>{t.items.length}</span>
+                <span className={`text-xs font-normal tabular-nums ${selected ? 'text-white' : 'text-[#7A4A5E]'}`}>{t.items.length}</span>
               </button>
             )
           })}
@@ -244,7 +245,7 @@ export default function Services() {
         )}
       </div>
 
-      <div className="mt-10 text-center">
+      <div className="mt-10 hidden md:block text-center">
         <Link
           to="/booking"
           className="btn-candy px-10 py-3.5 text-lg"

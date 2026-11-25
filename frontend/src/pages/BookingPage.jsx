@@ -16,7 +16,7 @@ export default function BookingPage() {
             <Link to="/" className="pt-2" aria-label="Lucky Salon หน้าแรก">
               <BrandLogo />
             </Link>
-            <p className="glass hidden sm:flex items-center gap-2 rounded-full px-5 py-2 text-sm font-display font-semibold text-rose-600"><Icon name="calendar" /> จองคิวออนไลน์</p>
+            <p className="glass hidden sm:flex items-center gap-2 rounded-full px-5 py-2 text-sm font-display font-semibold text-berry"><Icon name="calendar" /> จองคิวออนไลน์</p>
             <Link
               to="/"
               className="glass-btn gap-1.5 text-sm font-display font-semibold px-4 py-2"

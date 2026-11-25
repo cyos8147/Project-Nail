@@ -5,7 +5,7 @@ import Icon from './Icon.jsx'
 export default function CancelPolicyNote({ hours = 0, className = '' }) {
   return (
     <div className={`flex gap-3 bg-rose-50/60 border border-[#1f1b16]/[0.06] rounded-2xl p-4 text-left ${className}`}>
-      <span className="text-rose-600 mt-0.5"><Icon name="calendar" /></span>
+      <span className="text-berry mt-0.5"><Icon name="calendar" /></span>
       <p className="text-xs text-gray-600 leading-relaxed">
         {hours > 0 ? (
           <>

@@ -65,11 +65,11 @@ export default function SplashIntro() {
       ))}
 
       <span className="lucky-splash__crown text-4xl sm:text-5xl text-rose-500">♛</span>
-      <p className="lucky-splash__word mt-1 font-script text-6xl sm:text-8xl text-rose-600 leading-tight px-4 pb-2 drop-shadow-[0_4px_12px_rgba(255,255,255,0.8)]">
+      <p className="lucky-splash__word mt-1 font-script text-6xl sm:text-8xl text-berry leading-tight px-4 pb-2 drop-shadow-[0_4px_12px_rgba(255,255,255,0.8)]">
         Lucky Salon
       </p>
-      <p className="lucky-splash__tag mt-2 text-xs sm:text-sm tracking-[0.4em] uppercase text-rose-700/80">
-        Beauty · Nail · Hair
+      <p className="lucky-splash__tag mt-2 text-sm sm:text-base text-[#7A4A5E]">
+        Nail &amp; Hair Salon
       </p>
     </div>
   )

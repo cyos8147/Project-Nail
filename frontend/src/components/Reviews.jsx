@@ -74,15 +74,15 @@ export default function Reviews({ embedded = false }) {
           {(reviews || []).map((r, i) => (
             <div key={`${r.name}-${i}`} className="rounded-[24px] glass p-6">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center font-display font-semibold text-rose-600">
+                <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center font-display font-semibold text-berry">
                   {r.name.charAt(0)}
                 </div>
                 <div>
-                  <p className="font-medium text-gray-800 text-sm">{r.name}</p>
+                  <p className="font-medium text-[#4A2A37] text-sm">{r.name}</p>
                   <Stars count={r.rating} />
                 </div>
               </div>
-              <p className="text-gray-600 text-sm leading-relaxed">{r.text}</p>
+              <p className="text-[#7A4A5E] text-sm leading-relaxed">{r.text}</p>
               {r.photo_url && (
                 <img loading="lazy" decoding="async" src={r.photo_url} alt="ผลงานจากรีวิว" className="mt-3 rounded-xl w-full h-32 object-cover" />
               )}

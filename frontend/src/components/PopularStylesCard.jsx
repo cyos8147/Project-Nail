@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { saveCarryDesign } from '../utils/carryDesign.js'
 import { getNailDesigns } from '../api/client.js'
 import { Bone } from './Skeleton.jsx'
 import Icon from './Icon.jsx'
@@ -25,6 +27,12 @@ export default function PopularStylesCard() {
   const [reduced] = useState(prefersReducedMotion)
   const pointerX = useRef(null)
   const tiltRef = useRef(null)
+  const navigate = useNavigate()
+  function bookCurrent() {
+    if (!current) return
+    saveCarryDesign({ source: 'design', nail_design_id: current.id, nail_design_name: current.name, color_hex: current.color_hex, summary: current.name })
+    navigate('/booking')
+  }
 
   useEffect(() => {
     getNailDesigns()
@@ -93,10 +101,10 @@ export default function PopularStylesCard() {
         className="lucky-3d-inner glass relative rounded-[30px] p-5 sm:p-6"
       >
         <div className="lucky-z1 flex items-center justify-between gap-2 pl-1">
-          <p className="flex items-center gap-2 font-display text-xl font-semibold text-[#4A2A37]">
+          <h2 className="flex items-center gap-2 font-display text-xl font-semibold text-[#4A2A37]">
             <Icon name="heart" className="h-5 w-5 text-rose-400" />
-            Popular Styles
-          </p>
+            ลายเล็บยอดนิยม
+          </h2>
         </div>
 
         <div className="lucky-z2 relative mt-4">
@@ -144,21 +152,28 @@ export default function PopularStylesCard() {
           </div>
 
           {/* ลูกศรวงกลมกระจกคร่อมขอบรูป */}
-          <button type="button" onClick={() => step(-1)} disabled={count < 2} aria-label="ลายก่อนหน้า" className="glass-btn absolute -left-3 top-1/2 -translate-y-1/2 h-10 w-10">
+          <button type="button" onClick={() => step(-1)} disabled={count < 2} aria-label="ลายก่อนหน้า" className="glass-btn absolute -left-3 top-1/2 -translate-y-1/2 h-11 w-11">
             <Icon name="chevronLeft" />
           </button>
-          <button type="button" onClick={() => step(1)} disabled={count < 2} aria-label="ลายถัดไป" className="glass-btn absolute -right-3 top-1/2 -translate-y-1/2 h-10 w-10">
+          <button type="button" onClick={() => step(1)} disabled={count < 2} aria-label="ลายถัดไป" className="glass-btn absolute -right-3 top-1/2 -translate-y-1/2 h-11 w-11">
             <Icon name="chevronRight" />
           </button>
         </div>
 
-        <p key={`name-${index}`} aria-live={playing ? 'off' : 'polite'} className="lucky-z1 lucky-fade-up mt-3 text-center font-display font-semibold text-[#4A2A37] truncate">
-          {current?.name || '\u00a0'}
-        </p>
+        <div className="lucky-z1 mt-3 flex items-center justify-between gap-3 pl-1">
+          <p key={`name-${index}`} aria-live={playing ? 'off' : 'polite'} className="lucky-fade-up min-w-0 font-display font-semibold text-[#4A2A37] truncate">
+            {current?.name || '\u00a0'}
+          </p>
+          {current && (
+            <button type="button" onClick={bookCurrent} className="btn-candy shrink-0 px-4 py-2 text-sm">
+              <Icon name="calendar" className="h-4 w-4" /> จองลายนี้
+            </button>
+          )}
+        </div>
 
         {/* จุดบอกลำดับ: จุดปัจจุบันมีแถบนับเวลาไปภาพถัดไป */}
         {count > 1 && (
-          <div className="lucky-z1 mt-2 flex items-center justify-center gap-1.5">
+          <div className="lucky-z1 -mb-2 flex items-center justify-center">
             {designs.map((d, i) => {
               const active = i === index
               return (
@@ -168,15 +183,17 @@ export default function PopularStylesCard() {
                   onClick={() => go(i)}
                   aria-label={`ดูลายที่ ${i + 1}: ${d.name}`}
                   aria-current={active}
-                  className={`relative h-2.5 rounded-full overflow-hidden border border-white transition-[width,background-color] duration-300 ${active ? 'w-9 bg-rose-100' : 'w-2.5 bg-white/80 hover:bg-rose-100'}`}
+                  className="group/dot flex h-11 items-center justify-center px-1"
                 >
-                  {active && (
-                    <span
-                      key={`p-${index}`}
-                      className={`absolute inset-0 rounded-full bg-rose-500 ${playing ? 'lucky-progress' : ''}`}
-                      style={playing ? { animationDuration: `${SLIDE_MS}ms` } : undefined}
-                    />
-                  )}
+                  <span className={`relative block h-2.5 rounded-full overflow-hidden border border-white transition-[width,background-color] duration-300 ${active ? 'w-9 bg-rose-100' : 'w-2.5 bg-white/80 group-hover/dot:bg-rose-100'}`}>
+                    {active && (
+                      <span
+                        key={`p-${index}`}
+                        className={`absolute inset-0 rounded-full bg-berry ${playing ? 'lucky-progress' : ''}`}
+                        style={playing ? { animationDuration: `${SLIDE_MS}ms` } : undefined}
+                      />
+                    )}
+                  </span>
                 </button>
               )
             })}

@@ -181,7 +181,7 @@ export default function CustomerHistoryPage() {
                   <div key={i} className="glass-solid rounded-[24px] p-5">
                     <div className="flex items-center justify-between mb-1">
                       <p className="font-medium text-gray-800">{b.service_name}</p>
-                      <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-blush-100 text-rose-600">
+                      <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-blush-100 text-berry">
                         {STATUS_LABEL[b.status] || b.status}
                       </span>
                     </div>
@@ -192,7 +192,7 @@ export default function CustomerHistoryPage() {
                   <div key={b.id} className="glass-solid rounded-[24px] p-5">
                     <div className="flex items-center justify-between mb-2">
                       <p className="font-medium text-gray-800">{b.service_name}</p>
-                      <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-blush-100 text-rose-600">
+                      <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-blush-100 text-berry">
                         {STATUS_LABEL[b.status] || b.status}
                       </span>
                     </div>
@@ -218,7 +218,7 @@ export default function CustomerHistoryPage() {
                       <div className="mt-3 flex items-center gap-4">
                         <Link
                           to={`/booking/edit?code=${encodeURIComponent(b.booking_code)}&phone=${encodeURIComponent(phone.trim())}`}
-                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:underline"
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-berry hover:underline"
                         >
                           <Icon name="edit" className="h-4 w-4" /> แก้ไขวันเวลา
                         </Link>
@@ -246,7 +246,7 @@ export default function CustomerHistoryPage() {
                         <button
                           type="button"
                           onClick={() => setReviewingBookingId(b.id)}
-                          className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:underline"
+                          className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-berry hover:underline"
                         >
                           <Icon name="star" className="h-4 w-4" /> ให้คะแนนบริการนี้
                         </button>

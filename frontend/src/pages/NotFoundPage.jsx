@@ -30,7 +30,7 @@ export default function NotFoundPage() {
         </Link>
         <Link
           to="/booking"
-          className="glass inline-flex items-center rounded-full px-7 py-3 font-display font-semibold text-rose-600"
+          className="glass inline-flex items-center rounded-full px-7 py-3 font-display font-semibold text-berry"
         >
           จองคิว
         </Link>

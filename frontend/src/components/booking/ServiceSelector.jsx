@@ -52,12 +52,12 @@ export default function ServiceSelector({ category, setCategory, service, setSer
                   <p className="font-semibold text-gray-800">{s.name}</p>
                   <p className="text-xs text-[#7A4A5E] mt-1">ใช้เวลาประมาณ {duration} นาที</p>
                   {category === 'hair' && isColor && (
-                    <span className="inline-block mt-2 text-[11px] font-medium text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full">
+                    <span className="inline-block mt-2 text-[11px] font-medium text-berry bg-rose-100 px-2 py-0.5 rounded-full">
                       เลือกโทนสีได้
                     </span>
                   )}
                 </div>
-                <p className="text-rose-600 font-semibold text-sm whitespace-nowrap tabular-nums">{Number(s.price).toLocaleString('th-TH')} บาท</p>
+                <p className="text-berry font-semibold text-sm whitespace-nowrap tabular-nums">{Number(s.price).toLocaleString('th-TH')} บาท</p>
               </div>
             </button>
           )

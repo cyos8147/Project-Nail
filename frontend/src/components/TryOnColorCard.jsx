@@ -70,7 +70,7 @@ function DropSwatch({ s, active, onSelect }) {
       aria-label={s.th}
       title={s.th}
       onClick={() => onSelect(s)}
-      className={`relative h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-full transition-transform duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400 ${
+      className={`relative h-11 w-11 shrink-0 rounded-full transition-transform duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400 ${
         active ? 'scale-110 ring-[3px] ring-white shadow-[0_0_0_5px_rgba(236,76,130,0.45),0_8px_14px_-6px_rgba(150,40,85,0.6)]' : 'hover:-translate-y-0.5 shadow-[0_6px_12px_-6px_rgba(150,40,85,0.55)]'
       }`}
       style={{
@@ -96,7 +96,7 @@ export default function TryOnColorCard() {
       </h2>
       <p className="mt-1 text-sm text-[#7A4A5E]">แตะสีเพื่อดูบนเล็บ แล้วไปลองบนรูปมือของคุณเองได้เลย</p>
 
-      <div role="radiogroup" aria-label="เลือกสีเล็บ" className="-mx-2 mt-4 flex gap-2.5 overflow-x-auto px-2 py-2 [scrollbar-width:none]">
+      <div role="radiogroup" aria-label="เลือกสีเล็บ" className="mt-4 flex flex-wrap gap-2.5 py-2">
         {SWATCHES.map((s) => (
           <DropSwatch key={s.hex} s={s} active={s.hex === selected.hex} onSelect={setSelected} />
         ))}
@@ -117,16 +117,25 @@ export default function TryOnColorCard() {
           </div>
         </div>
 
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-2.5">
-          <Link to="/ai" aria-label="ลองสีนี้บนรูปมือของคุณ" title="ลองบนรูปมือของคุณ" className="glass-btn h-10 w-10">
-            <Icon name="expand" />
-          </Link>
-          <button type="button" onClick={randomize} aria-label="สุ่มสี" title="สุ่มสี" className="glass-btn h-10 w-10">
-            <Icon name="repeat" />
-          </button>
-          <Link to="/ai" aria-label="ไปหน้า AI วิเคราะห์ลายเล็บ" title="AI แนะนำลาย" className="glass-btn h-10 w-10">
-            <Icon name="heart" />
-          </Link>
+        <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex flex-col gap-2">
+          {[
+            { to: '/ai', icon: 'hand', label: 'ลองบนมือ' },
+            { onClick: randomize, icon: 'repeat', label: 'สุ่มสี' },
+            { to: '/ai', icon: 'wand', label: 'AI แนะนำ' },
+          ].map((t) => {
+            const inner = (
+              <>
+                <span className="glass-btn h-10 w-10"><Icon name={t.icon} /></span>
+                <span className="text-[10px] font-display font-semibold leading-none text-[#4A2A37]">{t.label}</span>
+              </>
+            )
+            const cls = 'flex flex-col items-center gap-1 rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-400'
+            return t.to ? (
+              <Link key={t.label} to={t.to} className={cls}>{inner}</Link>
+            ) : (
+              <button key={t.label} type="button" onClick={t.onClick} className={cls}>{inner}</button>
+            )
+          })}
         </div>
       </div>
 

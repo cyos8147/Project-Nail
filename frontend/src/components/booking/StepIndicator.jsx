@@ -22,7 +22,7 @@ export default function StepIndicator({ steps, currentStep }) {
               </div>
               <span
                 className={`text-xs font-medium hidden sm:inline ${
-                  isActive ? 'text-rose-600' : isDone ? 'text-gray-600' : 'text-gray-400'
+                  isActive ? 'text-berry' : isDone ? 'text-gray-600' : 'text-gray-400'
                 }`}
               >
                 {step}

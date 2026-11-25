@@ -45,7 +45,7 @@ function Field({ label, hint, options, value, onChange }) {
             aria-pressed={value === o.id}
             onClick={() => onChange(o.id)}
             className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors duration-150 ${
-              value === o.id ? 'bg-rose-500 border-rose-500 text-white' : 'bg-white text-gray-600 border-[#1f1b16]/10 hover:border-rose-300 hover:text-rose-600'
+              value === o.id ? 'bg-rose-500 border-rose-500 text-white' : 'bg-white text-gray-600 border-[#1f1b16]/10 hover:border-rose-300 hover:text-berry'
             }`}
           >
             {o.label}
@@ -174,7 +174,7 @@ export default function AdvancedRecommend({ skinTone = null }) {
                       <p className="text-xs text-gray-400">{r.design.duration_minutes} นาที · {Math.round(r.design.price)} บาท</p>
                       <p className="text-xs mt-0.5">
                         <span className="text-gray-400">คะแนนที่ AI แนะนำ </span>
-                        <span className="inline-flex items-center gap-1 font-bold text-rose-600"><Star className="h-3.5 w-3.5" /> {scoreLabel(scores[i])}</span>
+                        <span className="inline-flex items-center gap-1 font-bold text-berry"><Star className="h-3.5 w-3.5" /> {scoreLabel(scores[i])}</span>
                         <span className="text-gray-400">/10</span>
                       </p>
                     </div>

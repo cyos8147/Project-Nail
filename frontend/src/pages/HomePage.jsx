@@ -25,9 +25,9 @@ const HIGHLIGHTS = [
 function HighlightBar() {
   return (
     <section className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-4">
-      <ul className="glass rounded-[28px] lg:rounded-full px-4 py-4 lg:px-6 grid grid-cols-2 lg:grid-cols-4 gap-y-4 lg:divide-x lg:divide-white/90">
+      <ul className="glass rounded-[28px] xl:rounded-full px-4 py-4 xl:px-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-y-4 xl:divide-x xl:divide-white/90">
         {HIGHLIGHTS.map((h) => (
-          <li key={h.title} className="flex items-center gap-3 px-2 lg:px-4">
+          <li key={h.title} className="flex items-center gap-3 px-2 xl:px-4">
             <span className="glass-btn h-11 w-11 shrink-0 !cursor-default hover:!transform-none">
               <Icon name={h.icon} className="h-5 w-5" />
             </span>

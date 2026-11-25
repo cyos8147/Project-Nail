@@ -343,7 +343,7 @@ export default function BookingWizard() {
                       <span className="font-medium text-gray-800">{i + 1}. {b.service_name}</span>
                       <span className="text-gray-600 whitespace-nowrap">{b.booking_time} น.</span>
                     </div>
-                    <p className="text-xs text-gray-400">รหัสคิว <span className="font-display font-bold text-rose-600">{b.booking_code}</span></p>
+                    <p className="text-xs text-gray-400">รหัสคิว <span className="font-display font-bold text-berry">{b.booking_code}</span></p>
                   </div>
                 ))}
               </>
@@ -366,7 +366,7 @@ export default function BookingWizard() {
             {bookingResult?.booking_code && !bookingResult?.all && (
               <div className="flex justify-between items-center text-sm pt-2.5 mt-1 border-t border-blush-200">
                 <span className="text-gray-500">รหัสคิว</span>
-                <span className="font-display font-bold text-rose-600">{bookingResult.booking_code}</span>
+                <span className="font-display font-bold text-berry">{bookingResult.booking_code}</span>
               </div>
             )}
           </div>
@@ -584,7 +584,7 @@ export default function BookingWizard() {
         {step === totalSteps && (
           <p className="mt-4 text-center text-xs text-gray-400">
             การกดยืนยันการจองถือว่ารับทราบ{' '}
-            <Link to="/privacy" target="_blank" className="underline hover:text-rose-600">
+            <Link to="/privacy" target="_blank" className="underline hover:text-berry">
               นโยบายความเป็นส่วนตัว
             </Link>
           </p>

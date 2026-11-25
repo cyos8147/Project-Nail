@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import PopularStylesCard from './PopularStylesCard.jsx'
 import Icon from './Icon.jsx'
+import NextFreeSlot from './NextFreeSlot.jsx'
 import { GlassHeart, Sparkle } from './Decor.jsx'
 
 // Hero ตามภาพตัวอย่าง: ข้อความซ้าย · รูปมือทำเล็บกลาง (มีวงโคจรประกาย) · การ์ดลายเล็บยอดนิยมขวา
@@ -74,12 +75,16 @@ export default function Hero() {
 
           <div style={{ animationDelay: '0.24s' }} className="lucky-fade-up mt-8 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3">
             <Link to="/booking" className="btn-candy px-9 py-3.5 text-base">
-              <Icon name="calendar" /> จองคิวออนไลน์
+              <Icon name="calendar" /> จองคิวเลย
               <Icon name="arrow" className="h-4 w-4" />
             </Link>
-            <a href="#popular" className="glass inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full px-7 py-3.5 font-display font-semibold text-rose-600 hover:text-rose-700">
+            <a href="#popular" className="glass inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full px-7 py-3.5 font-display font-semibold text-berry hover:text-rose-700">
               ดูลายเล็บยอดนิยม
             </a>
+          </div>
+
+          <div style={{ animationDelay: '0.32s' }} className="lucky-fade-up mt-5 flex justify-center lg:justify-start">
+            <NextFreeSlot />
           </div>
         </div>
 
@@ -87,7 +92,7 @@ export default function Hero() {
           <HeroHand />
         </div>
 
-        <div style={{ animationDelay: '0.18s' }} className="lucky-fade-up relative z-10">
+        <div style={{ animationDelay: '0.18s' }} className="lucky-fade-up relative z-10 hidden sm:block">
           <PopularStylesCard />
         </div>
       </div>

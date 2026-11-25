@@ -88,7 +88,7 @@ function Lightbox({ designs, index, onClose, onStep, onBook }) {
             <DesignImage design={d} className="block w-full max-h-[62vh] aspect-[4/3] h-auto" />
           </div>
           {many && (
-            <span className="absolute top-3 left-3 rounded-full bg-white/85 px-3 py-1 text-xs font-display font-semibold text-rose-600 tabular-nums">
+            <span className="absolute top-3 left-3 rounded-full bg-white/85 px-3 py-1 text-xs font-display font-semibold text-berry tabular-nums">
               {index + 1} / {designs.length}
             </span>
           )}
@@ -99,7 +99,7 @@ function Lightbox({ designs, index, onClose, onStep, onBook }) {
             <p className="font-display text-lg sm:text-xl font-semibold text-gray-800 truncate">{d.name}</p>
             <p className="text-sm text-gray-500">
               {STYLE_LABEL[d.style_tag] || d.style_tag} · {formatMinutes(d.duration_minutes)} ·{' '}
-              <span className="font-display font-semibold text-rose-600 tabular-nums">{formatPrice(d.price)} บาท</span>
+              <span className="font-display font-semibold text-berry tabular-nums">{formatPrice(d.price)} บาท</span>
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -221,7 +221,7 @@ export default function GalleryPage() {
             >
               <div className="relative aspect-square overflow-hidden rounded-[12px]">
                 <DesignImage design={d} className="w-full h-full transition-opacity duration-150 group-hover:opacity-90" />
-                <span aria-hidden="true" className="absolute bottom-2 right-2 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-display font-semibold text-rose-600 opacity-0 transition-opacity group-hover:opacity-100">
+                <span aria-hidden="true" className="absolute bottom-2 right-2 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-display font-semibold text-berry opacity-0 transition-opacity group-hover:opacity-100">
                   <Icon name="expand" className="inline h-3.5 w-3.5 -mt-0.5" /> ดูเต็มจอ
                 </span>
               </div>
@@ -229,7 +229,7 @@ export default function GalleryPage() {
                 <p className="font-display font-semibold text-gray-800 truncate">{d.name}</p>
                 <p className="text-sm">
                   <span className="text-gray-500">{STYLE_LABEL[d.style_tag] || d.style_tag}</span>
-                  <span className="float-right font-display font-semibold text-rose-600 tabular-nums">{formatPrice(d.price)} บาท</span>
+                  <span className="float-right font-display font-semibold text-berry tabular-nums">{formatPrice(d.price)} บาท</span>
                 </p>
               </div>
             </button>

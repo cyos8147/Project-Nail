@@ -130,7 +130,7 @@ export default function EditBookingPage() {
             <p className="text-sm text-gray-700 font-medium">
               กรุณาติดต่อร้านโดยตรง{shop.phone ? ` โทร ${shop.phone}` : ' ทาง LINE หรือโทรหาร้าน'}
             </p>
-            <Link to="/history" className="inline-block text-sm font-semibold text-rose-600 hover:underline">ดูประวัติของฉัน</Link>
+            <Link to="/history" className="inline-block text-sm font-semibold text-berry hover:underline">ดูประวัติของฉัน</Link>
           </div>
         )}
 
@@ -176,7 +176,7 @@ export default function EditBookingPage() {
 
         {saved && (
           <div className="glass-solid rounded-[24px] p-8 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-rose-50 text-rose-600">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-rose-50 text-berry">
               <Icon name="check" className="h-7 w-7" strokeWidth={2} />
             </div>
             <h2 className="font-display text-xl font-semibold text-gray-800">แก้ไขวันเวลาสำเร็จ</h2>

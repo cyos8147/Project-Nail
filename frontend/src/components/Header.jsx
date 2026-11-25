@@ -51,14 +51,14 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
       {/* ม่านกระจกบาง ๆ ให้เมนูอ่านออกเมื่อเลื่อนทับเนื้อหา */}
-      <div aria-hidden="true" className="absolute inset-0 bg-[#FCE6EE]/55 backdrop-blur-md [mask-image:linear-gradient(180deg,#000_70%,transparent)]" />
+      <div aria-hidden="true" className="absolute inset-0 bg-[#FCE6EE]/80 backdrop-blur-lg [mask-image:linear-gradient(180deg,#000_78%,transparent)]" />
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap xl:flex-nowrap items-center justify-between gap-x-3 gap-y-2">
         <a href="/#home" className="pt-2 shrink-0" aria-label="Lucky Salon หน้าแรก">
           <BrandLogo />
         </a>
 
         {/* เมนูแคปซูลกระจก เมนูที่อยู่ตอนนี้เป็นปุ่มชมพูเต็ม */}
-        <nav aria-label="เมนูหลัก" className="hidden lg:flex order-last basis-full justify-center xl:order-none xl:basis-auto">
+        <nav aria-label="เมนูหลัก" className="hidden xl:flex">
           <div className="glass flex items-center gap-0.5 rounded-full p-1 whitespace-nowrap">
             {navItems.map((item) => {
               const active = item.match === pathname
@@ -67,7 +67,7 @@ export default function Header() {
                   key={item.label}
                   item={item}
                   active={active}
-                  className={`${pill} ${active ? 'text-white bg-gradient-to-b from-[#F88AB0] to-[#EC4C82] shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_6px_14px_-6px_rgba(201,51,106,0.7)]' : 'text-[#6E4255] hover:bg-white/70 hover:text-rose-600'}`}
+                  className={`${pill} ${active ? 'text-white bg-gradient-to-b from-[#D6336C] to-[#B4235A] shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_6px_14px_-6px_rgba(201,51,106,0.7)]' : 'text-[#6E4255] hover:bg-white/70 hover:text-berry'}`}
                 >
                   <NavIcon name={item.icon} />
                   {item.label}
@@ -80,18 +80,18 @@ export default function Header() {
         <div className="flex items-center gap-2 shrink-0">
           <Link
             to="/history"
-            className={`glass hidden md:inline-flex ${pill} ${pathname === '/history' ? 'text-rose-600' : 'text-[#6E4255] hover:text-rose-600'}`}
+            className={`glass hidden md:inline-flex ${pill} ${pathname === '/history' ? 'text-berry' : 'text-[#6E4255] hover:text-berry'}`}
           >
             ประวัติของฉัน
           </Link>
           <Link
             to="/ai"
-            className={`glass hidden sm:inline-flex ${pill} ${pathname === '/ai' ? 'text-rose-600' : 'text-[#6E4255] hover:text-rose-600'}`}
+            className={`glass hidden sm:inline-flex ${pill} ${pathname === '/ai' ? 'text-berry' : 'text-[#6E4255] hover:text-berry'}`}
           >
             <Icon name="sparkle" className="h-4 w-4 text-rose-500" />
             AI วิเคราะห์ลายเล็บ
           </Link>
-          <Link to="/booking" className="btn-candy text-sm xl:text-[13px] px-5 xl:px-4 py-2.5">
+          <Link to="/booking" className="btn-candy hidden md:inline-flex text-sm xl:text-[13px] px-5 xl:px-4 py-2.5">
             <NavIcon name="calendar" />
             จองคิวเลย
           </Link>
@@ -100,7 +100,7 @@ export default function Header() {
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="เปิดเมนู"
             aria-expanded={menuOpen}
-            className="glass-btn lg:hidden w-10 h-10 flex-shrink-0 flex-col gap-1.5"
+            className="glass-btn xl:hidden w-11 h-11 flex-shrink-0 flex-col gap-1.5"
           >
             <span className={`block w-4 h-0.5 bg-rose-600 rounded-full transition-transform ${menuOpen ? 'translate-y-2 rotate-45' : ''}`} />
             <span className={`block w-4 h-0.5 bg-rose-600 rounded-full transition-opacity ${menuOpen ? 'opacity-0' : ''}`} />
@@ -110,23 +110,26 @@ export default function Header() {
       </div>
 
       {menuOpen && (
-        <nav aria-label="เมนูมือถือ" className="glass-solid relative lg:hidden mx-4 mb-2 rounded-[24px] px-4 py-2 flex flex-col text-[15px] font-display font-semibold text-[#4A2A37]">
+        <button type="button" aria-label="ปิดเมนู" onClick={() => setMenuOpen(false)} className="fixed inset-0 z-40 cursor-default bg-[#3D2230]/10 xl:hidden" />
+      )}
+      {menuOpen && (
+        <nav aria-label="เมนูมือถือ" className="glass-solid absolute left-0 right-0 top-full z-50 xl:hidden mx-4 rounded-[24px] px-4 py-2 flex flex-col text-[15px] font-display font-semibold text-[#4A2A37]">
           {navItems.map((item) => (
             <NavLink
               key={item.label}
               item={item}
               active={item.match === pathname}
               onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 py-3 border-b border-rose-100/80 last:border-0 hover:text-rose-600"
+              className="flex items-center gap-3 py-3 border-b border-rose-100/80 last:border-0 hover:text-berry"
             >
               <NavIcon name={item.icon} className="h-[18px] w-[18px] text-rose-400" />
               {item.label}
             </NavLink>
           ))}
-          <Link to="/history" onClick={() => setMenuOpen(false)} className="py-3 border-t border-rose-100/80 hover:text-rose-600 md:hidden">
+          <Link to="/history" onClick={() => setMenuOpen(false)} className="py-3 border-t border-rose-100/80 hover:text-berry md:hidden">
             ประวัติของฉัน
           </Link>
-          <Link to="/ai" onClick={() => setMenuOpen(false)} className="py-3 border-t border-rose-100/80 hover:text-rose-600 sm:hidden">
+          <Link to="/ai" onClick={() => setMenuOpen(false)} className="py-3 border-t border-rose-100/80 hover:text-berry sm:hidden">
             AI วิเคราะห์ลายเล็บ
           </Link>
         </nav>

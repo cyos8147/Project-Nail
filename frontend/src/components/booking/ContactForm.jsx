@@ -93,7 +93,7 @@ export default function ContactForm({
           ) : null}
           <div className="border-t border-blush-200 pt-3 flex justify-between text-sm">
             <span className="text-gray-500">ราคาโดยประมาณ</span>
-            <span className="font-semibold text-rose-600">{chain ? chain.reduce((n, c) => n + c.price, 0) : service?.price} บาท</span>
+            <span className="font-semibold text-berry">{chain ? chain.reduce((n, c) => n + c.price, 0) : service?.price} บาท</span>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed">
             ตรวจรูป สี และบริการให้ถูกต้องก่อนกดยืนยัน ถ้าต้องการแก้ไขกด “ย้อนกลับ”

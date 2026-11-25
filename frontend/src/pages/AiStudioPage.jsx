@@ -60,7 +60,7 @@ export default function AiStudioPage() {
               ['calendar', 'จองคิว', 'ส่งสีที่ชอบไปจองต่อได้เลย'],
             ].map(([icon, title, sub], i) => (
               <li key={title} className="rounded-[24px] glass p-4 flex flex-col gap-1">
-                <span className="flex items-center justify-between text-rose-600">
+                <span className="flex items-center justify-between text-berry">
                   <Icon name={icon} />
                   <span className="text-xs text-gray-500 tabular-nums">{i + 1}</span>
                 </span>
@@ -73,7 +73,7 @@ export default function AiStudioPage() {
           <p className="mt-6 text-xs text-gray-500 flex items-center justify-center gap-1.5 flex-wrap">
             <Icon name="lock" className="h-4 w-4" />
             รูปที่คุณอัปโหลดส่งไปประมวลผลชั่วคราวเท่านั้น ไม่ถูกเก็บไว้บนเซิร์ฟเวอร์ (เว้นแต่คุณกดจองคิวพร้อมรูป) ·{' '}
-            <Link to="/privacy" className="underline hover:text-rose-600">
+            <Link to="/privacy" className="underline hover:text-berry">
               นโยบายความเป็นส่วนตัว
             </Link>
           </p>
