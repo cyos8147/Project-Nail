@@ -9,8 +9,8 @@ export default function BrandLogo({ subtitle = 'Nail & Hair Salon', size = 'md' 
       </span>
       <span className={`font-script ${word} text-rose-500 drop-shadow-[0_2px_0_rgba(255,255,255,0.9)]`}>Lucky Salon</span>
       {subtitle && (
-        <span className="mt-0.5 ml-auto pr-1 text-[10px] tracking-[0.22em] text-rose-400 whitespace-nowrap">
-          ✦ {subtitle} ✦
+        <span className="mt-0.5 ml-auto pr-1 text-[11px] text-gray-500 whitespace-nowrap">
+          {subtitle}
         </span>
       )}
     </span>

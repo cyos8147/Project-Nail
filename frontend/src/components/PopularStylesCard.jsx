@@ -13,23 +13,6 @@ const SWIPE_PX = 40
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
-function Heart({ className = '', style }) {
-  return (
-    <svg viewBox="0 0 24 22" className={className} style={style} aria-hidden="true">
-      <path d="M12 21 C4 15 1 11 1 6.5 C1 3 3.6 1 6.4 1 C8.6 1 10.6 2.3 12 4.3 C13.4 2.3 15.4 1 17.6 1 C20.4 1 23 3 23 6.5 C23 11 20 15 12 21Z" fill="currentColor" />
-      <ellipse cx="7" cy="6" rx="2.6" ry="1.6" fill="#fff" opacity="0.75" transform="rotate(-30 7 6)" />
-    </svg>
-  )
-}
-
-function Spark({ className = '', style }) {
-  return (
-    <svg viewBox="-6 -6 12 12" className={className} style={style} aria-hidden="true">
-      <path d="M0 -6 C0.6 -1.2 1.2 -0.6 6 0 C1.2 0.6 0.6 1.2 0 6 C-0.6 1.2 -1.2 0.6 -6 0 C-1.2 -0.6 -0.6 -1.2 0 -6Z" fill="currentColor" />
-    </svg>
-  )
-}
-
 export default function PopularStylesCard() {
   const [designs, setDesigns] = useState([])
   const [loaded, setLoaded] = useState(false)
@@ -39,6 +22,7 @@ export default function PopularStylesCard() {
   const [hidden, setHidden] = useState(false)
   const [reduced] = useState(prefersReducedMotion)
   const pointerX = useRef(null)
+  const tiltRef = useRef(null)
 
   useEffect(() => {
     getNailDesigns()
@@ -77,17 +61,22 @@ export default function PopularStylesCard() {
     if (Math.abs(dx) >= SWIPE_PX) step(dx < 0 ? 1 : -1)
   }
 
-  return (
-    // ชั้นนอกลอยขึ้นลง ชั้นในเอียง (แยกกันเพราะ transform ของสองอย่างจะทับกัน)
-    <div className="relative mx-auto w-full max-w-sm motion-safe:animate-float hover:[animation-play-state:paused] focus-within:[animation-play-state:paused]" style={{ animationDuration: '6s' }}>
-      {/* ของตกแต่งรอบการ์ด */}
-      <Heart className="absolute -left-5 top-1/3 z-10 w-8 text-pink-300 drop-shadow motion-safe:animate-float" style={{ animationDelay: '0.8s' }} />
-      <Heart className="absolute -right-4 bottom-16 z-10 w-6 text-rose-300 drop-shadow motion-safe:animate-float" style={{ animationDelay: '1.6s' }} />
-      <Spark className="lucky-twinkle absolute -left-2 -top-2 z-10 w-5 text-white" />
-      <Spark className="lucky-twinkle absolute right-10 -bottom-3 z-10 w-4 text-rose-300" style={{ animationDelay: '1.2s' }} />
-      <Spark className="lucky-twinkle absolute -right-3 top-1/2 z-10 w-3 text-white" style={{ animationDelay: '0.6s' }} />
+  // เอียงการ์ดแบบ 3D ตามเมาส์ (เฉพาะเมาส์จริง ไม่ทำกับนิ้ว/ปากกา และไม่ทำเมื่อลดการเคลื่อนไหว)
+  function onTiltMove(e) {
+    if (reduced || e.pointerType !== 'mouse' || !tiltRef.current) return
+    const r = e.currentTarget.getBoundingClientRect()
+    const x = (e.clientX - r.left) / r.width - 0.5
+    const y = (e.clientY - r.top) / r.height - 0.5
+    tiltRef.current.style.transform = `rotateY(${(x * 14).toFixed(2)}deg) rotateX(${(-y * 10).toFixed(2)}deg)`
+  }
+  function resetTilt() {
+    if (tiltRef.current) tiltRef.current.style.transform = ''
+  }
 
+  return (
+    <div className="lucky-3d relative mx-auto w-full max-w-sm" onPointerMove={onTiltMove} onPointerLeave={resetTilt}>
       <div
+        ref={tiltRef}
         role="region"
         aria-roledescription="สไลด์โชว์"
         aria-label="ลายเล็บยอดนิยม"
@@ -95,39 +84,36 @@ export default function PopularStylesCard() {
         onPointerLeave={(e) => e.pointerType === 'mouse' && setHovering(false)}
         onFocus={(e) => e.target.matches?.(':focus-visible') && setFocused(true)}
         onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setFocused(false)}
-        className="relative -rotate-3 bg-white/70 backdrop-blur-md rounded-[2rem] border-2 border-white shadow-[0_24px_50px_-22px_rgba(217,59,114,0.6)] p-5 sm:p-6"
+        className="lucky-3d-inner relative rounded-[24px] border border-white bg-white/75 p-5 sm:p-6 shadow-lift backdrop-blur-md"
       >
-        <div className="absolute -top-4 -right-3 text-4xl drop-shadow motion-safe:animate-float" aria-hidden="true" style={{ animationDuration: '3s' }}>
-          🎀
-        </div>
-        <div className="flex items-baseline justify-between gap-2">
+        <div className="lucky-z1 flex items-baseline justify-between gap-2">
           <p className="font-script text-3xl text-rose-500">Popular Styles</p>
           {count > 1 && (
-            <span className="text-xs font-display font-semibold text-rose-400 tabular-nums">
+            <span className="text-xs text-gray-500 tabular-nums">
               {index + 1} / {count}
             </span>
           )}
         </div>
 
         <div
-          className="relative mt-4 aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-rose-100 to-pink-200 ring-2 ring-white select-none"
+          className="lucky-z2 relative mt-4 aspect-[4/3] rounded-2xl overflow-hidden bg-rose-50 select-none shadow-soft"
           style={{ touchAction: 'pan-y' }}
           onPointerDown={onPointerDown}
           onPointerUp={onPointerUp}
           onPointerCancel={() => (pointerX.current = null)}
         >
           {count === 0 && !loaded && <Bone className="absolute inset-0 !rounded-2xl" />}
-          {count === 0 && loaded && <div className="w-full h-full flex items-center justify-center text-rose-400 text-sm">ลายเล็บยอดนิยม</div>}
+          {count === 0 && loaded && <div className="w-full h-full flex items-center justify-center text-gray-500 text-sm">ลายเล็บยอดนิยม</div>}
 
-          {/* ทุกภาพซ้อนกันอยู่ ภาพที่แสดงจะจางเข้า ภาพอื่นจางออก */}
+          {/* ทุกภาพซ้อนกันอยู่ ภาพที่แสดงพลิกเข้ามาแบบ 3D ภาพอื่นจางออก */}
           {designs.map((d, i) => {
             const active = i === index
             return (
               <div
                 key={d.id}
                 aria-hidden={!active}
-                className="absolute inset-0 transition-opacity duration-700 ease-out"
-                style={{ opacity: active ? 1 : 0 }}
+                className="absolute inset-0 transition-opacity duration-500"
+                style={{ opacity: active ? 1 : 0, transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)' }}
               >
                 <img
                   key={active ? `on-${index}` : 'off'}
@@ -136,7 +122,7 @@ export default function PopularStylesCard() {
                   draggable="false"
                   loading={i === 0 ? 'eager' : 'lazy'}
                   decoding="async"
-                  className={`w-full h-full object-cover ${active ? 'lucky-kenburns' : ''}`}
+                  className={`w-full h-full object-cover ${active ? 'lucky-flip-in' : ''}`}
                 />
               </div>
             )
@@ -147,15 +133,14 @@ export default function PopularStylesCard() {
             <span
               key={`sweep-${index}`}
               aria-hidden="true"
-              className="lucky-sweep pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/45 to-transparent"
+              className="lucky-sweep pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent"
             />
           )}
-          <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-t from-rose-900/15 via-transparent to-white/10" />
         </div>
 
         {/* จุดบอกลำดับ: จุดปัจจุบันมีแถบนับเวลาไปภาพถัดไป */}
         {count > 1 && (
-          <div className="mt-3 flex items-center justify-center gap-1.5">
+          <div className="lucky-z1 mt-4 flex items-center justify-center gap-1.5">
             {designs.map((d, i) => {
               const active = i === index
               return (
@@ -165,7 +150,7 @@ export default function PopularStylesCard() {
                   onClick={() => go(i)}
                   aria-label={`ดูลายที่ ${i + 1}: ${d.name}`}
                   aria-current={active}
-                  className={`relative h-2.5 rounded-full overflow-hidden transition-all duration-300 ${active ? 'w-8 bg-rose-200' : 'w-2.5 bg-rose-200/70 hover:bg-rose-300'}`}
+                  className={`relative h-2 rounded-full overflow-hidden transition-[width,background-color] duration-300 ${active ? 'w-8 bg-rose-100' : 'w-2 bg-gray-300/70 hover:bg-gray-400/70'}`}
                 >
                   {active && (
                     <span
@@ -180,11 +165,11 @@ export default function PopularStylesCard() {
           </div>
         )}
 
-        <div className="mt-3 flex items-center justify-between gap-2">
+        <div className="lucky-z1 mt-3 flex items-center justify-between gap-2">
           <button type="button" onClick={() => step(-1)} disabled={count < 2} aria-label="ลายก่อนหน้า" className="btn-candy-soft w-9 h-9 !p-0 text-lg">
             ‹
           </button>
-          <p key={`name-${index}`} aria-live={playing ? 'off' : 'polite'} className="lucky-fade-up font-display font-semibold text-gray-700 truncate">
+          <p key={`name-${index}`} aria-live={playing ? 'off' : 'polite'} className="lucky-fade-up font-display font-semibold text-gray-800 truncate">
             {current?.name || ''}
           </p>
           <button type="button" onClick={() => step(1)} disabled={count < 2} aria-label="ลายถัดไป" className="btn-candy-soft w-9 h-9 !p-0 text-lg">

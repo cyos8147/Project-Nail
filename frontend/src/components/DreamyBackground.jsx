@@ -71,8 +71,9 @@ const SPARKLES = [
 // variant="calm"  หน้าอื่น: เรียบขึ้นให้เนื้อหาเด่น (ริบบิ้นเส้นเดียวจาง ๆ หัวใจ 2 ดวง ไม่มีโบว์ ประกาย 3 จุด)
 export default function DreamyBackground({ variant = 'calm' }) {
   const full = variant === 'full'
-  const hearts = full ? HEARTS : HEARTS.filter((h) => !h.desktopOnly).slice(1, 3)
-  const sparkles = full ? SPARKLES : SPARKLES.filter((_, i) => i % 2 === 1)
+  // หน้าแรกเหลือหัวใจครึ่งหนึ่ง หน้าอื่น 2 ดวง ทั้งหมดอยู่นิ่ง (ไม่ลอยวน)
+  const hearts = full ? HEARTS.filter((_, i) => i % 2 === 0) : HEARTS.filter((h) => !h.desktopOnly).slice(1, 3)
+  const sparkles = full ? SPARKLES.filter((_, i) => i % 2 === 0) : SPARKLES.filter((_, i) => i % 2 === 1)
   return (
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden select-none">
       {/* พื้นชมพูไล่เฉด + แสงฟุ้ง (แบบเรียบสีอ่อนกว่า) */}
@@ -98,20 +99,13 @@ export default function DreamyBackground({ variant = 'calm' }) {
       <RibbonSwoosh className={`absolute -top-10 -left-24 w-[26rem] sm:w-[34rem] ${full ? 'opacity-80' : 'opacity-35'}`} />
       {full && <RibbonSwoosh flip className="absolute bottom-0 -right-24 w-[26rem] sm:w-[34rem] opacity-70" />}
 
-      {/* โบว์มุมบน (เฉพาะหน้าแรก) */}
-      {full && (
-        <>
-          <span className="absolute top-20 left-3 sm:left-8 text-4xl sm:text-5xl opacity-90 rotate-[-18deg]">🎀</span>
-          <span className="absolute top-24 right-3 sm:right-10 text-3xl sm:text-5xl opacity-90 rotate-[14deg] hidden sm:block">🎀</span>
-        </>
-      )}
 
       {/* หัวใจแก้วลอย (ลอยช้า ๆ) */}
       {hearts.map((h, i) => (
         <GlassHeart
           key={i}
-          className={`absolute ${full ? h.size : 'w-8 sm:w-10 opacity-60'} ${h.desktopOnly ? 'hidden md:block' : ''} drop-shadow-[0_6px_12px_rgba(236,76,130,0.25)] motion-safe:animate-float`}
-          style={{ top: h.top, left: h.left, right: h.right, animationDelay: h.delay, animationDuration: '7s' }}
+          className={`absolute ${full ? `${h.size} opacity-80` : 'w-8 sm:w-10 opacity-50'} ${h.desktopOnly ? 'hidden md:block' : ''}`}
+          style={{ top: h.top, left: h.left, right: h.right }}
         />
       ))}
 
@@ -119,8 +113,8 @@ export default function DreamyBackground({ variant = 'calm' }) {
       {sparkles.map((s, i) => (
         <Sparkle
           key={i}
-          className={`lucky-twinkle absolute ${s.size} ${s.color}`}
-          style={{ top: s.top, left: s.left, right: s.right, animationDelay: `${i * 0.7}s`, animationDuration: '4.5s' }}
+          className={`absolute ${s.size} ${s.color} opacity-70`}
+          style={{ top: s.top, left: s.left, right: s.right }}
         />
       ))}
     </div>

@@ -56,7 +56,7 @@ export default function ServiceSelector({ category, setCategory, service, setSer
                     </span>
                   )}
                 </div>
-                <p className="text-rose-600 font-semibold text-sm whitespace-nowrap">{s.price} บาท</p>
+                <p className="text-rose-600 font-semibold text-sm whitespace-nowrap tabular-nums">{Number(s.price).toLocaleString('th-TH')} บาท</p>
               </div>
             </button>
           )

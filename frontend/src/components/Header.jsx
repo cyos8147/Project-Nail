@@ -21,10 +21,10 @@ const ICON_PATHS = {
   pin: 'M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z',
 }
 
-function NavIcon({ name, className = 'h-4 w-4' }) {
+function NavIcon({ name, className = 'h-[18px] w-[18px]' }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path d={ICON_PATHS[name]} stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={ICON_PATHS[name]} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }
@@ -37,7 +37,7 @@ export default function Header() {
     `relative py-2 transition-colors ${active ? 'text-rose-600 font-bold' : 'text-gray-700 hover:text-rose-600'}`
 
   return (
-    <header className="sticky top-0 z-50 bg-gradient-to-b from-white/80 to-white/55 backdrop-blur-md border-b border-white/80 shadow-[0_8px_30px_-18px_rgba(217,59,114,0.45)]">
+    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-[#1f1b16]/[0.06] shadow-hair">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <a href="/#home" className="pt-2" aria-label="Lucky Salon หน้าแรก">
           <BrandLogo />
@@ -45,7 +45,7 @@ export default function Header() {
 
         {/* เมนูใหญ่บนเดสก์ท็อป เด่นชัด เป็นแคปซูลสีชมพู */}
         <nav aria-label="เมนูหลัก" className="hidden lg:flex order-last basis-full justify-center min-[1150px]:order-none min-[1150px]:basis-auto">
-          <div className="flex items-center gap-0.5 bg-white/75 rounded-full border-2 border-white shadow-[0_6px_20px_-10px_rgba(217,59,114,0.5)] px-1 py-1 text-sm min-[1150px]:text-[13px] font-display font-semibold whitespace-nowrap">
+          <div className="flex items-center gap-0.5 bg-white/70 rounded-full border border-[#1f1b16]/[0.06] px-1 py-1 text-sm min-[1150px]:text-[13px] font-display font-semibold whitespace-nowrap">
           {navItems.map((item) =>
             item.to ? (
               <Link
@@ -69,15 +69,15 @@ export default function Header() {
         <div className="flex items-center gap-2">
           <Link
             to="/history"
-            className={`hidden md:inline-flex text-sm min-[1150px]:text-[13px] px-4 min-[1150px]:px-3 py-2 ${pathname === '/history' ? 'btn-candy' : 'btn-candy-soft'}`}
+            className={`hidden md:inline-flex px-2 py-2 text-sm font-display font-semibold transition-colors ${pathname === '/history' ? 'text-rose-600' : 'text-gray-600 hover:text-rose-600'}`}
           >
             ประวัติของฉัน
           </Link>
           <Link
             to="/ai"
-            className="btn-candy-soft hidden sm:inline-flex text-sm min-[1150px]:text-[13px] px-4 min-[1150px]:px-3 py-2"
+            className="hidden sm:inline-flex px-2 py-2 text-sm font-display font-semibold text-gray-600 hover:text-rose-600 transition-colors"
           >
-            ✨ AI วิเคราะห์ลายเล็บ
+            AI วิเคราะห์ลายเล็บ
           </Link>
           <Link
             to="/booking"
@@ -105,12 +105,12 @@ export default function Header() {
           {navItems.map((item) =>
             item.to ? (
               <Link key={item.label} to={item.to} onClick={() => setMenuOpen(false)} className="flex items-center gap-3 py-3 border-b border-rose-50 hover:text-rose-600">
-                <NavIcon name={item.icon} className="h-5 w-5 text-rose-500" />
+                <NavIcon name={item.icon} className="h-[18px] w-[18px] text-gray-500" />
                 {item.label}
               </Link>
             ) : (
               <a key={item.label} href={item.href} onClick={() => setMenuOpen(false)} className="flex items-center gap-3 py-3 border-b border-rose-50 hover:text-rose-600">
-                <NavIcon name={item.icon} className="h-5 w-5 text-rose-500" />
+                <NavIcon name={item.icon} className="h-[18px] w-[18px] text-gray-500" />
                 {item.label}
               </a>
             ),
@@ -118,8 +118,8 @@ export default function Header() {
           <Link to="/history" onClick={() => setMenuOpen(false)} className="py-3 border-b border-rose-50 hover:text-rose-600 md:hidden">
             ประวัติของฉัน
           </Link>
-          <Link to="/ai" onClick={() => setMenuOpen(false)} className="py-3 text-rose-600 sm:hidden">
-            ✨ AI วิเคราะห์ลายเล็บ
+          <Link to="/ai" onClick={() => setMenuOpen(false)} className="py-3 hover:text-rose-600 sm:hidden">
+            AI วิเคราะห์ลายเล็บ
           </Link>
         </nav>
       )}

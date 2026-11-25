@@ -10,32 +10,26 @@ import Footer from '../components/Footer.jsx'
 import MobileStickyBar from '../components/MobileStickyBar.jsx'
 import DreamyBackground from '../components/DreamyBackground.jsx'
 import Reveal from '../components/Reveal.jsx'
+import Icon from '../components/Icon.jsx'
 
 // จุดเด่นของร้าน (ข้อความอย่างเดียว ไม่มีปุ่ม)
 // ไอคอนเส้นวาดเอง (แทนอีโมจิ ซึ่งแสดงต่างกันในแต่ละเครื่องและดูไม่เป็นแบรนด์)
-const ICONS = {
-  gem: 'M6 3h12l4 6-10 12L2 9zM2 9h20M9 3l-2 6 5 12 5-12-2-6',
-  shield: 'M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6zM8.5 12l2.5 2.5 4.5-5',
-  heart: 'M12 20s-7.5-4.6-9.2-9.2C1.5 7 3.8 4 7 4c2 0 3.6 1.1 5 3 1.4-1.9 3-3 5-3 3.2 0 5.5 3 4.2 6.8C19.5 15.4 12 20 12 20z',
-  clock: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3.5 2',
-}
+// สิ่งที่เว็บนี้ทำได้จริง (ตรวจสอบได้จากฟีเจอร์ ไม่ใช่คำโฆษณากว้าง ๆ)
 const HIGHLIGHTS = [
-  { icon: 'gem', title: 'Premium Quality', sub: 'คุณภาพพรีเมียม' },
-  { icon: 'shield', title: 'Hygienic & Safe', sub: 'สะอาด ปลอดภัย' },
-  { icon: 'heart', title: 'Professional Staff', sub: 'ช่างมืออาชีพ' },
-  { icon: 'clock', title: 'Easy Booking', sub: 'จองง่าย สะดวก' },
+  { icon: 'calendar', title: 'จองออนไลน์ได้ตลอด', sub: 'เลือกบริการและเวลาที่ว่างเอง' },
+  { icon: 'hand', title: 'ลองสีบนรูปมือก่อนจอง', sub: 'เห็นสีบนเล็บของคุณจริง' },
+  { icon: 'repeat', title: 'เลื่อนหรือยกเลิกนัดเอง', sub: 'จัดการได้ที่ประวัติของฉัน' },
+  { icon: 'bell', title: 'แจ้งเตือนผ่าน LINE', sub: 'ยืนยันคิวและเตือนก่อนนัด' },
 ]
 
 function HighlightBar() {
   return (
     <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-4">
-      <ul className="bg-white/60 backdrop-blur-sm rounded-[2rem] md:rounded-full border border-white/80 shadow-card px-4 py-4 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-0 md:divide-x md:divide-rose-100">
+      <ul className="rounded-[20px] border border-[#1f1b16]/[0.06] bg-white/85 shadow-soft px-4 py-5 grid grid-cols-2 md:grid-cols-4 gap-y-5 md:divide-x md:divide-[#1f1b16]/[0.06]">
         {HIGHLIGHTS.map((h) => (
-          <li key={h.title} className="flex items-center gap-3 justify-center px-3">
-            <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-50 to-pink-100 text-rose-500 ring-2 ring-white">
-              <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
-                <path d={ICONS[h.icon]} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+          <li key={h.title} className="flex items-start gap-3 px-4">
+            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
+              <Icon name={h.icon} />
             </span>
             <span className="text-left leading-tight">
               <span className="block text-sm font-display font-semibold text-gray-800">{h.title}</span>

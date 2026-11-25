@@ -71,7 +71,7 @@ h1, h2, h3, .font-display {
 
 /* ===== ภาพเคลื่อนไหว (ปิดทั้งหมดเมื่อเครื่องตั้งค่า "ลดการเคลื่อนไหว") ===== */
 @keyframes lucky-fade-up {
-  from { opacity: 0; transform: translateY(18px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: none; }
 }
 @keyframes lucky-write {
@@ -130,7 +130,28 @@ h1, h2, h3, .font-display {
 }
 .lucky-page { animation: lucky-page-in 0.35s ease-out; }
 
-.lucky-fade-up { animation: lucky-fade-up 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.lucky-fade-up { animation: lucky-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* ===== 3D ที่ตอบสนองต่อผู้ใช้ (ไม่วนเอง) ===== */
+.lucky-3d { perspective: 1100px; }
+.lucky-3d-inner {
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.lucky-z1 { transform: translateZ(28px); }
+.lucky-z2 { transform: translateZ(52px); }
+@keyframes lucky-flip-in {
+  from { opacity: 0; transform: rotateY(-22deg) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+.lucky-flip-in { animation: lucky-flip-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: left center; }
+@keyframes lucky-nail-turn {
+  0% { transform: rotateY(0deg) rotateX(0deg); }
+  45% { transform: rotateY(18deg) rotateX(-6deg); }
+  100% { transform: rotateY(0deg) rotateX(0deg); }
+}
+.lucky-nail-turn { animation: lucky-nail-turn 0.9s cubic-bezier(0.22, 1, 0.36, 1); }
 .lucky-kenburns { animation: lucky-kenburns 6s ease-out both; }
 .lucky-progress { transform-origin: left; animation: lucky-progress linear both; }
 .lucky-sweep { animation: lucky-sweep 1.3s ease-out 0.15s both; }
@@ -148,12 +169,15 @@ h1, h2, h3, .font-display {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .lucky-3d-inner { transform: none !important; transition: none !important; }
   .lucky-fade-up,
   .lucky-splash__word,
   .lucky-splash__tag,
   .lucky-splash__crown,
   .lucky-splash__heart,
   .lucky-page,
+  .lucky-flip-in,
+  .lucky-nail-turn,
   .lucky-shine,
   .lucky-skeleton,
   .lucky-kenburns,

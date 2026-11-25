@@ -2,6 +2,7 @@
 // ข้อมูลทางเทคนิคของโมเดล (ความแม่นยำ ชื่อไฟล์) ไม่แสดงให้ลูกค้า — อยู่ในเอกสารโครงงานและสไลด์แล้ว
 
 import { useEffect, useState } from 'react'
+import Icon from './Icon.jsx'
 import { useNavigate } from 'react-router-dom'
 import { aiRecommend, aiRecommendAccept, getSavedPhone } from '../api/client.js'
 import { toRecommendScores, scoreLabel } from '../utils/recommendScore.js'
@@ -42,8 +43,8 @@ function Field({ label, hint, options, value, onChange }) {
             type="button"
             aria-pressed={value === o.id}
             onClick={() => onChange(o.id)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-              value === o.id ? 'bg-gradient-to-r from-rose-500 to-rose-400 text-white shadow-[0_8px_16px_-6px_rgba(236,76,130,0.6)] scale-[1.03]' : 'bg-white text-gray-600 border border-blush-200 hover:border-rose-300 hover:text-rose-600'
+            className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors duration-150 ${
+              value === o.id ? 'bg-rose-500 border-rose-500 text-white' : 'bg-white text-gray-600 border-[#1f1b16]/10 hover:border-rose-300 hover:text-rose-600'
             }`}
           >
             {o.label}
@@ -105,12 +106,11 @@ export default function AdvancedRecommend({ skinTone = null }) {
   return (
     <section id="ai-advanced-recommend" className="max-w-5xl mx-auto px-6 py-20">
       <div className="text-center mb-4">
-        <p className="font-script text-4xl text-rose-500">Find Your Style</p>
-        <h2 className="font-display text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight mt-1">ให้ AI เลือกลายที่ใช่ให้คุณ</h2>
+        <h2 className="font-display text-3xl/[1.4] sm:text-4xl/[1.4] font-semibold text-gray-800">ให้ AI เลือกลายที่ใช่ให้คุณ</h2>
         <p className="text-gray-500 mt-2">ตอบไม่กี่ข้อ แล้วดูลายที่เหมาะกับคุณที่สุดจากลายของร้าน</p>
       </div>
 
-      <div className="bg-white/90 backdrop-blur rounded-[2rem] border border-blush-100 shadow-[0_30px_60px_-30px_rgba(217,59,114,0.35)] p-6 sm:p-10 grid md:grid-cols-2 gap-8 mt-8">
+      <div className="bg-white/90 rounded-[24px] border border-[#1f1b16]/[0.06] shadow-soft p-6 sm:p-10 grid md:grid-cols-2 gap-8 mt-8">
         <div className="space-y-6">
           <Field
             label="โทนสีผิวของคุณ"
@@ -146,8 +146,8 @@ export default function AdvancedRecommend({ skinTone = null }) {
 
         <div aria-live="polite">
           {status !== 'done' && (
-            <div className="h-full min-h-[240px] flex flex-col items-center justify-center text-sm text-gray-400 text-center px-6 gap-2 rounded-3xl border-2 border-dashed border-blush-200 bg-gradient-to-br from-blush-50 to-violet-50/60">
-              <span className="text-4xl" aria-hidden="true">💅</span>
+            <div className="h-full min-h-[240px] flex flex-col items-center justify-center text-sm text-gray-500 text-center px-6 gap-3 rounded-[20px] border-2 border-dashed border-[#1f1b16]/10 bg-rose-50/50">
+              <span className="text-rose-400" aria-hidden="true"><Icon name="brush" className="h-8 w-8" /></span>
               ลายที่ AI เลือกให้จะแสดงที่นี่
             </div>
           )}
@@ -158,7 +158,7 @@ export default function AdvancedRecommend({ skinTone = null }) {
                 {result.recommendations.map((r, i) => (
                   <div
                     key={r.design.id}
-                    className={`rounded-2xl p-3 flex items-center gap-3 border transition hover:-translate-y-0.5 hover:shadow-card ${i === 0 ? 'border-rose-300 bg-gradient-to-r from-rose-50 to-white shadow-card' : 'border-blush-200 bg-white'}`}
+                    className={`rounded-2xl p-3 flex items-center gap-3 border transition-colors duration-150 ${i === 0 ? 'border-rose-300 bg-rose-50/60' : 'border-blush-200 bg-white'}`}
                   >
                     <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
                       {r.design.image_url ? (

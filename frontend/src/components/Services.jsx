@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { getServiceCategories, getServices } from '../api/client.js'
 import ServiceArt from './ServiceArt.jsx'
 import { Bone, SlowNote, useSlow } from './Skeleton.jsx'
+import Icon from './Icon.jsx'
 
 const FALLBACK_CATEGORIES = [
   { id: 'hair', name: 'ทำผม', icon: '💇‍♀️' },
@@ -35,7 +36,7 @@ function formatDuration(minutes) {
 function Thumb({ src, name, categoryId }) {
   const [failed, setFailed] = useState(false)
   return (
-    <div className="flex h-20 w-24 sm:h-24 sm:w-32 lg:h-28 lg:w-36 shrink-0 items-center justify-center overflow-hidden rounded-[1.1rem] bg-gradient-to-br from-rose-100 via-pink-50 to-white text-3xl ring-2 ring-white shadow-[0_6px_14px_-8px_rgba(217,59,114,0.5)]">
+    <div className="flex h-20 w-24 sm:h-24 sm:w-32 lg:h-28 lg:w-36 shrink-0 items-center justify-center overflow-hidden rounded-[12px] bg-rose-50 text-3xl">
       {src && !failed ? (
         <img src={src} alt={name} loading="lazy" onError={() => setFailed(true)} className="h-full w-full object-cover" />
       ) : (
@@ -60,18 +61,17 @@ function ServiceRow({ service, icon }) {
   const duration = formatDuration(service.duration_minutes)
   const price = (
     <>
-      <span className="font-display font-bold text-rose-500">{formatPrice(service.price)}</span>
+      <span className="font-display font-semibold text-rose-600 tabular-nums">{formatPrice(service.price)}</span>
       <span className="ml-1 text-sm font-semibold text-rose-500">บาท</span>
     </>
   )
   return (
     <li
-      className="group relative flex items-center gap-3 sm:gap-4 rounded-[1.6rem] border-2 border-white/90 p-2.5 pr-3 sm:p-3 sm:pr-4 shadow-[0_12px_28px_-14px_rgba(217,59,114,0.55),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-sm transition-transform hover:-translate-y-0.5"
-      style={{ background: 'linear-gradient(135deg, rgba(255,244,248,0.85) 0%, rgba(252,220,233,0.6) 100%)' }}
+      className="group relative flex items-center gap-3 sm:gap-4 rounded-[20px] border border-[#1f1b16]/[0.06] bg-white/85 shadow-soft p-3 pr-4 transition-colors duration-150 hover:bg-white"
     >
       <Thumb src={service.image_url} name={name} categoryId={service.category_id} />
       <div className="min-w-0 flex-1">
-        <h3 className="font-display font-bold leading-snug text-gray-800 line-clamp-2 text-base sm:text-lg">{name}</h3>
+        <h3 className="font-display font-semibold leading-snug text-gray-800 line-clamp-2 text-base sm:text-lg">{name}</h3>
         {description && description !== name && (
           <p className="mt-0.5 line-clamp-2 text-xs sm:text-sm text-gray-500">{description}</p>
         )}
@@ -131,8 +131,7 @@ export default function Services() {
   const active = tabs.find((t) => t.id === activeId) || tabs[0]
   const header = (
     <div className="text-center mb-8">
-      <p className="font-script text-4xl text-rose-500">Our Services</p>
-      <h2 className="font-display text-3xl font-bold text-gray-800 mt-1">บริการของร้าน</h2>
+      <h2 className="font-display text-3xl font-semibold text-gray-800">บริการของร้าน</h2>
       <p className="text-gray-500 mt-2">เลือกหมวดที่สนใจ แล้วจองคิวได้ทันที</p>
     </div>
   )
@@ -145,7 +144,7 @@ export default function Services() {
         <Bone className="mx-auto mb-8 h-14 w-full max-w-lg !rounded-full" />
         <ul className="grid gap-4 md:grid-cols-2">
           {Array.from({ length: 4 }, (_, i) => (
-            <li key={i} className="flex items-center gap-4 rounded-[1.6rem] border-2 border-white/90 bg-white/50 p-3">
+            <li key={i} className="flex items-center gap-4 rounded-[20px] border border-[#1f1b16]/[0.06] bg-white/85 shadow-soft p-3">
               <Bone className="h-20 w-24 sm:h-24 sm:w-32 shrink-0 !rounded-[1.1rem]" />
               <div className="flex-1 space-y-2.5">
                 <Bone className="h-5 w-2/3" />
@@ -187,7 +186,7 @@ export default function Services() {
         <div
           role="tablist"
           aria-label="หมวดบริการ"
-          className="mx-auto mb-8 flex w-full max-w-lg gap-2 rounded-full border-2 border-white bg-white/55 p-2 shadow-[0_8px_24px_-12px_rgba(217,59,114,0.5)] backdrop-blur-sm"
+          className="mx-auto mb-8 flex w-full max-w-lg gap-2 rounded-full border border-[#1f1b16]/[0.06] bg-white/85 p-1.5 shadow-hair"
         >
           {tabs.map((t, i) => {
             const selected = t.id === active.id
@@ -209,15 +208,9 @@ export default function Services() {
                   selected ? 'btn-candy' : 'btn-candy-soft !border-transparent !shadow-none !bg-transparent hover:!bg-white/70 !text-gray-700'
                 }`}
               >
-                <span aria-hidden="true">{t.icon}</span>
+                <Icon name={t.id === 'hair' ? 'scissors' : t.id === 'nail' ? 'brush' : 'palette'} />
                 {t.name}
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                    selected ? 'bg-white/25 text-white' : 'bg-blush-100 text-rose-600'
-                  }`}
-                >
-                  {t.items.length}
-                </span>
+                <span className={`text-xs font-normal tabular-nums ${selected ? 'text-white/80' : 'text-gray-500'}`}>{t.items.length}</span>
               </button>
             )
           })}
@@ -258,7 +251,7 @@ export default function Services() {
           to="/booking"
           className="btn-candy px-10 py-3.5 text-lg"
         >
-          <span aria-hidden="true">📅</span>
+          <Icon name="calendar" />
           จองคิวเลย
           <span aria-hidden="true">›</span>
         </Link>

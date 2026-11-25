@@ -35,9 +35,9 @@ export default function Reveal({ children, delay = 0, className = '' }) {
 
   const style =
     phase === 'hidden'
-      ? { opacity: 0, transform: 'translateY(28px)' }
+      ? { opacity: 0, transform: 'translateY(12px)' }
       : phase === 'shown'
-        ? { opacity: 1, transform: 'none', transition: `opacity 0.8s ease-out ${delay}ms, transform 0.8s cubic-bezier(0.2,0.7,0.2,1) ${delay}ms` }
+        ? { opacity: 1, transform: 'none', transition: `opacity 0.5s cubic-bezier(0.22,1,0.36,1) ${delay}ms, transform 0.5s cubic-bezier(0.22,1,0.36,1) ${delay}ms` }
         : undefined
 
   return (

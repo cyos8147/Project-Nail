@@ -53,8 +53,7 @@ export default function NailRecommendation({ skinTone }) {
   return (
     <section id="ai-recommend" className="max-w-6xl mx-auto px-6 py-20">
       <div className="text-center mb-4">
-        <p className="font-script text-4xl text-rose-500">{personalized ? 'Picked for You' : 'Trending Styles'}</p>
-        <h2 className="font-display text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight mt-1">
+        <h2 className="font-display text-3xl/[1.4] sm:text-4xl/[1.4] font-semibold text-gray-800">
           {personalized ? `ลายเล็บที่เหมาะกับผิว${TONE_LABEL[skinTone]}ของคุณ` : 'ลายเล็บยอดนิยมของร้าน'}
         </h2>
         <p className="text-gray-500 mt-2">
@@ -68,7 +67,7 @@ export default function NailRecommendation({ skinTone }) {
         {ranked.map((d, i) => (
           <div
             key={d.id ?? d.name}
-            className="group bg-white rounded-3xl border border-blush-100 shadow-card overflow-hidden relative flex flex-col hover:-translate-y-1.5 hover:shadow-[0_22px_40px_-18px_rgba(217,59,114,0.4)] transition-all duration-300"
+            className="group bg-white rounded-[20px] border border-[#1f1b16]/[0.06] shadow-soft overflow-hidden relative flex flex-col"
           >
             {personalized && i === 0 && (
               <span className="absolute top-3 left-3 z-10 bg-gradient-to-r from-rose-500 to-fuchsia-500 text-white text-[11px] font-semibold px-3 py-1 rounded-full shadow-md">
@@ -77,7 +76,7 @@ export default function NailRecommendation({ skinTone }) {
             )}
             <div className="aspect-square overflow-hidden">
               {d.image_url ? (
-                <img loading="lazy" decoding="async" src={d.image_url} alt={d.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img loading="lazy" decoding="async" src={d.image_url} alt={d.name} className="w-full h-full object-cover" />
               ) : (
                 <NailThumb label={d.name} accent={d.color_hex || ACCENTS[i % ACCENTS.length]} />
               )}

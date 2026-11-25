@@ -9,6 +9,7 @@ import NailThumb from '../components/NailThumb.jsx'
 import { Bone, SlowNote, useSlow } from '../components/Skeleton.jsx'
 import { getNailDesigns } from '../api/client.js'
 import { saveCarryDesign } from '../utils/carryDesign.js'
+import Icon from '../components/Icon.jsx'
 
 // หน้าแกลเลอรีผลงานลายเล็บทั้งหมดของร้าน (ข้อมูลจากหน้าแอดมิน "ลายเล็บ")
 // กดการ์ดเพื่อดูเต็มจอ เลื่อนด้วยลูกศร/คีย์บอร์ด/ปัด และกด "จองลายนี้" ไปหน้าจองพร้อมลายที่เลือก
@@ -83,7 +84,7 @@ function Lightbox({ designs, index, onClose, onStep, onBook }) {
             if (Math.abs(dx) >= SWIPE_PX) onStep(dx < 0 ? 1 : -1)
           }}
         >
-          <div key={d.id} className="lucky-fade-up" style={{ animationDuration: '0.45s' }}>
+          <div key={d.id} className="lucky-flip-in">
             <DesignImage design={d} className="block w-full max-h-[62vh] aspect-[4/3] h-auto" />
           </div>
           {many && (
@@ -93,12 +94,12 @@ function Lightbox({ designs, index, onClose, onStep, onBook }) {
           )}
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[1.6rem] bg-white/95 p-4 sm:px-6">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[20px] bg-white/95 p-4 sm:px-6">
           <div className="min-w-0">
-            <p className="font-display text-lg sm:text-xl font-bold text-gray-800 truncate">{d.name}</p>
+            <p className="font-display text-lg sm:text-xl font-semibold text-gray-800 truncate">{d.name}</p>
             <p className="text-sm text-gray-500">
               {STYLE_LABEL[d.style_tag] || d.style_tag} · {formatMinutes(d.duration_minutes)} ·{' '}
-              <span className="font-display font-bold text-rose-500">{formatPrice(d.price)} บาท</span>
+              <span className="font-display font-semibold text-rose-600 tabular-nums">{formatPrice(d.price)} บาท</span>
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -108,7 +109,7 @@ function Lightbox({ designs, index, onClose, onStep, onBook }) {
               </button>
             )}
             <button type="button" onClick={() => onBook(d)} className="btn-candy px-6 py-3">
-              <span aria-hidden="true">📅</span> จองลายนี้
+              <Icon name="calendar" /> จองลายนี้
             </button>
             {many && (
               <button type="button" onClick={() => onStep(1)} aria-label="ลายถัดไป" className="btn-candy-soft w-11 h-11 !p-0 text-xl">
@@ -173,24 +174,23 @@ export default function GalleryPage() {
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
         <div className="text-center">
-          <p className="lucky-fade-up font-script text-5xl text-rose-500">Our Gallery</p>
-          <h1 className="lucky-fade-up font-display text-3xl sm:text-4xl font-bold text-gray-800 mt-1" style={{ animationDelay: '0.1s' }}>
+          <h1 className="lucky-fade-up font-display text-3xl/[1.4] sm:text-4xl/[1.4] font-semibold text-gray-800">
             ผลงานลายเล็บของร้าน
           </h1>
-          <p className="lucky-fade-up text-gray-500 mt-2" style={{ animationDelay: '0.2s' }}>
+          <p className="lucky-fade-up text-gray-600 mt-2" style={{ animationDelay: '0.06s' }}>
             กดที่รูปเพื่อดูเต็มจอ ชอบลายไหนกดจองได้เลย
           </p>
         </div>
 
         {tags.length > 1 && (
-          <div role="group" aria-label="กรองตามสไตล์" className="mt-8 flex flex-wrap justify-center gap-2">
+          <div role="group" aria-label="กรองตามสไตล์" className="mt-8 -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-2 overflow-x-auto sm:flex-wrap sm:justify-center pb-1 [scrollbar-width:none]">
             {['all', ...tags].map((t) => (
               <button
                 key={t}
                 type="button"
                 aria-pressed={filter === t}
                 onClick={() => setFilter(t)}
-                className={`px-5 py-2 text-sm ${filter === t ? 'btn-candy' : 'btn-candy-soft'}`}
+                className={`shrink-0 px-5 py-2 text-sm ${filter === t ? 'btn-candy' : 'btn-candy-soft'}`}
               >
                 {t === 'all' ? `ทั้งหมด (${designs.length})` : STYLE_LABEL[t] || t}
               </button>
@@ -201,7 +201,7 @@ export default function GalleryPage() {
         <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5" aria-busy={designs === null}>
           {designs === null &&
             Array.from({ length: 8 }, (_, i) => (
-              <div key={i} aria-hidden="true" className="rounded-[1.6rem] border-2 border-white bg-white/50 p-2">
+              <div key={i} aria-hidden="true" className="rounded-[20px] border border-[#1f1b16]/[0.06] bg-white/70 p-2">
                 <Bone className="aspect-square !rounded-[1.2rem]" />
                 <div className="p-2 space-y-2">
                   <Bone className="h-4 w-3/4" />
@@ -216,20 +216,20 @@ export default function GalleryPage() {
               type="button"
               onClick={(e) => open(i, e.currentTarget)}
               aria-label={`ดูลาย ${d.name} เต็มจอ`}
-              className="lucky-fade-up group text-left rounded-[1.6rem] border-2 border-white/90 p-2 shadow-[0_12px_28px_-14px_rgba(217,59,114,0.55)] backdrop-blur-sm transition-transform hover:-translate-y-1 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-rose-300"
-              style={{ background: 'linear-gradient(135deg, rgba(255,244,248,0.85), rgba(252,220,233,0.6))', animationDelay: `${Math.min(i, 11) * 0.05}s` }}
+              className="lucky-fade-up group text-left rounded-[20px] border border-[#1f1b16]/[0.06] bg-white/85 p-2 shadow-soft transition-colors duration-150 hover:bg-white focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-rose-300"
+              style={{ animationDelay: `${Math.min(i, 5) * 0.06}s` }}
             >
-              <div className="relative aspect-square overflow-hidden rounded-[1.2rem]">
-                <DesignImage design={d} className="w-full h-full transition-transform duration-500 group-hover:scale-110" />
+              <div className="relative aspect-square overflow-hidden rounded-[12px]">
+                <DesignImage design={d} className="w-full h-full transition-opacity duration-150 group-hover:opacity-90" />
                 <span aria-hidden="true" className="absolute bottom-2 right-2 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-display font-semibold text-rose-600 opacity-0 transition-opacity group-hover:opacity-100">
                   ดูเต็มจอ ⤢
                 </span>
               </div>
               <div className="px-2 pt-2.5 pb-1">
-                <p className="font-display font-bold text-gray-800 truncate">{d.name}</p>
+                <p className="font-display font-semibold text-gray-800 truncate">{d.name}</p>
                 <p className="text-sm">
                   <span className="text-gray-500">{STYLE_LABEL[d.style_tag] || d.style_tag}</span>
-                  <span className="float-right font-display font-bold text-rose-500">{formatPrice(d.price)} ฿</span>
+                  <span className="float-right font-display font-semibold text-rose-600 tabular-nums">{formatPrice(d.price)} บาท</span>
                 </p>
               </div>
             </button>
@@ -245,7 +245,7 @@ export default function GalleryPage() {
 
         <div className="mt-12 text-center">
           <Link to="/booking" className="btn-candy px-10 py-3.5 text-lg">
-            <span aria-hidden="true">📅</span> จองคิวเลย
+            <Icon name="calendar" /> จองคิวเลย
           </Link>
         </div>
       </main>

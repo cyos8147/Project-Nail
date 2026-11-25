@@ -326,7 +326,7 @@ export default function BookingWizard() {
       <section id="booking" className="max-w-2xl mx-auto px-6 py-16 text-center">
         <div className="bg-white rounded-3xl shadow-card p-10">
           <div className="text-5xl mb-4">🎉</div>
-          <h2 className="font-display text-2xl font-bold text-gray-800">จองคิวสำเร็จแล้ว!</h2>
+          <h2 className="font-display text-2xl font-semibold text-gray-800">จองคิวสำเร็จแล้ว</h2>
           <p className="text-gray-500 mt-2">ขอบคุณที่ใช้บริการ Lucky Salon</p>
 
           <div className="mt-6 bg-blush-50 border border-blush-200 rounded-2xl p-5 max-w-xs mx-auto text-left space-y-2.5">
@@ -434,8 +434,7 @@ export default function BookingWizard() {
   return (
     <section id="booking" className="max-w-4xl mx-auto px-6 py-16">
       <div className="text-center mb-2">
-        <p className="font-script text-4xl text-rose-500">Book Your Visit</p>
-        <h2 className="font-display text-3xl font-bold text-gray-800 mt-1">จองคิวออนไลน์</h2>
+        <h2 className="font-display text-3xl font-semibold text-gray-800">จองคิวออนไลน์</h2>
         <p className="text-gray-500 mt-2">ดูปฏิทิน เลือกเวลาว่าง และเลือกบริการที่ต้องการได้ในที่เดียว</p>
       </div>
 

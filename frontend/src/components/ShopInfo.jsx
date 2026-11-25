@@ -77,8 +77,7 @@ const ChatIcon = () => (
 
 const ContactHeading = () => (
   <div className="text-center mb-10">
-    <p className="font-script text-4xl text-rose-500">Visit Us</p>
-    <h2 className="font-display text-3xl font-bold text-gray-800 mt-1">ที่ตั้งและเวลาทำการ</h2>
+    <h2 className="font-display text-3xl font-semibold text-gray-800">ที่ตั้งและเวลาทำการ</h2>
     <p className="text-gray-500 mt-2">แวะมาหาเราได้เลย หรือทักไลน์ถามก่อนก็ได้</p>
   </div>
 )
