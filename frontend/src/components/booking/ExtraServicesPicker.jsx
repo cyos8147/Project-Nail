@@ -35,9 +35,9 @@ export default function ExtraServicesPicker({ main, extras, setExtras, allServic
             </div>
             {i > 0 && (
               <div className="flex items-center gap-1">
-                <button type="button" onClick={() => move(i - 1, -1)} disabled={i === 1} aria-label={`เลื่อน ${c.service.name} ขึ้น`} className="w-9 h-9 rounded-full text-gray-500 hover:bg-blush-100 disabled:opacity-30">↑</button>
-                <button type="button" onClick={() => move(i - 1, 1)} disabled={i === chain.length - 1} aria-label={`เลื่อน ${c.service.name} ลง`} className="w-9 h-9 rounded-full text-gray-500 hover:bg-blush-100 disabled:opacity-30">↓</button>
-                <button type="button" onClick={() => setExtras(extras.filter((s) => s.id !== c.service.id))} aria-label={`เอา ${c.service.name} ออก`} className="w-9 h-9 rounded-full text-gray-400 hover:bg-red-50 hover:text-red-500">✕</button>
+                <button type="button" onClick={() => move(i - 1, -1)} disabled={i === 1} aria-label={`เลื่อน ${c.service.name} ขึ้น`} className="btn-candy-soft w-9 h-9 !p-0">↑</button>
+                <button type="button" onClick={() => move(i - 1, 1)} disabled={i === chain.length - 1} aria-label={`เลื่อน ${c.service.name} ลง`} className="btn-candy-soft w-9 h-9 !p-0">↓</button>
+                <button type="button" onClick={() => setExtras(extras.filter((s) => s.id !== c.service.id))} aria-label={`เอา ${c.service.name} ออก`} className="btn-candy-soft w-9 h-9 !p-0 hover:!text-red-500">✕</button>
               </div>
             )}
             {i === 0 && <span className="text-[11px] text-rose-600 font-semibold bg-rose-50 px-2 py-1 rounded-full">บริการหลัก</span>}
@@ -60,7 +60,7 @@ export default function ExtraServicesPicker({ main, extras, setExtras, allServic
                 key={s.id}
                 type="button"
                 onClick={() => setExtras([...extras, s])}
-                className="text-sm bg-white border border-blush-200 hover:border-rose-300 hover:text-rose-600 rounded-full px-3.5 py-2 transition-colors"
+                className="btn-candy-soft text-sm px-3.5 py-2"
               >
                 + {s.name} <span className="text-xs text-gray-400">({catName(s.category_id)} {formatMinutes(Number(s.duration_minutes))})</span>
               </button>

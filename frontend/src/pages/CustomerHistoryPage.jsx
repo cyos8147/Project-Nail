@@ -70,7 +70,7 @@ function ReviewForm({ booking, phone, onSubmitted }) {
         type="button"
         onClick={handleSubmit}
         disabled={submitting}
-        className="text-xs font-semibold text-white bg-rose-500 hover:bg-rose-600 disabled:bg-blush-200 px-4 py-2 rounded-full"
+        className="btn-candy text-xs px-4 py-2"
       >
         {submitting ? 'กำลังส่ง...' : 'ส่งรีวิว'}
       </button>
@@ -156,7 +156,7 @@ export default function CustomerHistoryPage() {
           <button
             type="submit"
             disabled={status === 'loading'}
-            className="bg-rose-500 hover:bg-rose-600 disabled:bg-blush-200 text-white font-semibold px-6 py-3 rounded-full shadow-card transition-colors whitespace-nowrap"
+            className="btn-candy px-6 py-3 whitespace-nowrap"
           >
             {status === 'loading' ? 'กำลังค้นหา...' : 'ดูประวัติ'}
           </button>

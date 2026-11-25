@@ -61,6 +61,12 @@ h1, h2, h3, .font-display {
   .btn-candy-soft:focus-visible { outline: 3px solid #F9A8C9; outline-offset: 3px; }
   .btn-candy:disabled,
   .btn-candy-soft:disabled { opacity: 0.45; transform: none; cursor: not-allowed; }
+  /* ปุ่ม LINE: รูปทรงลูกอมเหมือนกัน แต่คงสีเขียวของ LINE */
+  .btn-candy.btn-line {
+    background: linear-gradient(180deg, #2FDB78 0%, #06C755 100%);
+    box-shadow: 0 4px 0 #049A41, 0 10px 18px -8px rgba(4, 154, 65, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.4);
+  }
+  .btn-candy.btn-line:active { box-shadow: 0 1px 0 #049A41, inset 0 2px 0 rgba(255, 255, 255, 0.4); }
 }
 
 /* ===== ภาพเคลื่อนไหว (ปิดทั้งหมดเมื่อเครื่องตั้งค่า "ลดการเคลื่อนไหว") ===== */

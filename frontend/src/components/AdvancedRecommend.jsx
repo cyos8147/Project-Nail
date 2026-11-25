@@ -139,7 +139,7 @@ export default function AdvancedRecommend({ skinTone = null }) {
             type="button"
             onClick={handleSubmit}
             disabled={status === 'loading'}
-            className="w-full bg-gradient-to-r from-rose-500 via-rose-500 to-fuchsia-500 hover:brightness-110 disabled:opacity-60 text-white font-semibold py-3.5 rounded-full shadow-[0_14px_28px_-10px_rgba(236,76,130,0.7)] transition"
+            className="btn-candy w-full py-3.5"
           >
             {status === 'loading' ? 'AI กำลังเลือกลายให้คุณ...' : 'ดูลายที่เหมาะกับฉัน'}
           </button>
@@ -182,7 +182,7 @@ export default function AdvancedRecommend({ skinTone = null }) {
                     <button
                       type="button"
                       onClick={() => handleBookThis(r.design)}
-                      className="text-xs font-semibold text-white bg-gradient-to-r from-rose-500 to-rose-400 hover:brightness-110 px-3.5 py-2 rounded-full whitespace-nowrap shadow-md"
+                      className="btn-candy text-xs px-3.5 py-2 whitespace-nowrap"
                     >
                       จองลายนี้
                     </button>

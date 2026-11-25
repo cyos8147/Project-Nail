@@ -133,7 +133,7 @@ export default function ServiceDetails({
               type="button"
               onClick={handleAnalyze}
               disabled={aiStatus === 'loading'}
-              className="text-xs font-semibold text-white bg-rose-500 hover:bg-rose-600 disabled:bg-blush-200 px-4 py-2 rounded-full whitespace-nowrap"
+              className="btn-candy text-xs px-4 py-2 whitespace-nowrap"
             >
               {aiStatus === 'loading' ? 'กำลังวิเคราะห์...' : '🤖 วิเคราะห์ลาย'}
             </button>

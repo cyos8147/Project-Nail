@@ -105,7 +105,7 @@ export default function NailRecommendation({ skinTone }) {
                 <button
                   type="button"
                   onClick={() => handleBook(d)}
-                  className="mt-auto text-xs font-semibold text-rose-600 border border-rose-200 hover:bg-rose-500 hover:text-white hover:border-rose-500 rounded-full py-2.5 transition-colors"
+                  className="btn-candy-soft mt-auto text-xs py-2.5"
                 >
                   จองลายนี้
                 </button>

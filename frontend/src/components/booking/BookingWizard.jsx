@@ -397,7 +397,7 @@ export default function BookingWizard() {
                   href={buildLineAddLink(shopLineId, bookingResult.booking_code)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 bg-[#06C755] hover:brightness-95 text-white text-sm font-semibold py-3 rounded-full transition-all"
+                  className="btn-candy btn-line gap-2 text-sm py-3"
                 >
                   💬 ผูก LINE รับแจ้งเตือนคิวอัตโนมัติ
                 </a>
@@ -416,12 +416,12 @@ export default function BookingWizard() {
           </div>
           <CancelPolicyNote hours={cancelCutoffHours} className="mt-4 max-w-xs mx-auto" />
           <div className="flex flex-wrap justify-center gap-3 mt-6">
-            <a href="/history" className="bg-white hover:bg-blush-100 text-rose-600 text-sm font-semibold px-6 py-3 rounded-full border border-blush-200 transition-colors">
+            <a href="/history" className="btn-candy-soft text-sm px-6 py-3">
               ดูประวัติของฉัน
             </a>
             <button
               onClick={handleReset}
-              className="bg-rose-500 hover:bg-rose-600 text-white font-semibold px-6 py-3 rounded-full transition-colors"
+              className="btn-candy px-6 py-3"
             >
               จองคิวเพิ่ม
             </button>
@@ -539,7 +539,7 @@ export default function BookingWizard() {
             type="button"
             onClick={goBack}
             disabled={step === 1}
-            className="px-4 py-2.5 rounded-full text-sm font-semibold text-gray-500 hover:bg-blush-100 disabled:opacity-0 transition-colors"
+            className="btn-candy-soft text-sm px-4 py-2 disabled:invisible"
           >
             ย้อนกลับ
           </button>
@@ -564,7 +564,7 @@ export default function BookingWizard() {
               type="button"
               onClick={goNext}
               disabled={!isStepValid(step)}
-              className="bg-rose-500 hover:bg-rose-600 disabled:bg-blush-200 disabled:cursor-not-allowed text-white font-semibold px-6 sm:px-7 py-2.5 rounded-full shadow-card transition-colors whitespace-nowrap"
+              className="btn-candy px-6 sm:px-7 py-2.5 whitespace-nowrap"
             >
               ถัดไป
             </button>
@@ -573,7 +573,7 @@ export default function BookingWizard() {
               type="button"
               onClick={handleConfirm}
               disabled={submitting}
-              className="bg-rose-500 hover:bg-rose-600 disabled:bg-blush-200 disabled:cursor-not-allowed text-white font-semibold px-7 py-2.5 rounded-full shadow-card transition-colors"
+              className="btn-candy px-7 py-2.5"
             >
               {submitting ? 'กำลังบันทึก...' : 'ยืนยันการจองคิว'}
             </button>

@@ -110,7 +110,7 @@ export default function DateTimePicker({
               type="button"
               onClick={goPrevMonth}
               disabled={isBeforeCurrentMonth}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-blush-100 disabled:opacity-30 disabled:hover:bg-transparent"
+              className="btn-candy-soft w-8 h-8 !p-0"
             >
               ‹
             </button>
@@ -120,7 +120,7 @@ export default function DateTimePicker({
             <button
               type="button"
               onClick={goNextMonth}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-blush-100"
+              className="btn-candy-soft w-8 h-8 !p-0"
             >
               ›
             </button>
@@ -196,12 +196,12 @@ export default function DateTimePicker({
                     type="button"
                     disabled={!s.available}
                     onClick={() => setSelectedTime(s.time)}
-                    className={`py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                    className={`py-2.5 text-sm ${
                       isSelected
-                        ? 'bg-rose-500 text-white'
+                        ? 'btn-candy'
                         : !s.available
-                        ? 'bg-blush-100 text-gray-300 line-through cursor-not-allowed'
-                        : 'bg-blush-50 text-gray-600 hover:bg-blush-100 border border-blush-200'
+                        ? 'rounded-full font-medium bg-blush-100 text-gray-300 line-through cursor-not-allowed'
+                        : 'btn-candy-soft'
                     }`}
                   >
                     {s.time}

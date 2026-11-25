@@ -213,7 +213,7 @@ export default function ShopInfo() {
                   href={mapUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-rose-500 px-5 py-2.5 text-sm font-semibold text-white shadow-card transition-colors hover:bg-rose-600"
+                  className="btn-candy gap-1.5 px-5 py-2.5 text-sm"
                 >
                   <PinIcon />
                   เปิดแผนที่
@@ -222,7 +222,7 @@ export default function ShopInfo() {
               {telUrl && (
                 <a
                   href={telUrl}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-blush-200 bg-white px-5 py-2.5 text-sm font-semibold text-rose-600 transition-colors hover:bg-blush-100"
+                  className="btn-candy-soft gap-1.5 px-5 py-2.5 text-sm"
                 >
                   <PhoneIcon />
                   โทรเลย
@@ -233,7 +233,7 @@ export default function ShopInfo() {
                   href={lineUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-[#06C755] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#05b34c]"
+                  className="btn-candy btn-line gap-1.5 px-5 py-2.5 text-sm"
                 >
                   <ChatIcon />
                   ทักไลน์

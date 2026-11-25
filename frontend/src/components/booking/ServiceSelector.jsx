@@ -21,11 +21,7 @@ export default function ServiceSelector({ category, setCategory, service, setSer
             key={c.id}
             type="button"
             onClick={() => handleCategoryChange(c.id)}
-            className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm transition-colors ${
-              category === c.id
-                ? 'bg-rose-500 text-white shadow-card'
-                : 'bg-white text-gray-500 border border-blush-200 hover:bg-blush-100'
-            }`}
+            className={`px-6 py-3 text-sm ${category === c.id ? 'btn-candy' : 'btn-candy-soft'}`}
           >
             <span className="text-lg">{c.icon}</span>
             {c.name || c.label}

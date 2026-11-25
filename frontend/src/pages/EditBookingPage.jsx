@@ -110,7 +110,7 @@ export default function EditBookingPage() {
             <button
               type="submit"
               disabled={status === 'loading'}
-              className="w-full bg-rose-500 hover:bg-rose-600 disabled:bg-blush-200 text-white font-semibold py-3 rounded-full shadow-card transition-colors"
+              className="btn-candy w-full py-3"
             >
               {status === 'loading' ? 'กำลังค้นหา...' : 'ค้นหาคิวของฉัน'}
             </button>
@@ -162,7 +162,7 @@ export default function EditBookingPage() {
               type="button"
               onClick={handleSave}
               disabled={!selectedDate || !selectedTime || saving}
-              className="w-full mt-8 bg-rose-500 hover:bg-rose-600 disabled:bg-blush-200 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-full shadow-card transition-colors"
+              className="btn-candy w-full mt-8 py-3"
             >
               {saving ? 'กำลังบันทึก...' : 'ยืนยันวันเวลาใหม่'}
             </button>
@@ -182,7 +182,7 @@ export default function EditBookingPage() {
             </p>
             <Link
               to="/history"
-              className="inline-block mt-6 bg-rose-500 hover:bg-rose-600 text-white font-semibold px-6 py-3 rounded-full transition-colors"
+              className="btn-candy mt-6 px-6 py-3"
             >
               ดูประวัติของฉัน
             </Link>
