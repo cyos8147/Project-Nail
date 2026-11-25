@@ -20,7 +20,7 @@ function PopularStylesCard() {
   return (
     <div className="relative mx-auto w-full max-w-sm -rotate-3 bg-white/70 backdrop-blur-md rounded-[2rem] border border-white shadow-card p-5 sm:p-6">
       <div className="absolute -top-4 -right-3 text-4xl drop-shadow" aria-hidden="true">🎀</div>
-      <p className="font-serif italic text-xl text-rose-700">Popular Styles</p>
+      <p className="font-script text-3xl text-rose-500">Popular Styles</p>
 
       <div className="relative mt-4 aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-rose-100 to-pink-200">
         {current ? (
@@ -36,7 +36,7 @@ function PopularStylesCard() {
           onClick={() => step(-1)}
           disabled={count < 2}
           aria-label="ลายก่อนหน้า"
-          className="w-9 h-9 rounded-full bg-white shadow-card text-rose-600 disabled:opacity-40 hover:bg-rose-50"
+          className="btn-candy-soft w-9 h-9 !p-0 text-lg"
         >
           ‹
         </button>
@@ -46,7 +46,7 @@ function PopularStylesCard() {
           onClick={() => step(1)}
           disabled={count < 2}
           aria-label="ลายถัดไป"
-          className="w-9 h-9 rounded-full bg-white shadow-card text-rose-600 disabled:opacity-40 hover:bg-rose-50"
+          className="btn-candy-soft w-9 h-9 !p-0 text-lg"
         >
           ›
         </button>
@@ -74,14 +74,13 @@ export default function Hero() {
           <div style={{ animationDelay: '0.75s' }} className="lucky-fade-up mt-8 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4">
             <Link
               to="/booking"
-              className="relative overflow-hidden inline-flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-semibold px-8 py-3.5 rounded-full shadow-card transition-colors"
+              className="btn-candy px-8 py-3.5 text-base"
             >
-              <span aria-hidden="true" className="lucky-shine pointer-events-none absolute inset-0" />
-              จองคิวออนไลน์ →
+              <span aria-hidden="true">📅</span> จองคิวออนไลน์
             </Link>
             <a
               href="#popular"
-              className="inline-flex items-center justify-center bg-white hover:bg-rose-50 text-rose-600 font-semibold px-8 py-3.5 rounded-full border border-rose-200 transition-colors"
+              className="btn-candy-soft px-8 py-3.5 text-base"
             >
               ดูลายเล็บยอดนิยม
             </a>

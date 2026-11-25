@@ -20,7 +20,7 @@ export default function TryOnColorCard() {
     <section className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <div className="bg-white/60 backdrop-blur-sm rounded-[2rem] border border-white/80 shadow-card p-6 sm:p-10 grid md:grid-cols-2 gap-8 items-center">
         <div>
-          <p className="font-serif italic text-2xl text-rose-700">Try On Color</p>
+          <p className="font-script text-4xl text-rose-500">Try On Color</p>
           <h2 className="mt-2 font-display text-2xl sm:text-3xl font-bold text-gray-800">ลองเลือกสีที่ชอบ</h2>
           <p className="mt-2 text-gray-500">เลือกสีด้านล่าง แล้วไปลองสีบนรูปมือของคุณเองที่หน้า AI</p>
 
@@ -57,7 +57,7 @@ export default function TryOnColorCard() {
           </p>
           <Link
             to="/ai"
-            className="inline-flex items-center justify-center bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-semibold px-7 py-3 rounded-full shadow-card transition-colors"
+            className="btn-candy px-7 py-3"
           >
             ✨ ลองสีนี้ด้วย AI
           </Link>

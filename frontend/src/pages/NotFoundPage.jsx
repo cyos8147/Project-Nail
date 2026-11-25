@@ -23,13 +23,13 @@ export default function NotFoundPage() {
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Link
           to="/"
-          className="rounded-full bg-rose-500 px-7 py-3 font-semibold text-white shadow-card transition-colors hover:bg-rose-600"
+          className="btn-candy px-7 py-3"
         >
           กลับหน้าแรก
         </Link>
         <Link
           to="/booking"
-          className="rounded-full border border-blush-200 bg-white px-7 py-3 font-semibold text-rose-600 transition-colors hover:bg-blush-100"
+          className="btn-candy-soft px-7 py-3"
         >
           จองคิว
         </Link>

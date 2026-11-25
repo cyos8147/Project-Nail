@@ -28,7 +28,7 @@ export default function PopularNails() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-end justify-between mb-8">
           <div>
-            <p className="font-serif italic text-2xl text-rose-700">Our Nails</p>
+            <p className="font-script text-4xl text-rose-500">Our Nails</p>
             <h2 className="font-display text-3xl font-bold text-gray-800 mt-1">ลายเล็บยอดนิยม</h2>
             <p className="text-gray-500 mt-2">ผลงานของเรา ที่พร้อมให้คุณเลือกชม</p>
           </div>

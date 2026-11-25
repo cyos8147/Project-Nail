@@ -33,7 +33,7 @@ function formatDuration(minutes) {
 function Thumb({ src, icon, name }) {
   const [failed, setFailed] = useState(false)
   return (
-    <div className="flex h-20 w-20 sm:h-24 sm:w-32 xl:h-28 xl:w-36 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-rose-100 via-pink-100 to-white text-3xl ring-1 ring-white/80">
+    <div className="flex h-20 w-24 sm:h-24 sm:w-32 lg:h-28 lg:w-36 shrink-0 items-center justify-center overflow-hidden rounded-[1.1rem] bg-gradient-to-br from-rose-100 via-pink-50 to-white text-3xl ring-2 ring-white shadow-[0_6px_14px_-8px_rgba(217,59,114,0.5)]">
       {src && !failed ? (
         <img src={src} alt={name} loading="lazy" onError={() => setFailed(true)} className="h-full w-full object-cover" />
       ) : (
@@ -56,11 +56,20 @@ function ServiceRow({ service, icon }) {
   const name = service.name.trim()
   const description = service.description?.trim()
   const duration = formatDuration(service.duration_minutes)
+  const price = (
+    <>
+      <span className="font-display font-bold text-rose-500">{formatPrice(service.price)}</span>
+      <span className="ml-1 text-sm font-semibold text-rose-500">บาท</span>
+    </>
+  )
   return (
-    <li className="group flex items-center gap-3 sm:gap-4 rounded-[1.75rem] border border-white/80 bg-white/60 p-2.5 pr-3 sm:p-3 sm:pr-4 shadow-[0_12px_30px_-16px_rgba(217,59,114,0.45)] backdrop-blur-sm transition hover:-translate-y-0.5 hover:bg-white/80">
+    <li
+      className="group relative flex items-center gap-3 sm:gap-4 rounded-[1.6rem] border-2 border-white/90 p-2.5 pr-3 sm:p-3 sm:pr-4 shadow-[0_12px_28px_-14px_rgba(217,59,114,0.55),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-sm transition-transform hover:-translate-y-0.5"
+      style={{ background: 'linear-gradient(135deg, rgba(255,244,248,0.85) 0%, rgba(252,220,233,0.6) 100%)' }}
+    >
       <Thumb src={service.image_url} icon={icon} name={name} />
       <div className="min-w-0 flex-1">
-        <h3 className="font-bold leading-snug text-gray-800 line-clamp-2 sm:text-lg">{name}</h3>
+        <h3 className="font-display font-bold leading-snug text-gray-800 line-clamp-2 text-base sm:text-lg">{name}</h3>
         {description && description !== name && (
           <p className="mt-0.5 line-clamp-2 text-xs sm:text-sm text-gray-500">{description}</p>
         )}
@@ -70,25 +79,21 @@ function ServiceRow({ service, icon }) {
             {duration}
           </p>
         )}
-        <p className="mt-1.5 sm:hidden text-sm text-gray-500">
-          เริ่มต้น <span className="text-lg font-bold text-rose-600">{formatPrice(service.price)}</span>
-          <span className="ml-0.5 text-xs font-semibold text-rose-600">บาท</span>
+        <p className="mt-1 lg:hidden text-xs text-gray-500">
+          เริ่มต้น <span className="text-lg">{price}</span>
         </p>
       </div>
-      <div className="hidden sm:block shrink-0 text-right">
-        <p className="text-[11px] leading-none text-gray-500">เริ่มต้น</p>
-        <p className="mt-1 whitespace-nowrap font-bold leading-none text-rose-600 text-lg sm:text-2xl">
-          {formatPrice(service.price)}
-          <span className="ml-0.5 text-xs sm:text-sm font-semibold">บาท</span>
-        </p>
+      <div className="hidden lg:block shrink-0 text-right">
+        <p className="text-xs leading-none text-gray-500">เริ่มต้น</p>
+        <p className="mt-1.5 whitespace-nowrap leading-none text-2xl">{price}</p>
       </div>
       <Link
         to={`/booking?service=${encodeURIComponent(service.id)}`}
         aria-label={`จอง ${name}`}
-        className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-100 to-pink-200 text-rose-600 shadow-sm ring-1 ring-white transition group-hover:from-rose-500 group-hover:to-pink-500 group-hover:text-white"
+        className="btn-candy-soft h-10 w-10 shrink-0 !p-0"
       >
         <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
-          <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </Link>
     </li>
@@ -139,9 +144,9 @@ export default function Services() {
   }
 
   return (
-    <section id="services" className="max-w-6xl mx-auto px-4 sm:px-6 py-16 scroll-mt-20">
+    <section id="services" className="max-w-7xl mx-auto px-4 sm:px-6 py-16 scroll-mt-20">
       <div className="text-center mb-8">
-        <p className="font-serif italic text-2xl text-rose-700">Our Services</p>
+        <p className="font-script text-4xl text-rose-500">Our Services</p>
         <h2 className="font-display text-3xl font-bold text-gray-800 mt-1">บริการของร้าน</h2>
         <p className="text-gray-500 mt-2">เลือกหมวดที่สนใจ แล้วจองคิวได้ทันที</p>
       </div>
@@ -150,7 +155,7 @@ export default function Services() {
         <div
           role="tablist"
           aria-label="หมวดบริการ"
-          className="mx-auto mb-8 flex w-full max-w-lg gap-1.5 rounded-full border border-white/80 bg-white/60 p-2 shadow-card backdrop-blur-sm"
+          className="mx-auto mb-8 flex w-full max-w-lg gap-2 rounded-full border-2 border-white bg-white/55 p-2 shadow-[0_8px_24px_-12px_rgba(217,59,114,0.5)] backdrop-blur-sm"
         >
           {tabs.map((t, i) => {
             const selected = t.id === active.id
@@ -168,8 +173,8 @@ export default function Services() {
                 tabIndex={selected ? 0 : -1}
                 onClick={() => selectTab(t.id)}
                 onKeyDown={(e) => onTabKeyDown(e, i)}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-3 text-base font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 ${
-                  selected ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-card' : 'text-gray-700 hover:bg-white/70'
+                className={`flex-1 px-4 py-2.5 text-base ${
+                  selected ? 'btn-candy' : 'btn-candy-soft !border-transparent !shadow-none !bg-transparent hover:!bg-white/70 !text-gray-700'
                 }`}
               >
                 <span aria-hidden="true">{t.icon}</span>
@@ -188,7 +193,7 @@ export default function Services() {
       )}
 
       <div id="services-panel" role="tabpanel" aria-labelledby={`services-tab-${active.id}`}>
-        <ul className="grid gap-4 lg:grid-cols-2">
+        <ul className="grid gap-4 md:grid-cols-2">
           {visible.map((s) => (
             <ServiceRow key={s.id} service={s} icon={active.icon} />
           ))}
@@ -200,7 +205,7 @@ export default function Services() {
               type="button"
               aria-expanded={expanded}
               onClick={() => setExpanded((v) => !v)}
-              className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/70 px-6 py-2.5 text-sm font-semibold text-rose-600 shadow-sm backdrop-blur-sm transition-colors hover:bg-white"
+              className="btn-candy-soft px-6 py-2.5 text-sm"
             >
               {expanded ? 'ย่อรายการ' : `ดูทั้งหมด ${active.items.length} รายการ`}
               <svg
@@ -219,7 +224,7 @@ export default function Services() {
       <div className="mt-10 text-center">
         <Link
           to="/booking"
-          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 px-10 py-3.5 text-lg font-bold text-white shadow-[0_14px_30px_-12px_rgba(217,59,114,0.7)] ring-4 ring-white/60 transition-colors hover:from-rose-600 hover:to-pink-600"
+          className="btn-candy px-10 py-3.5 text-lg"
         >
           <span aria-hidden="true">📅</span>
           จองคิวเลย

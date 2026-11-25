@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import BrandLogo from './BrandLogo.jsx'
 
 // เมนูหลัก: ทุกลิงก์ชี้ไปที่เดิมเหมือนก่อนเปลี่ยนดีไซน์
 const navItems = [
@@ -36,27 +37,27 @@ export default function Header() {
     `relative py-2 transition-colors ${active ? 'text-rose-600 font-bold' : 'text-gray-700 hover:text-rose-600'}`
 
   return (
-    <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-md border-b border-white/70 shadow-[0_8px_30px_-18px_rgba(217,59,114,0.45)]">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-        <a href="/#home" className="flex items-baseline gap-1 whitespace-nowrap" aria-label="Lucky Salon หน้าแรก">
-          <span className="font-script text-4xl leading-none text-rose-600">Lucky Salon</span>
-                  </a>
+    <header className="sticky top-0 z-50 bg-gradient-to-b from-white/80 to-white/55 backdrop-blur-md border-b border-white/80 shadow-[0_8px_30px_-18px_rgba(217,59,114,0.45)]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <a href="/#home" className="pt-2" aria-label="Lucky Salon หน้าแรก">
+          <BrandLogo />
+        </a>
 
         {/* เมนูใหญ่บนเดสก์ท็อป เด่นชัด เป็นแคปซูลสีชมพู */}
-        <nav aria-label="เมนูหลัก" className="hidden lg:flex order-last basis-full justify-center">
-          <div className="flex items-center gap-1 bg-white/90 rounded-full border border-white shadow-card px-2 py-1.5 text-[15px] font-semibold whitespace-nowrap">
+        <nav aria-label="เมนูหลัก" className="hidden lg:flex order-last basis-full justify-center min-[1150px]:order-none min-[1150px]:basis-auto">
+          <div className="flex items-center gap-0.5 bg-white/75 rounded-full border-2 border-white shadow-[0_6px_20px_-10px_rgba(217,59,114,0.5)] px-1 py-1 text-sm min-[1150px]:text-[13px] font-display font-semibold whitespace-nowrap">
           {navItems.map((item) =>
             item.to ? (
               <Link
                 key={item.label}
                 to={item.to}
-                className={`${linkClass(pathname === item.to)} inline-flex items-center gap-1.5 px-3.5 rounded-full hover:bg-rose-50`}
+                className={`${linkClass(pathname === item.to)} inline-flex items-center gap-1 px-3 min-[1150px]:px-2.5 rounded-full hover:bg-rose-50`}
               >
                 <NavIcon name={item.icon} />
                 {item.label}
               </Link>
             ) : (
-              <a key={item.label} href={item.href} className={`${linkClass(false)} inline-flex items-center gap-1.5 px-3.5 rounded-full hover:bg-rose-50`}>
+              <a key={item.label} href={item.href} className={`${linkClass(false)} inline-flex items-center gap-1 px-3 min-[1150px]:px-2.5 rounded-full hover:bg-rose-50`}>
                 <NavIcon name={item.icon} />
                 {item.label}
               </a>
@@ -65,26 +66,22 @@ export default function Header() {
           </div>
         </nav>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2">
           <Link
             to="/history"
-            className={`hidden md:inline-flex items-center gap-1.5 text-sm font-semibold px-4 py-2.5 rounded-full border transition-colors whitespace-nowrap ${
-              pathname === '/history'
-                ? 'bg-rose-500 border-rose-500 text-white'
-                : 'bg-white border-rose-200 text-rose-600 hover:bg-rose-50'
-            }`}
+            className={`hidden md:inline-flex text-sm min-[1150px]:text-[13px] px-4 min-[1150px]:px-3 py-2 ${pathname === '/history' ? 'btn-candy' : 'btn-candy-soft'}`}
           >
             ประวัติของฉัน
           </Link>
           <Link
             to="/ai"
-            className="hidden sm:inline-flex items-center gap-1.5 bg-white hover:bg-rose-50 text-rose-600 text-sm font-semibold px-4 py-2.5 rounded-full border border-rose-200 transition-colors whitespace-nowrap"
+            className="btn-candy-soft hidden sm:inline-flex text-sm min-[1150px]:text-[13px] px-4 min-[1150px]:px-3 py-2"
           >
             ✨ AI วิเคราะห์ลายเล็บ
           </Link>
           <Link
             to="/booking"
-            className="inline-flex items-center gap-1.5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white text-sm font-semibold px-5 py-2.5 rounded-full shadow-card ring-2 ring-white/70 transition-colors whitespace-nowrap"
+            className="btn-candy text-sm min-[1150px]:text-[13px] px-4 py-2.5"
           >
             <NavIcon name="calendar" />
             จองคิวเลย

@@ -37,15 +37,13 @@ function Sparkle({ className = '', style }) {
 function RibbonSwoosh({ className = '', flip = false }) {
   return (
     <svg viewBox="0 0 400 300" className={className} aria-hidden="true" style={flip ? { transform: 'scaleX(-1)' } : undefined}>
-      <defs>
-        <linearGradient id="rb-stroke" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#F9A8C9" stopOpacity="0" />
-          <stop offset="0.4" stopColor="#F9A8C9" stopOpacity="0.85" />
-          <stop offset="1" stopColor="#FFFFFF" stopOpacity="0.9" />
-        </linearGradient>
-      </defs>
-      <path d="M-20 260 C 80 180 120 40 240 60 S 380 200 420 120" fill="none" stroke="url(#rb-stroke)" strokeWidth="22" strokeLinecap="round" />
-      <path d="M-20 260 C 80 180 120 40 240 60 S 380 200 420 120" fill="none" stroke="#ffffff" strokeOpacity="0.7" strokeWidth="4" strokeLinecap="round" />
+      {/* ริบบิ้นซาติน: ขอบเข้ม → เนื้อชมพู → แถบแสงกลาง → เส้นเงา */}
+      <g fill="none" strokeLinecap="round">
+        <path d="M-20 260 C 80 180 120 40 240 60 S 380 200 420 120" stroke="#EE8FB4" strokeOpacity="0.55" strokeWidth="34" />
+        <path d="M-20 260 C 80 180 120 40 240 60 S 380 200 420 120" stroke="#F9BFD5" strokeOpacity="0.85" strokeWidth="28" />
+        <path d="M-20 260 C 80 180 120 40 240 60 S 380 200 420 120" stroke="#FFE3EE" strokeOpacity="0.9" strokeWidth="12" />
+        <path d="M-20 260 C 80 180 120 40 240 60 S 380 200 420 120" stroke="#ffffff" strokeOpacity="0.85" strokeWidth="3" />
+      </g>
     </svg>
   )
 }

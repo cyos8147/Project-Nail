@@ -12,7 +12,55 @@ body {
 }
 
 h1, h2, h3, .font-display {
-  font-family: 'Baloo 2', sans-serif;
+  font-family: 'Mali', 'Baloo 2', sans-serif;
+}
+
+/* ===== ปุ่มแบบ "ลูกอม": ขอบล่างหนาให้ดูนูน กดแล้วยุบ มีรอยเย็บเส้นปะด้านในเหมือนริบบิ้น ===== */
+@layer components {
+  .btn-candy,
+  .btn-candy-soft {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    border-radius: 9999px;
+    font-family: 'Mali', 'Prompt', sans-serif;
+    font-weight: 700;
+    white-space: nowrap;
+    user-select: none;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.15s ease, filter 0.15s ease;
+  }
+  .btn-candy {
+    color: #fff;
+    background: linear-gradient(180deg, #F88AB0 0%, #EC4C82 100%);
+    box-shadow: 0 4px 0 #C9336A, 0 10px 18px -8px rgba(201, 51, 106, 0.55), inset 0 2px 0 rgba(255, 255, 255, 0.45);
+  }
+  .btn-candy::after {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border-radius: inherit;
+    border: 1.5px dashed rgba(255, 255, 255, 0.7);
+    pointer-events: none;
+  }
+  .btn-candy:hover { filter: brightness(1.05); transform: translateY(-1px); }
+  .btn-candy:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #C9336A, 0 4px 10px -6px rgba(201, 51, 106, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.4);
+  }
+  .btn-candy-soft {
+    color: #D93B72;
+    background: #fff;
+    border: 2px solid #F9B9CF;
+    box-shadow: 0 3px 0 #F9B9CF;
+  }
+  .btn-candy-soft:hover { background: #FFF4F8; transform: translateY(-1px); }
+  .btn-candy-soft:active { transform: translateY(2px); box-shadow: 0 1px 0 #F9B9CF; }
+  .btn-candy:focus-visible,
+  .btn-candy-soft:focus-visible { outline: 3px solid #F9A8C9; outline-offset: 3px; }
+  .btn-candy:disabled,
+  .btn-candy-soft:disabled { opacity: 0.45; transform: none; cursor: not-allowed; }
 }
 
 /* ===== ภาพเคลื่อนไหว (ปิดทั้งหมดเมื่อเครื่องตั้งค่า "ลดการเคลื่อนไหว") ===== */
