@@ -28,8 +28,8 @@ export default function AiStudioPage() {
       <div className="relative z-10">
         <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-rose-100 shadow-[0_8px_30px_-18px_rgba(217,59,114,0.45)]">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
-            <Link to="/" className="flex items-baseline gap-1 whitespace-nowrap" aria-label="Nailly หน้าแรก">
-              <span className="font-script text-4xl leading-none text-rose-600">Nailly</span>
+            <Link to="/" className="flex items-baseline gap-1 whitespace-nowrap" aria-label="Lucky Salon หน้าแรก">
+              <span className="font-script text-4xl leading-none text-rose-600">Lucky Salon</span>
               <span className="hidden sm:inline text-[11px] tracking-[0.2em] uppercase text-gray-500">AI Beauty Studio</span>
             </Link>
             <Link
@@ -42,7 +42,7 @@ export default function AiStudioPage() {
         </header>
 
         <section className="max-w-4xl mx-auto px-4 sm:px-6 pt-12 pb-10 text-center">
-          <p className="text-xs tracking-[0.35em] uppercase text-rose-500">Nailly AI Beauty Studio</p>
+          <p className="text-xs tracking-[0.35em] uppercase text-rose-500">Lucky Salon AI Beauty Studio</p>
           <h1 className="mt-4 font-serif text-5xl sm:text-6xl font-semibold text-gray-800 leading-[1.1] text-balance">
             Find your perfect look,
             <span className="block font-script text-6xl sm:text-7xl text-rose-500 leading-[1.15] mt-1 pb-1">with AI ♡</span>

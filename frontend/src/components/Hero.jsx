@@ -66,7 +66,7 @@ export default function Hero() {
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-12 sm:pt-16 sm:pb-16 grid lg:grid-cols-2 gap-10 lg:gap-12 items-center">
         <div className="text-center lg:text-left">
-          <p className="text-xs sm:text-sm tracking-[0.35em] uppercase text-rose-500">Welcome to Nailly</p>
+          <p className="text-xs sm:text-sm tracking-[0.35em] uppercase text-rose-500">Welcome to Lucky Salon</p>
           <h1 className="mt-4 font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold text-gray-800 leading-[1.1] text-balance">
             More than just nails,
           </h1>

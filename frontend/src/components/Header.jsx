@@ -21,10 +21,9 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-rose-100 shadow-[0_8px_30px_-18px_rgba(217,59,114,0.45)]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
-        <a href="/#home" className="flex items-baseline gap-1 whitespace-nowrap" aria-label="Nailly หน้าแรก">
-          <span className="font-script text-4xl leading-none text-rose-600">Nailly</span>
-          <span className="hidden sm:inline text-[11px] tracking-[0.2em] uppercase text-gray-500">Nail Salon</span>
-        </a>
+        <a href="/#home" className="flex items-baseline gap-1 whitespace-nowrap" aria-label="Lucky Salon หน้าแรก">
+          <span className="font-script text-4xl leading-none text-rose-600">Lucky Salon</span>
+                  </a>
 
         {/* เมนูใหญ่บนเดสก์ท็อป เด่นชัด เป็นแคปซูลสีชมพู */}
         <nav
