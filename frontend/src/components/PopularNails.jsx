@@ -24,12 +24,13 @@ export default function PopularNails() {
   }, [])
 
   return (
-    <section id="popular" className="bg-blush-100/60 py-16">
-      <div className="max-w-6xl mx-auto px-6">
+    <section id="popular" className="py-16 scroll-mt-20">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-end justify-between mb-8">
           <div>
-            <h2 className="font-display text-3xl font-bold text-gray-800">ลายเล็บยอดนิยม</h2>
-            <p className="text-gray-500 mt-2">แรงบันดาลใจลายเล็บที่ลูกค้าเลือกมากที่สุด</p>
+            <p className="font-serif italic text-2xl text-rose-700">Our Nails</p>
+            <h2 className="font-display text-3xl font-bold text-gray-800 mt-1">ลายเล็บยอดนิยม</h2>
+            <p className="text-gray-500 mt-2">ผลงานของเรา ที่พร้อมให้คุณเลือกชม</p>
           </div>
         </div>
 
@@ -37,7 +38,7 @@ export default function PopularNails() {
           {nails.map((n) => (
             <div
               key={n.id}
-              className="bg-white rounded-2xl shadow-card overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-200"
+              className="bg-white rounded-3xl border border-white shadow-card overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-200"
             >
               <div className="aspect-square">
                 {n.image_url ? (

@@ -6,6 +6,8 @@ export default {
       fontFamily: {
         display: ['"Baloo 2"', 'sans-serif'],
         body: ['"Prompt"', 'sans-serif'],
+        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+        script: ['"Dancing Script"', 'cursive'],
       },
       colors: {
         blush: {

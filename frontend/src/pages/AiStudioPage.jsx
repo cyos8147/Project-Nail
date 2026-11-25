@@ -18,39 +18,34 @@ export default function AiStudioPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-blush-50 via-white to-blush-50 text-gray-800 overflow-x-clip">
+    <div className="relative min-h-screen bg-gradient-to-b from-rose-50 via-pink-50/60 to-rose-50 text-gray-800 overflow-x-clip">
       <div className="pointer-events-none absolute inset-0 z-0 overflow-clip">
-        <div className="absolute top-0 -right-32 w-[28rem] h-[28rem] bg-peach/50 rounded-full blur-3xl" />
-        <div className="absolute top-[45%] -left-40 w-[26rem] h-[26rem] bg-rose-200/40 rounded-full blur-3xl" />
-        <div className="absolute top-[85%] right-0 w-[24rem] h-[24rem] bg-blush-200/60 rounded-full blur-3xl" />
+        <div className="absolute top-0 -right-32 w-[28rem] h-[28rem] bg-rose-200/50 rounded-full blur-3xl" />
+        <div className="absolute top-[45%] -left-40 w-[26rem] h-[26rem] bg-pink-200/40 rounded-full blur-3xl" />
+        <div className="absolute top-[85%] right-0 w-[24rem] h-[24rem] bg-rose-100/70 rounded-full blur-3xl" />
       </div>
 
       <div className="relative z-10">
-        <header className="sticky top-0 z-50 bg-white/75 backdrop-blur-md border-b border-blush-200/70 shadow-[0_6px_24px_-16px_rgba(217,59,114,0.35)]">
-          <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
-            <p className="flex items-center gap-2 font-display text-2xl font-bold text-rose-600 whitespace-nowrap">
-              <img src="/logo.jpg" alt="Lucky Salon" className="w-8 h-8 rounded-full object-cover" />
-              Lucky<span className="text-gray-800"> Salon</span>
-            </p>
-            <p className="text-sm font-medium text-gray-500 hidden sm:block">✨ AI Beauty Studio</p>
+        <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-rose-100 shadow-[0_8px_30px_-18px_rgba(217,59,114,0.45)]">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+            <Link to="/" className="flex items-baseline gap-1 whitespace-nowrap" aria-label="Nailly หน้าแรก">
+              <span className="font-script text-4xl leading-none text-rose-600">Nailly</span>
+              <span className="hidden sm:inline text-[11px] tracking-[0.2em] uppercase text-gray-500">AI Beauty Studio</span>
+            </Link>
             <Link
               to="/"
-              className="bg-white hover:bg-blush-100 text-rose-600 text-sm font-semibold px-4 py-2.5 rounded-full border border-blush-200 transition-colors whitespace-nowrap"
+              className="bg-white hover:bg-rose-50 text-rose-600 text-sm font-semibold px-4 py-2.5 rounded-full border border-rose-200 transition-colors whitespace-nowrap"
             >
               ← กลับหน้าแรก
             </Link>
           </div>
         </header>
 
-        <section className="max-w-4xl mx-auto px-6 pt-14 pb-10 text-center">
-          <span className="inline-flex items-center gap-2 bg-white/90 text-rose-600 text-xs font-semibold px-4 py-1.5 rounded-full shadow-card border border-blush-200 mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-            Lucky Salon AI Beauty Studio
-          </span>
-          <h1 className="font-display text-4xl sm:text-5xl font-extrabold text-gray-800 leading-[1.15] tracking-tight">
+        <section className="max-w-4xl mx-auto px-4 sm:px-6 pt-12 pb-10 text-center">
+          <p className="text-xs tracking-[0.35em] uppercase text-rose-500">Nailly AI Beauty Studio</p>
+          <h1 className="mt-4 font-display text-4xl sm:text-5xl font-extrabold text-gray-800 leading-[1.2]">
             ให้ AI ช่วยหา
-            <span className="bg-gradient-to-r from-rose-500 via-fuchsia-500 to-violet-500 bg-clip-text text-transparent">ลุคเล็บที่ใช่</span>
-            <br className="hidden sm:block" />สำหรับคุณ
+            <span className="block text-rose-500">ลุคเล็บที่ใช่ สำหรับคุณ ♡</span>
           </h1>
           <p className="text-gray-500 mt-5 max-w-xl mx-auto text-base leading-relaxed">
             วิเคราะห์สีผิว ลองสีเล็บบนรูปมือจริงของคุณ และรับคำแนะนำลายที่เหมาะกับคุณ แล้วจองคิวต่อได้ทันที
