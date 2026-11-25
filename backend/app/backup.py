@@ -89,9 +89,22 @@ def export_rows(db: Session) -> dict:
     }
 
 
+def _json_default(value):
+    """ค่าที่ json มาตรฐานแปลงเองไม่ได้ (ทศนิยม วันเวลา ไบต์ ฯลฯ) -- กันไม่ให้การสำรองทั้งก้อนล้มเพราะค่าเดียว"""
+    if isinstance(value, (datetime, date)):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, (bytes, bytearray)):
+        return base64.b64encode(bytes(value)).decode("ascii")
+    if isinstance(value, (set, tuple)):
+        return list(value)
+    return str(value)
+
+
 def build_zip(payload: dict) -> bytes:
     buffer = io.BytesIO()
-    body = json.dumps(payload, ensure_ascii=False, indent=1).encode("utf-8")
+    body = json.dumps(payload, ensure_ascii=False, indent=1, default=_json_default).encode("utf-8")
     readme = (
         "ไฟล์สำรองข้อมูล Lucky Salon (กู้คืนได้)\n"
         "เก็บไฟล์นี้ไว้ในที่ปลอดภัย ไฟล์มีชื่อและเบอร์โทรลูกค้า ห้ามเผยแพร่\n"

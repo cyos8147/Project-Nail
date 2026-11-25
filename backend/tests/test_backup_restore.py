@@ -5,6 +5,7 @@ import io
 import json
 import zipfile
 
+from app import backup
 from conftest import book, open_date
 
 
@@ -136,3 +137,19 @@ def test_a_failure_in_the_middle_rolls_everything_back(client, services, owner_h
     assert r.status_code == 500 and "ข้อมูลเดิมยังอยู่ครบ" in r.json()["detail"]
     after_ids = {b["id"] for b in client.get("/api/admin/bookings", headers=owner_headers, params={"sort": "created"}).json()}
     assert after_ids == before_ids
+
+
+def test_zip_builds_even_with_unusual_value_types():
+    """ค่าที่ไม่ใช่ชนิดมาตรฐานต้องไม่ทำให้การสร้างไฟล์สำรองล้ม (เคยพบบน Render เป็น 500)"""
+    from decimal import Decimal
+    from datetime import datetime
+
+    payload = {
+        "format": "luckysalon-full-backup", "version": 1, "created_at": "x", "counts": {},
+        "tables": {"t": [{"amount": Decimal("12.50"), "when": datetime(2030, 1, 2, 3, 4), "raw": b"ab", "tags": {"a", "b"}}]},
+    }
+    raw = backup.build_zip(payload)
+    data = json.loads(zipfile.ZipFile(io.BytesIO(raw)).read("backup.json"))
+    row = data["tables"]["t"][0]
+    assert row["amount"] == "12.50" and row["when"].startswith("2030-01-02") and row["raw"] == "YWI="
+    assert sorted(row["tags"]) == ["a", "b"]
