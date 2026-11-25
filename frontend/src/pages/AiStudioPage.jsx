@@ -43,9 +43,9 @@ export default function AiStudioPage() {
 
         <section className="max-w-4xl mx-auto px-4 sm:px-6 pt-12 pb-10 text-center">
           <p className="text-xs tracking-[0.35em] uppercase text-rose-500">Nailly AI Beauty Studio</p>
-          <h1 className="mt-4 font-display text-4xl sm:text-5xl font-extrabold text-gray-800 leading-[1.2]">
-            ให้ AI ช่วยหา
-            <span className="block text-rose-500">ลุคเล็บที่ใช่ สำหรับคุณ ♡</span>
+          <h1 className="mt-4 font-serif text-5xl sm:text-6xl font-semibold text-gray-800 leading-[1.1] text-balance">
+            Find your perfect look,
+            <span className="block font-script text-6xl sm:text-7xl text-rose-500 leading-[1.15] mt-1 pb-1">with AI ♡</span>
           </h1>
           <p className="text-gray-500 mt-5 max-w-xl mx-auto text-base leading-relaxed">
             วิเคราะห์สีผิว ลองสีเล็บบนรูปมือจริงของคุณ และรับคำแนะนำลายที่เหมาะกับคุณ แล้วจองคิวต่อได้ทันที
