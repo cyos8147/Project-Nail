@@ -67,7 +67,7 @@ export default function NailRecommendation({ skinTone }) {
         {ranked.map((d, i) => (
           <div
             key={d.id ?? d.name}
-            className="group bg-white rounded-[20px] border border-[#1f1b16]/[0.06] shadow-soft overflow-hidden relative flex flex-col"
+            className="group glass-solid rounded-[24px] overflow-hidden relative flex flex-col"
           >
             {personalized && i === 0 && (
               <span className="absolute top-3 left-3 z-10 bg-gradient-to-r from-rose-500 to-fuchsia-500 text-white text-[11px] font-semibold px-3 py-1 rounded-full shadow-md">

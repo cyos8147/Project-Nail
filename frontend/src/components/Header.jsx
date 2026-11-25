@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import BrandLogo from './BrandLogo.jsx'
+import Icon from './Icon.jsx'
 
 // เมนูหลัก: ทุกลิงก์ชี้ไปที่เดิมเหมือนก่อนเปลี่ยนดีไซน์
 const navItems = [
-  { label: 'หน้าแรก', href: '/#home', icon: 'home' },
-  { label: 'จองคิว', to: '/booking', icon: 'calendar' },
-  { label: 'ลายเล็บ', href: '/#popular', icon: 'image' },
+  { label: 'หน้าแรก', href: '/#home', icon: 'home', match: '/' },
+  { label: 'จองคิว', to: '/booking', icon: 'calendar', match: '/booking' },
+  { label: 'ลายเล็บ', href: '/#popular', icon: 'image', match: '/gallery' },
   { label: 'บริการ', href: '/#services', icon: 'star' },
   { label: 'รีวิว', href: '/#reviews', icon: 'chat' },
   { label: 'ติดต่อ', href: '/#contact', icon: 'pin' },
@@ -29,60 +30,68 @@ function NavIcon({ name, className = 'h-[18px] w-[18px]' }) {
   )
 }
 
+function NavLink({ item, active, className, children, onClick }) {
+  const props = { className, onClick, 'aria-current': active ? 'page' : undefined }
+  return item.to ? (
+    <Link to={item.to} {...props}>
+      {children}
+    </Link>
+  ) : (
+    <a href={item.href} {...props}>
+      {children}
+    </a>
+  )
+}
+
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const { pathname } = useLocation()
-
-  const linkClass = (active) =>
-    `relative py-2 transition-colors ${active ? 'text-rose-600 font-bold' : 'text-gray-700 hover:text-rose-600'}`
+  const pill = 'inline-flex items-center gap-1.5 rounded-full px-4 xl:px-3 py-2 text-sm xl:text-[13px] font-display font-semibold whitespace-nowrap transition-colors'
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-[#1f1b16]/[0.06] shadow-hair">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-        <a href="/#home" className="pt-2" aria-label="Lucky Salon หน้าแรก">
+    <header className="sticky top-0 z-50" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      {/* ม่านกระจกบาง ๆ ให้เมนูอ่านออกเมื่อเลื่อนทับเนื้อหา */}
+      <div aria-hidden="true" className="absolute inset-0 bg-[#FCE6EE]/55 backdrop-blur-md [mask-image:linear-gradient(180deg,#000_70%,transparent)]" />
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap xl:flex-nowrap items-center justify-between gap-x-3 gap-y-2">
+        <a href="/#home" className="pt-2 shrink-0" aria-label="Lucky Salon หน้าแรก">
           <BrandLogo />
         </a>
 
-        {/* เมนูใหญ่บนเดสก์ท็อป เด่นชัด เป็นแคปซูลสีชมพู */}
-        <nav aria-label="เมนูหลัก" className="hidden lg:flex order-last basis-full justify-center min-[1150px]:order-none min-[1150px]:basis-auto">
-          <div className="flex items-center gap-0.5 bg-white/70 rounded-full border border-[#1f1b16]/[0.06] px-1 py-1 text-sm min-[1150px]:text-[13px] font-display font-semibold whitespace-nowrap">
-          {navItems.map((item) =>
-            item.to ? (
-              <Link
-                key={item.label}
-                to={item.to}
-                className={`${linkClass(pathname === item.to)} inline-flex items-center gap-1 px-3 min-[1150px]:px-2.5 rounded-full hover:bg-rose-50`}
-              >
-                <NavIcon name={item.icon} />
-                {item.label}
-              </Link>
-            ) : (
-              <a key={item.label} href={item.href} className={`${linkClass(false)} inline-flex items-center gap-1 px-3 min-[1150px]:px-2.5 rounded-full hover:bg-rose-50`}>
-                <NavIcon name={item.icon} />
-                {item.label}
-              </a>
-            ),
-          )}
+        {/* เมนูแคปซูลกระจก เมนูที่อยู่ตอนนี้เป็นปุ่มชมพูเต็ม */}
+        <nav aria-label="เมนูหลัก" className="hidden lg:flex order-last basis-full justify-center xl:order-none xl:basis-auto">
+          <div className="glass flex items-center gap-0.5 rounded-full p-1 whitespace-nowrap">
+            {navItems.map((item) => {
+              const active = item.match === pathname
+              return (
+                <NavLink
+                  key={item.label}
+                  item={item}
+                  active={active}
+                  className={`${pill} ${active ? 'text-white bg-gradient-to-b from-[#F88AB0] to-[#EC4C82] shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_6px_14px_-6px_rgba(201,51,106,0.7)]' : 'text-[#6E4255] hover:bg-white/70 hover:text-rose-600'}`}
+                >
+                  <NavIcon name={item.icon} />
+                  {item.label}
+                </NavLink>
+              )
+            })}
           </div>
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <Link
             to="/history"
-            className={`hidden md:inline-flex px-2 py-2 text-sm font-display font-semibold transition-colors ${pathname === '/history' ? 'text-rose-600' : 'text-gray-600 hover:text-rose-600'}`}
+            className={`glass hidden md:inline-flex ${pill} ${pathname === '/history' ? 'text-rose-600' : 'text-[#6E4255] hover:text-rose-600'}`}
           >
             ประวัติของฉัน
           </Link>
           <Link
             to="/ai"
-            className="hidden sm:inline-flex px-2 py-2 text-sm font-display font-semibold text-gray-600 hover:text-rose-600 transition-colors"
+            className={`glass hidden sm:inline-flex ${pill} ${pathname === '/ai' ? 'text-rose-600' : 'text-[#6E4255] hover:text-rose-600'}`}
           >
+            <Icon name="sparkle" className="h-4 w-4 text-rose-500" />
             AI วิเคราะห์ลายเล็บ
           </Link>
-          <Link
-            to="/booking"
-            className="btn-candy text-sm min-[1150px]:text-[13px] px-4 py-2.5"
-          >
+          <Link to="/booking" className="btn-candy text-sm xl:text-[13px] px-5 xl:px-4 py-2.5">
             <NavIcon name="calendar" />
             จองคิวเลย
           </Link>
@@ -91,7 +100,7 @@ export default function Header() {
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="เปิดเมนู"
             aria-expanded={menuOpen}
-            className="lg:hidden w-10 h-10 flex-shrink-0 flex flex-col items-center justify-center gap-1.5 rounded-full bg-rose-50 hover:bg-rose-100 transition-colors"
+            className="glass-btn lg:hidden w-10 h-10 flex-shrink-0 flex-col gap-1.5"
           >
             <span className={`block w-4 h-0.5 bg-rose-600 rounded-full transition-transform ${menuOpen ? 'translate-y-2 rotate-45' : ''}`} />
             <span className={`block w-4 h-0.5 bg-rose-600 rounded-full transition-opacity ${menuOpen ? 'opacity-0' : ''}`} />
@@ -101,24 +110,23 @@ export default function Header() {
       </div>
 
       {menuOpen && (
-        <nav aria-label="เมนูมือถือ" className="lg:hidden border-t border-rose-100 bg-white px-4 py-3 flex flex-col text-[15px] font-semibold text-gray-700">
-          {navItems.map((item) =>
-            item.to ? (
-              <Link key={item.label} to={item.to} onClick={() => setMenuOpen(false)} className="flex items-center gap-3 py-3 border-b border-rose-50 hover:text-rose-600">
-                <NavIcon name={item.icon} className="h-[18px] w-[18px] text-gray-500" />
-                {item.label}
-              </Link>
-            ) : (
-              <a key={item.label} href={item.href} onClick={() => setMenuOpen(false)} className="flex items-center gap-3 py-3 border-b border-rose-50 hover:text-rose-600">
-                <NavIcon name={item.icon} className="h-[18px] w-[18px] text-gray-500" />
-                {item.label}
-              </a>
-            ),
-          )}
-          <Link to="/history" onClick={() => setMenuOpen(false)} className="py-3 border-b border-rose-50 hover:text-rose-600 md:hidden">
+        <nav aria-label="เมนูมือถือ" className="glass-solid relative lg:hidden mx-4 mb-2 rounded-[24px] px-4 py-2 flex flex-col text-[15px] font-display font-semibold text-[#4A2A37]">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.label}
+              item={item}
+              active={item.match === pathname}
+              onClick={() => setMenuOpen(false)}
+              className="flex items-center gap-3 py-3 border-b border-rose-100/80 last:border-0 hover:text-rose-600"
+            >
+              <NavIcon name={item.icon} className="h-[18px] w-[18px] text-rose-400" />
+              {item.label}
+            </NavLink>
+          ))}
+          <Link to="/history" onClick={() => setMenuOpen(false)} className="py-3 border-t border-rose-100/80 hover:text-rose-600 md:hidden">
             ประวัติของฉัน
           </Link>
-          <Link to="/ai" onClick={() => setMenuOpen(false)} className="py-3 hover:text-rose-600 sm:hidden">
+          <Link to="/ai" onClick={() => setMenuOpen(false)} className="py-3 border-t border-rose-100/80 hover:text-rose-600 sm:hidden">
             AI วิเคราะห์ลายเล็บ
           </Link>
         </nav>

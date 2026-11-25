@@ -24,7 +24,7 @@ export default function FeatureHighlights() {
           <Link
             key={c.to}
             to={c.to}
-            className="group relative flex items-center gap-4 sm:gap-5 rounded-[20px] border border-[#1f1b16]/[0.06] bg-white/85 shadow-soft p-5 sm:p-6 transition-colors duration-150 hover:bg-white focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-rose-300"
+            className="group relative flex items-center gap-4 sm:gap-5 rounded-[24px] glass p-5 sm:p-6 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-rose-300"
           >
             <span aria-hidden="true" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
               <svg viewBox="0 0 24 24" fill="none" className="h-[22px] w-[22px]">

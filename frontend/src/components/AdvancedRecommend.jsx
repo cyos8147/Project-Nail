@@ -110,7 +110,7 @@ export default function AdvancedRecommend({ skinTone = null }) {
         <p className="text-gray-500 mt-2">ตอบไม่กี่ข้อ แล้วดูลายที่เหมาะกับคุณที่สุดจากลายของร้าน</p>
       </div>
 
-      <div className="bg-white/90 rounded-[24px] border border-[#1f1b16]/[0.06] shadow-soft p-6 sm:p-10 grid md:grid-cols-2 gap-8 mt-8">
+      <div className="glass-solid rounded-[24px] p-6 sm:p-10 grid md:grid-cols-2 gap-8 mt-8">
         <div className="space-y-6">
           <Field
             label="โทนสีผิวของคุณ"

@@ -85,7 +85,7 @@ export default function EditBookingPage() {
         </div>
 
         {!booking && (
-          <form onSubmit={handleSearch} className="bg-white rounded-[20px] border border-[#1f1b16]/[0.06] shadow-soft p-6 sm:p-8 space-y-4">
+          <form onSubmit={handleSearch} className="glass-solid rounded-[24px] p-6 sm:p-8 space-y-4">
             <div>
               <label htmlFor="edit-code" className="block text-sm font-medium text-gray-700 mb-1.5">รหัสคิว</label>
               <input
@@ -120,7 +120,7 @@ export default function EditBookingPage() {
         )}
 
         {booking && !saved && isTooLateToChange(booking, shop?.cancel_cutoff_hours) && (
-          <div className="bg-white rounded-[20px] border border-[#1f1b16]/[0.06] shadow-soft p-6 sm:p-8 text-center space-y-3">
+          <div className="glass-solid rounded-[24px] p-6 sm:p-8 text-center space-y-3">
             <div className="text-4xl">⏳</div>
             <h2 className="font-display text-xl font-semibold text-gray-800">ใกล้เวลานัดแล้ว เลื่อนคิวผ่านเว็บไม่ได้</h2>
             <p className="text-sm text-gray-500">
@@ -135,7 +135,7 @@ export default function EditBookingPage() {
         )}
 
         {booking && !saved && !isTooLateToChange(booking, shop?.cancel_cutoff_hours) && (
-          <div className="bg-white rounded-[20px] border border-[#1f1b16]/[0.06] shadow-soft p-6 sm:p-8">
+          <div className="glass-solid rounded-[24px] p-6 sm:p-8">
             <div className="flex items-center justify-between mb-6 pb-6 border-b border-blush-100">
               <div>
                 <p className="font-display text-xl font-semibold text-gray-800">{booking.booking_code}</p>
@@ -175,7 +175,7 @@ export default function EditBookingPage() {
         )}
 
         {saved && (
-          <div className="bg-white rounded-[20px] border border-[#1f1b16]/[0.06] shadow-soft p-8 text-center">
+          <div className="glass-solid rounded-[24px] p-8 text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-rose-50 text-rose-600">
               <Icon name="check" className="h-7 w-7" strokeWidth={2} />
             </div>

@@ -137,7 +137,7 @@ export default function CustomerHistoryPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSearch} className="bg-white rounded-[20px] border border-[#1f1b16]/[0.06] shadow-soft p-6 flex flex-col sm:flex-row gap-3">
+        <form onSubmit={handleSearch} className="glass-solid rounded-[24px] p-6 flex flex-col sm:flex-row gap-3">
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -177,7 +177,7 @@ export default function CustomerHistoryPage() {
               <div className="space-y-3">
                 {data.bookings.length === 0 && <p className="text-sm text-gray-500">ยังไม่มีประวัติการจอง</p>}
                 {!data.verified && data.bookings.map((b, i) => (
-                  <div key={i} className="bg-white rounded-[20px] border border-[#1f1b16]/[0.06] shadow-soft p-5">
+                  <div key={i} className="glass-solid rounded-[24px] p-5">
                     <div className="flex items-center justify-between mb-1">
                       <p className="font-medium text-gray-800">{b.service_name}</p>
                       <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-blush-100 text-rose-600">
@@ -188,7 +188,7 @@ export default function CustomerHistoryPage() {
                   </div>
                 ))}
                 {data.verified && data.bookings.map((b) => (
-                  <div key={b.id} className="bg-white rounded-[20px] border border-[#1f1b16]/[0.06] shadow-soft p-5">
+                  <div key={b.id} className="glass-solid rounded-[24px] p-5">
                     <div className="flex items-center justify-between mb-2">
                       <p className="font-medium text-gray-800">{b.service_name}</p>
                       <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-blush-100 text-rose-600">
@@ -261,7 +261,7 @@ export default function CustomerHistoryPage() {
                 <h2 className="font-display text-xl font-semibold text-gray-800 mb-4">ประวัติการทดลองลายเล็บ (AI)</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {data.tryon_history.map((t) => (
-                    <div key={t.id} className="bg-white rounded-2xl border border-[#1f1b16]/[0.06] shadow-soft overflow-hidden">
+                    <div key={t.id} className="glass-solid rounded-2xl overflow-hidden">
                       {t.result_image_url && <img loading="lazy" decoding="async" src={t.result_image_url} alt="ผลลัพธ์ AI" className="w-full aspect-square object-cover" />}
                       <div className="p-2">
                         <p className="text-[11px] text-gray-500">{t.pattern} · {t.nail_shape}</p>
@@ -277,7 +277,7 @@ export default function CustomerHistoryPage() {
                 <h2 className="font-display text-xl font-semibold text-gray-800 mb-4">รีวิวที่เคยให้</h2>
                 <div className="space-y-3">
                   {data.reviews.map((r) => (
-                    <div key={r.id} className="bg-white rounded-[20px] border border-[#1f1b16]/[0.06] shadow-soft p-4">
+                    <div key={r.id} className="glass-solid rounded-[24px] p-4">
                       <p className="text-gold text-sm">{'★'.repeat(r.rating)}<span className="text-blush-200">{'★'.repeat(5 - r.rating)}</span></p>
                       {r.comment && <p className="text-sm text-gray-600 mt-1">{r.comment}</p>}
                     </div>

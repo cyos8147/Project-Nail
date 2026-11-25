@@ -59,7 +59,7 @@ export default function AiStudioPage() {
               ['wand', 'รับคำแนะนำ', 'AI จัดอันดับลายที่ใช่'],
               ['calendar', 'จองคิว', 'ส่งสีที่ชอบไปจองต่อได้เลย'],
             ].map(([icon, title, sub], i) => (
-              <li key={title} className="rounded-[20px] border border-[#1f1b16]/[0.06] bg-white/85 shadow-soft p-4 flex flex-col gap-1">
+              <li key={title} className="rounded-[24px] glass p-4 flex flex-col gap-1">
                 <span className="flex items-center justify-between text-rose-600">
                   <Icon name={icon} />
                   <span className="text-xs text-gray-500 tabular-nums">{i + 1}</span>

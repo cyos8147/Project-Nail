@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getNailDesigns } from '../api/client.js'
 import { Bone } from './Skeleton.jsx'
+import Icon from './Icon.jsx'
+import { GlassHeart, SatinBow } from './Decor.jsx'
 
 // การ์ดลายเล็บยอดนิยม (หน้าแรก) แบบสไลด์โชว์
 // - เปลี่ยนภาพเองทุก SLIDE_MS: ภาพใหม่ค่อย ๆ จางเข้า + ซูมช้า ๆ + แสงสะท้อนวิ่งผ่านหนึ่งครั้ง
@@ -74,7 +76,11 @@ export default function PopularStylesCard() {
   }
 
   return (
-    <div className="lucky-3d relative mx-auto w-full max-w-sm" onPointerMove={onTiltMove} onPointerLeave={resetTilt}>
+    <div className="relative mx-auto w-full max-w-sm lg:max-w-none lg:rotate-[4deg]">
+      {/* โบว์ซาตินที่มุมการ์ด */}
+      <SatinBow className="pointer-events-none absolute -top-16 -right-10 z-20 w-28 xl:w-36 rotate-[18deg]" />
+      <GlassHeart className="pointer-events-none absolute -top-5 -left-3 z-20 w-10 -rotate-12" />
+      <div className="lucky-3d" onPointerMove={onTiltMove} onPointerLeave={resetTilt}>
       <div
         ref={tiltRef}
         role="region"
@@ -84,63 +90,75 @@ export default function PopularStylesCard() {
         onPointerLeave={(e) => e.pointerType === 'mouse' && setHovering(false)}
         onFocus={(e) => e.target.matches?.(':focus-visible') && setFocused(true)}
         onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setFocused(false)}
-        className="lucky-3d-inner relative rounded-[24px] border border-white bg-white/75 p-5 sm:p-6 shadow-lift backdrop-blur-md"
+        className="lucky-3d-inner glass relative rounded-[30px] p-5 sm:p-6"
       >
-        <div className="lucky-z1 flex items-baseline justify-between gap-2">
-          <p className="font-script text-3xl text-rose-500">Popular Styles</p>
-          {count > 1 && (
-            <span className="text-xs text-gray-500 tabular-nums">
-              {index + 1} / {count}
-            </span>
-          )}
+        <div className="lucky-z1 flex items-center justify-between gap-2 pl-1">
+          <p className="flex items-center gap-2 font-display text-xl font-semibold text-[#4A2A37]">
+            <Icon name="heart" className="h-5 w-5 text-rose-400" />
+            Popular Styles
+          </p>
         </div>
 
-        <div
-          className="lucky-z2 relative mt-4 aspect-[4/3] rounded-2xl overflow-hidden bg-rose-50 select-none shadow-soft"
-          style={{ touchAction: 'pan-y' }}
-          onPointerDown={onPointerDown}
-          onPointerUp={onPointerUp}
-          onPointerCancel={() => (pointerX.current = null)}
-        >
-          {count === 0 && !loaded && <Bone className="absolute inset-0 !rounded-2xl" />}
-          {count === 0 && loaded && <div className="w-full h-full flex items-center justify-center text-gray-500 text-sm">ลายเล็บยอดนิยม</div>}
+        <div className="lucky-z2 relative mt-4">
+          <div
+            className="relative aspect-[4/3] rounded-[20px] overflow-hidden bg-rose-50 select-none border-[5px] border-white/90 shadow-[0_14px_30px_-18px_rgba(150,40,85,0.6)]"
+            style={{ touchAction: 'pan-y' }}
+            onPointerDown={onPointerDown}
+            onPointerUp={onPointerUp}
+            onPointerCancel={() => (pointerX.current = null)}
+          >
+            {count === 0 && !loaded && <Bone className="absolute inset-0 !rounded-none" />}
+            {count === 0 && loaded && <div className="w-full h-full flex items-center justify-center text-[#7A4A5E] text-sm">ลายเล็บยอดนิยม</div>}
 
-          {/* ทุกภาพซ้อนกันอยู่ ภาพที่แสดงพลิกเข้ามาแบบ 3D ภาพอื่นจางออก */}
-          {designs.map((d, i) => {
-            const active = i === index
-            return (
-              <div
-                key={d.id}
-                aria-hidden={!active}
-                className="absolute inset-0 transition-opacity duration-500"
-                style={{ opacity: active ? 1 : 0, transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)' }}
-              >
-                <img
-                  key={active ? `on-${index}` : 'off'}
-                  src={d.image_url}
-                  alt={active ? d.name : ''}
-                  draggable="false"
-                  loading={i === 0 ? 'eager' : 'lazy'}
-                  decoding="async"
-                  className={`w-full h-full object-cover ${active ? 'lucky-flip-in' : ''}`}
-                />
-              </div>
-            )
-          })}
+            {/* ทุกภาพซ้อนกันอยู่ ภาพที่แสดงพลิกเข้ามาแบบ 3D ภาพอื่นจางออก */}
+            {designs.map((d, i) => {
+              const active = i === index
+              return (
+                <div
+                  key={d.id}
+                  aria-hidden={!active}
+                  className="absolute inset-0 transition-opacity duration-500"
+                  style={{ opacity: active ? 1 : 0, transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)' }}
+                >
+                  <img
+                    key={active ? `on-${index}` : 'off'}
+                    src={d.image_url}
+                    alt={active ? d.name : ''}
+                    draggable="false"
+                    loading={i === 0 ? 'eager' : 'lazy'}
+                    decoding="async"
+                    className={`w-full h-full object-cover ${active ? 'lucky-flip-in' : ''}`}
+                  />
+                </div>
+              )
+            })}
 
-          {/* แสงสะท้อนกระจก วิ่งผ่านหนึ่งครั้งเมื่อเปลี่ยนภาพ */}
-          {count > 0 && (
-            <span
-              key={`sweep-${index}`}
-              aria-hidden="true"
-              className="lucky-sweep pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent"
-            />
-          )}
+            {/* แสงสะท้อนกระจก วิ่งผ่านหนึ่งครั้งเมื่อเปลี่ยนภาพ */}
+            {count > 0 && (
+              <span
+                key={`sweep-${index}`}
+                aria-hidden="true"
+                className="lucky-sweep pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+              />
+            )}
+          </div>
+
+          {/* ลูกศรวงกลมกระจกคร่อมขอบรูป */}
+          <button type="button" onClick={() => step(-1)} disabled={count < 2} aria-label="ลายก่อนหน้า" className="glass-btn absolute -left-3 top-1/2 -translate-y-1/2 h-10 w-10">
+            <Icon name="chevronLeft" />
+          </button>
+          <button type="button" onClick={() => step(1)} disabled={count < 2} aria-label="ลายถัดไป" className="glass-btn absolute -right-3 top-1/2 -translate-y-1/2 h-10 w-10">
+            <Icon name="chevronRight" />
+          </button>
         </div>
+
+        <p key={`name-${index}`} aria-live={playing ? 'off' : 'polite'} className="lucky-z1 lucky-fade-up mt-3 text-center font-display font-semibold text-[#4A2A37] truncate">
+          {current?.name || '\u00a0'}
+        </p>
 
         {/* จุดบอกลำดับ: จุดปัจจุบันมีแถบนับเวลาไปภาพถัดไป */}
         {count > 1 && (
-          <div className="lucky-z1 mt-4 flex items-center justify-center gap-1.5">
+          <div className="lucky-z1 mt-2 flex items-center justify-center gap-1.5">
             {designs.map((d, i) => {
               const active = i === index
               return (
@@ -150,7 +168,7 @@ export default function PopularStylesCard() {
                   onClick={() => go(i)}
                   aria-label={`ดูลายที่ ${i + 1}: ${d.name}`}
                   aria-current={active}
-                  className={`relative h-2 rounded-full overflow-hidden transition-[width,background-color] duration-300 ${active ? 'w-8 bg-rose-100' : 'w-2 bg-gray-300/70 hover:bg-gray-400/70'}`}
+                  className={`relative h-2.5 rounded-full overflow-hidden border border-white transition-[width,background-color] duration-300 ${active ? 'w-9 bg-rose-100' : 'w-2.5 bg-white/80 hover:bg-rose-100'}`}
                 >
                   {active && (
                     <span
@@ -164,18 +182,7 @@ export default function PopularStylesCard() {
             })}
           </div>
         )}
-
-        <div className="lucky-z1 mt-3 flex items-center justify-between gap-2">
-          <button type="button" onClick={() => step(-1)} disabled={count < 2} aria-label="ลายก่อนหน้า" className="btn-candy-soft w-9 h-9 !p-0 text-lg">
-            ‹
-          </button>
-          <p key={`name-${index}`} aria-live={playing ? 'off' : 'polite'} className="lucky-fade-up font-display font-semibold text-gray-800 truncate">
-            {current?.name || ''}
-          </p>
-          <button type="button" onClick={() => step(1)} disabled={count < 2} aria-label="ลายถัดไป" className="btn-candy-soft w-9 h-9 !p-0 text-lg">
-            ›
-          </button>
-        </div>
+      </div>
       </div>
     </div>
   )

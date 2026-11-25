@@ -11,8 +11,8 @@ export default function Footer() {
   }, [])
 
   return (
-    <footer className="relative bg-white/75 backdrop-blur-sm border-t border-[#1f1b16]/[0.06] py-8">
-      <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
+    <footer className="relative mt-8 border-t border-white/80 bg-[#FFF5F8]/60 backdrop-blur-md py-8">
+      <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-[#7A4A5E]">
         <BrandLogo size="sm" />
         <p className="text-center">
           © 2026 Lucky Salon. สงวนลิขสิทธิ์. ·{' '}

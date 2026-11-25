@@ -104,7 +104,7 @@ export default function DateTimePicker({
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Calendar */}
-        <div className="bg-white rounded-2xl shadow-card p-5">
+        <div className="glass-solid rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4">
             <button
               type="button"
@@ -162,7 +162,7 @@ export default function DateTimePicker({
         </div>
 
         {/* Time slots */}
-        <div className="bg-white rounded-2xl shadow-card p-5">
+        <div className="glass-solid rounded-2xl p-5">
           <p className="font-display font-semibold text-gray-800 mb-4">
             {selectedDate ? 'ช่วงเวลาที่ว่าง' : 'กรุณาเลือกวันที่ก่อน'}
           </p>

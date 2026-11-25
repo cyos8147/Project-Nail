@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from './Icon.jsx'
+import { Sparkle } from './Decor.jsx'
 
 // ส่วน "ลองสี" ในหน้าแรก: เลือกสีจากแผงปลายเล็บ แล้วเห็นเล็บ 3D เปลี่ยนสีตาม
 // กดปุ่มเพื่อไปลองสีบนรูปมือของตัวเองที่หน้า AI (ปลายทางเดิม)
@@ -27,7 +28,7 @@ function shade(hex, amt) {
 function Nail3D({ hex }) {
   const id = useId().replace(/[^a-zA-Z0-9]/g, '')
   return (
-    <svg viewBox="0 0 200 260" className="w-40 sm:w-48 h-auto drop-shadow-[0_18px_24px_rgba(31,27,22,0.18)]" role="img" aria-label="ตัวอย่างสีบนเล็บ">
+    <svg viewBox="0 0 200 260" className="w-full h-auto drop-shadow-[0_18px_24px_rgba(31,27,22,0.18)]" role="img" aria-label="ตัวอย่างสีบนเล็บ">
       <defs>
         <linearGradient id={`skin${id}`} x1="0" y1="0" x2="1" y2="0">
           <stop offset="0" stopColor="#EBC3AC" />
@@ -59,7 +60,8 @@ function Nail3D({ hex }) {
   )
 }
 
-function TipSwatch({ s, active, onSelect }) {
+// ปุ่มสีกลมเงาเหมือนหยดยาทาเล็บ
+function DropSwatch({ s, active, onSelect }) {
   return (
     <button
       type="button"
@@ -68,49 +70,69 @@ function TipSwatch({ s, active, onSelect }) {
       aria-label={s.th}
       title={s.th}
       onClick={() => onSelect(s)}
-      className={`group relative flex h-14 w-10 items-end justify-center rounded-xl transition-transform duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400 ${
-        active ? '-translate-y-1.5' : 'hover:-translate-y-0.5'
+      className={`relative h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-full transition-transform duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400 ${
+        active ? 'scale-110 ring-[3px] ring-white shadow-[0_0_0_5px_rgba(236,76,130,0.45),0_8px_14px_-6px_rgba(150,40,85,0.6)]' : 'hover:-translate-y-0.5 shadow-[0_6px_12px_-6px_rgba(150,40,85,0.55)]'
       }`}
-      style={{ transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)' }}
-    >
-      <svg viewBox="0 0 40 56" className="h-full w-full" aria-hidden="true">
-        <path d="M6 54 V22 C6 10 12 2 20 2 C28 2 34 10 34 22 V54 Z" fill={s.hex} stroke="rgba(31,27,22,0.08)" />
-        <path d="M11 44 V22 C11 14 14 9 18 7 C16 13 16 18 16 24 V44 Z" fill="#fff" opacity="0.5" />
-      </svg>
-      {active && <span className="absolute -bottom-2 h-1 w-5 rounded-full bg-rose-500" />}
-    </button>
+      style={{
+        transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        background: `radial-gradient(circle at 34% 28%, rgba(255,255,255,0.95) 0 9%, ${shade(s.hex, 0.25)} 22%, ${s.hex} 55%, ${shade(s.hex, -0.3)} 100%)`,
+      }}
+    />
   )
 }
 
 export default function TryOnColorCard() {
   const [selected, setSelected] = useState(SWATCHES[0])
+  const randomize = () => {
+    const rest = SWATCHES.filter((s) => s.hex !== selected.hex)
+    setSelected(rest[Math.floor(Math.random() * rest.length)])
+  }
 
   return (
-    <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
-      <div className="grid md:grid-cols-2 gap-8 items-center rounded-[24px] border border-[#1f1b16]/[0.06] bg-white/85 p-6 sm:p-10 shadow-soft">
-        <div>
-          <h2 className="font-display text-2xl sm:text-3xl font-semibold text-gray-800">ลองเลือกสีที่ชอบ</h2>
-          <p className="mt-2 text-gray-600">แตะสีด้านล่างเพื่อดูบนเล็บ แล้วไปลองบนรูปมือของคุณเองที่หน้า AI</p>
+    <div className="glass relative h-full min-w-0 rounded-[30px] p-5 sm:p-6 flex flex-col">
+      <h2 className="flex items-center gap-2 font-display text-2xl font-semibold text-[#4A2A37]">
+        <Sparkle className="h-6 w-6 text-rose-400" />
+        ลองเลือกสีที่ชอบ
+      </h2>
+      <p className="mt-1 text-sm text-[#7A4A5E]">แตะสีเพื่อดูบนเล็บ แล้วไปลองบนรูปมือของคุณเองได้เลย</p>
 
-          <div role="radiogroup" aria-label="เลือกสีเล็บ" className="mt-8 flex flex-wrap gap-x-3 gap-y-4">
-            {SWATCHES.map((s) => (
-              <TipSwatch key={s.hex} s={s} active={s.hex === selected.hex} onSelect={setSelected} />
-            ))}
+      <div role="radiogroup" aria-label="เลือกสีเล็บ" className="-mx-2 mt-4 flex gap-2.5 overflow-x-auto px-2 py-2 [scrollbar-width:none]">
+        {SWATCHES.map((s) => (
+          <DropSwatch key={s.hex} s={s} active={s.hex === selected.hex} onSelect={setSelected} />
+        ))}
+      </div>
+
+      {/* กรอบตัวอย่าง: รูปมือจริงเป็นฉาก + เล็บ 3D แสดงสีที่เลือก + ปุ่มเครื่องมือด้านขวา */}
+      <div className="relative mt-3 flex-1 min-h-[220px] overflow-hidden rounded-[22px] border-[5px] border-white/90 shadow-[0_14px_30px_-18px_rgba(150,40,85,0.6)]">
+        <img src="/photos/tryon-hand.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover object-[60%_55%]" />
+        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-[#FFF3F7]/95 via-[#FFF3F7]/55 to-transparent" />
+
+        <div className="lucky-3d relative flex h-full items-center gap-3 p-4">
+          <div key={selected.hex} className="lucky-nail-turn w-24 sm:w-28 shrink-0" style={{ transformStyle: 'preserve-3d' }}>
+            <Nail3D hex={selected.hex} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-[#7A4A5E]">สีที่เลือก</p>
+            <p className="font-display text-lg font-semibold text-[#4A2A37]">{selected.th}</p>
           </div>
         </div>
 
-        <div className="lucky-3d flex flex-col items-center text-center gap-4 rounded-[20px] bg-gradient-to-b from-rose-50 to-white p-6">
-          <div key={selected.hex} className="lucky-nail-turn" style={{ transformStyle: 'preserve-3d' }}>
-            <Nail3D hex={selected.hex} />
-          </div>
-          <p className="text-gray-600">
-            สีที่เลือก <span className="font-semibold text-gray-800">{selected.th}</span>
-          </p>
-          <Link to="/ai" className="btn-candy px-7 py-3">
-            <Icon name="hand" /> ลองสีนี้บนมือคุณ
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-2.5">
+          <Link to="/ai" aria-label="ลองสีนี้บนรูปมือของคุณ" title="ลองบนรูปมือของคุณ" className="glass-btn h-10 w-10">
+            <Icon name="expand" />
+          </Link>
+          <button type="button" onClick={randomize} aria-label="สุ่มสี" title="สุ่มสี" className="glass-btn h-10 w-10">
+            <Icon name="repeat" />
+          </button>
+          <Link to="/ai" aria-label="ไปหน้า AI วิเคราะห์ลายเล็บ" title="AI แนะนำลาย" className="glass-btn h-10 w-10">
+            <Icon name="heart" />
           </Link>
         </div>
       </div>
-    </section>
+
+      <Link to="/ai" className="btn-candy mt-5 self-start px-7 py-3">
+        <Icon name="hand" /> ลองสีนี้บนมือคุณ
+      </Link>
+    </div>
   )
 }

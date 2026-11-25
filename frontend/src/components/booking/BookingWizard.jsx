@@ -324,7 +324,7 @@ export default function BookingWizard() {
   if (submitted) {
     return (
       <section id="booking" className="max-w-2xl mx-auto px-6 py-16 text-center">
-        <div className="bg-white rounded-3xl shadow-card p-10">
+        <div className="glass-solid rounded-3xl p-10">
           <div className="text-5xl mb-4">🎉</div>
           <h2 className="font-display text-2xl font-semibold text-gray-800">จองคิวสำเร็จแล้ว</h2>
           <p className="text-gray-500 mt-2">ขอบคุณที่ใช้บริการ Lucky Salon</p>
@@ -438,7 +438,7 @@ export default function BookingWizard() {
         <p className="text-gray-500 mt-2">ดูปฏิทิน เลือกเวลาว่าง และเลือกบริการที่ต้องการได้ในที่เดียว</p>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-card p-6 sm:p-10 mt-8">
+      <div className="glass-solid rounded-3xl p-6 sm:p-10 mt-8">
         <StepIndicator steps={steps} currentStep={step} />
 
         {currentStepName === 'เลือกบริการ' && (

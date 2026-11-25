@@ -1,0 +1,7 @@
+Placeholder photos from Unsplash (https://unsplash.com/license — free to use, no attribution required).
+Replace with the shop's real photos before handover (keep the same file names).
+
+salon-backdrop.webp  https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f
+hero-hand.webp       https://images.unsplash.com/photo-1587729927069-ef3b7a5ab9b4
+tryon-hand.webp      https://images.unsplash.com/photo-1607779097040-26e80aa78e66
+soft-hands.webp      https://images.unsplash.com/photo-1610992015732-2449b76344bc

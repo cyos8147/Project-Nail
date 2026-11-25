@@ -201,7 +201,7 @@ export default function GalleryPage() {
         <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5" aria-busy={designs === null}>
           {designs === null &&
             Array.from({ length: 8 }, (_, i) => (
-              <div key={i} aria-hidden="true" className="rounded-[20px] border border-[#1f1b16]/[0.06] bg-white/70 p-2">
+              <div key={i} aria-hidden="true" className="rounded-[24px] glass p-2">
                 <Bone className="aspect-square !rounded-[1.2rem]" />
                 <div className="p-2 space-y-2">
                   <Bone className="h-4 w-3/4" />
@@ -216,7 +216,7 @@ export default function GalleryPage() {
               type="button"
               onClick={(e) => open(i, e.currentTarget)}
               aria-label={`ดูลาย ${d.name} เต็มจอ`}
-              className="lucky-fade-up group text-left rounded-[20px] border border-[#1f1b16]/[0.06] bg-white/85 p-2 shadow-soft transition-colors duration-150 hover:bg-white focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-rose-300"
+              className="lucky-fade-up group text-left rounded-[24px] glass p-2 transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-rose-300"
               style={{ animationDelay: `${Math.min(i, 5) * 0.06}s` }}
             >
               <div className="relative aspect-square overflow-hidden rounded-[12px]">

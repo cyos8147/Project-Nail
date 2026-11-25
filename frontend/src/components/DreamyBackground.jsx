@@ -1,119 +1,76 @@
-// พื้นหลังตกแต่งแบบ "ฝันหวานสีชมพู" ใช้ร่วมกันทั้งหน้าแรกและหน้า AI
-// - วางแบบ fixed อยู่หลังเนื้อหาทั้งหมด (ต้องอยู่ใน container ที่มี class "isolate")
-// - เป็นของตกแต่งล้วน: ไม่มีปุ่ม ไม่รับการแตะ (pointer-events-none) และซ่อนจากโปรแกรมอ่านหน้าจอ
-// - ใช้ radial-gradient แทน blur ขนาดใหญ่ เพื่อไม่ให้ไอแพด/มือถือเลื่อนหน้าช้า
-// - เคลื่อนไหวเฉพาะเมื่อเครื่องไม่ได้ตั้ง "ลดการเคลื่อนไหว" (motion-safe)
+import { GlassHeart, RibbonSwoosh, SatinBow, Sparkle } from './Decor.jsx'
 
-function GlassHeart({ className = '', style }) {
-  return (
-    <svg viewBox="0 0 64 58" className={className} style={style} aria-hidden="true">
-      <defs>
-        <linearGradient id="gh-fill" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#FFE4EE" stopOpacity="0.95" />
-          <stop offset="0.55" stopColor="#F9A8C9" stopOpacity="0.75" />
-          <stop offset="1" stopColor="#EC4C82" stopOpacity="0.55" />
-        </linearGradient>
-      </defs>
-      <path
-        d="M32 56 C 14 42 2 32 2 18 C 2 8 10 2 18 2 C 24 2 29 5 32 10 C 35 5 40 2 46 2 C 54 2 62 8 62 18 C 62 32 50 42 32 56 Z"
-        fill="url(#gh-fill)"
-        stroke="#ffffff"
-        strokeOpacity="0.9"
-        strokeWidth="1.5"
-      />
-      <ellipse cx="18" cy="14" rx="7" ry="4" fill="#ffffff" fillOpacity="0.85" transform="rotate(-30 18 14)" />
-    </svg>
-  )
-}
-
-function Sparkle({ className = '', style }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} style={style} aria-hidden="true">
-      <path d="M12 0 C 13 8 16 11 24 12 C 16 13 13 16 12 24 C 11 16 8 13 0 12 C 8 11 11 8 12 0 Z" fill="currentColor" />
-    </svg>
-  )
-}
-
-function RibbonSwoosh({ className = '', flip = false }) {
-  return (
-    <svg viewBox="0 0 400 300" className={className} aria-hidden="true" style={flip ? { transform: 'scaleX(-1)' } : undefined}>
-      {/* ริบบิ้นซาติน: ขอบเข้ม → เนื้อชมพู → แถบแสงกลาง → เส้นเงา */}
-      <g fill="none" strokeLinecap="round">
-        <path d="M-20 260 C 80 180 120 40 240 60 S 380 200 420 120" stroke="#EE8FB4" strokeOpacity="0.55" strokeWidth="34" />
-        <path d="M-20 260 C 80 180 120 40 240 60 S 380 200 420 120" stroke="#F9BFD5" strokeOpacity="0.85" strokeWidth="28" />
-        <path d="M-20 260 C 80 180 120 40 240 60 S 380 200 420 120" stroke="#FFE3EE" strokeOpacity="0.9" strokeWidth="12" />
-        <path d="M-20 260 C 80 180 120 40 240 60 S 380 200 420 120" stroke="#ffffff" strokeOpacity="0.85" strokeWidth="3" />
-      </g>
-    </svg>
-  )
-}
+// พื้นหลังของทุกหน้าลูกค้า: รูปร้านโทนชมพูเบลอ ๆ + ม่านชมพู + โบว์ ริบบิ้น หัวใจแก้ว ประกาย (ตามภาพตัวอย่างของร้าน)
+// - fixed อยู่หลังเนื้อหาทั้งหมด (ต้องอยู่ใน container ที่มี class "isolate")
+// - ของตกแต่งล้วน: ไม่รับการแตะ และซ่อนจากโปรแกรมอ่านหน้าจอ
+// - รูปพื้นหลังเป็นรูปชั่วคราว (public/photos) เปลี่ยนเป็นรูปร้านจริงได้โดยใช้ชื่อไฟล์เดิม
 
 const HEARTS = [
-  { top: '12%', left: '4%', size: 'w-12 sm:w-16', delay: '0s' },
-  { top: '30%', right: '6%', size: 'w-10 sm:w-14', delay: '1.1s' },
-  { top: '58%', left: '7%', size: 'w-9 sm:w-12', delay: '0.6s', desktopOnly: true },
-  { top: '74%', right: '10%', size: 'w-12 sm:w-16', delay: '1.6s' },
-  { top: '88%', left: '38%', size: 'w-8 sm:w-10', delay: '2s', desktopOnly: true },
-  { top: '6%', right: '30%', size: 'w-8 sm:w-10', delay: '0.3s', desktopOnly: true },
+  { top: '14%', left: '3%', w: 'w-12 sm:w-16' },
+  { top: '9%', right: '24%', w: 'w-10 sm:w-14', desktop: true },
+  { top: '44%', right: '2%', w: 'w-10 sm:w-14' },
+  { top: '62%', left: '2%', w: 'w-9 sm:w-12', desktop: true },
+  { top: '84%', right: '18%', w: 'w-10 sm:w-12' },
+  { top: '90%', left: '30%', w: 'w-8 sm:w-10', desktop: true },
 ]
 
 const SPARKLES = [
-  { top: '9%', left: '22%', size: 'w-4', color: 'text-white' },
-  { top: '18%', right: '18%', size: 'w-5', color: 'text-rose-300' },
-  { top: '42%', left: '15%', size: 'w-3', color: 'text-white' },
-  { top: '50%', right: '22%', size: 'w-4', color: 'text-white' },
-  { top: '66%', left: '28%', size: 'w-5', color: 'text-rose-300' },
-  { top: '82%', right: '28%', size: 'w-3', color: 'text-white' },
-  { top: '35%', left: '48%', size: 'w-3', color: 'text-rose-200' },
+  { top: '8%', left: '20%', w: 'w-4', c: 'text-white' },
+  { top: '20%', right: '12%', w: 'w-5', c: 'text-white' },
+  { top: '36%', left: '9%', w: 'w-3', c: 'text-white' },
+  { top: '30%', left: '52%', w: 'w-4', c: 'text-white', desktop: true },
+  { top: '56%', right: '9%', w: 'w-5', c: 'text-white' },
+  { top: '70%', left: '16%', w: 'w-4', c: 'text-white' },
+  { top: '78%', left: '62%', w: 'w-3', c: 'text-white', desktop: true },
+  { top: '94%', right: '40%', w: 'w-4', c: 'text-white' },
 ]
 
-// variant="full"  หน้าแรก: หวานเต็มที่ (ริบบิ้นสองมุม โบว์ หัวใจ 6 ดวง ประกาย 7 จุด)
-// variant="calm"  หน้าอื่น: เรียบขึ้นให้เนื้อหาเด่น (ริบบิ้นเส้นเดียวจาง ๆ หัวใจ 2 ดวง ไม่มีโบว์ ประกาย 3 จุด)
+// variant="full" หน้าแรก: ตกแต่งเต็มเหมือนภาพตัวอย่าง
+// variant="calm" หน้าอื่น: ชุดเดียวกันแต่น้อยลง ให้ฟอร์มและข้อมูลเด่น
 export default function DreamyBackground({ variant = 'calm' }) {
   const full = variant === 'full'
-  // หน้าแรกเหลือหัวใจครึ่งหนึ่ง หน้าอื่น 2 ดวง ทั้งหมดอยู่นิ่ง (ไม่ลอยวน)
-  const hearts = full ? HEARTS.filter((_, i) => i % 2 === 0) : HEARTS.filter((h) => !h.desktopOnly).slice(1, 3)
-  const sparkles = full ? SPARKLES.filter((_, i) => i % 2 === 0) : SPARKLES.filter((_, i) => i % 2 === 1)
+  const hearts = full ? HEARTS : HEARTS.filter((_, i) => i % 2 === 0)
+  const sparkles = full ? SPARKLES : SPARKLES.filter((_, i) => i % 2 === 1)
+
   return (
-    <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden select-none">
-      {/* พื้นชมพูไล่เฉด + แสงฟุ้ง (แบบเรียบสีอ่อนกว่า) */}
+    <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden select-none bg-[#FBE3EC]">
+      {/* รูปร้านเป็นฉากหลัง ย้อมชมพูและเบลอเล็กน้อยให้ตัวหนังสือชัด */}
+      <div
+        className="absolute -inset-4 bg-cover bg-center"
+        style={{ backgroundImage: 'url(/photos/salon-backdrop.webp)', filter: 'blur(5px) saturate(0.9)' }}
+      />
       <div
         className="absolute inset-0"
         style={{
-          background: full
-            ? [
-                'radial-gradient(60rem 40rem at 85% -10%, rgba(249,168,201,0.55), transparent 60%)',
-                'radial-gradient(50rem 36rem at -10% 40%, rgba(252,205,224,0.7), transparent 60%)',
-                'radial-gradient(40rem 30rem at 70% 105%, rgba(244,114,160,0.28), transparent 60%)',
-                'linear-gradient(180deg, #FFF1F6 0%, #FCE4EE 45%, #FDEAF2 100%)',
-              ].join(',')
-            : [
-                'radial-gradient(60rem 40rem at 90% -15%, rgba(249,168,201,0.35), transparent 60%)',
-                'radial-gradient(50rem 36rem at -15% 60%, rgba(252,205,224,0.45), transparent 60%)',
-                'linear-gradient(180deg, #FFF6F9 0%, #FDEEF4 100%)',
-              ].join(','),
+          background: [
+            'radial-gradient(70rem 40rem at 50% -10%, rgba(255,244,248,0.55), transparent 70%)',
+            'radial-gradient(40rem 30rem at 100% 100%, rgba(244,143,180,0.35), transparent 70%)',
+            `linear-gradient(180deg, rgba(251,214,228,${full ? 0.72 : 0.8}) 0%, rgba(250,205,222,${full ? 0.8 : 0.86}) 55%, rgba(252,222,233,0.9) 100%)`,
+          ].join(','),
         }}
       />
 
-      {/* ริบบิ้น */}
-      <RibbonSwoosh className={`absolute -top-10 -left-24 w-[26rem] sm:w-[34rem] ${full ? 'opacity-80' : 'opacity-35'}`} />
-      {full && <RibbonSwoosh flip className="absolute bottom-0 -right-24 w-[26rem] sm:w-[34rem] opacity-70" />}
+      {/* ริบบิ้นซาตินพาดมุม */}
+      <RibbonSwoosh className="absolute -top-16 -left-40 w-[28rem] sm:w-[38rem] opacity-80" style={{ rotate: '-8deg' }} />
+      <RibbonSwoosh flip className="absolute -bottom-10 -right-40 w-[28rem] sm:w-[40rem] opacity-75" />
+      {full && <RibbonSwoosh className="hidden lg:block absolute bottom-[8%] -left-48 w-[30rem] opacity-60" style={{ rotate: '24deg' }} />}
 
+      {/* โบว์มุมบน */}
+      <SatinBow className={`absolute -top-3 -left-6 w-28 sm:w-40 ${full ? '' : 'opacity-90'}`} style={{ rotate: '-14deg' }} />
+      <SatinBow className="hidden md:block absolute top-16 -right-4 w-32 lg:w-40" style={{ rotate: '16deg' }} />
 
-      {/* หัวใจแก้วลอย (ลอยช้า ๆ) */}
       {hearts.map((h, i) => (
         <GlassHeart
           key={i}
-          className={`absolute ${full ? `${h.size} opacity-80` : 'w-8 sm:w-10 opacity-50'} ${h.desktopOnly ? 'hidden md:block' : ''}`}
-          style={{ top: h.top, left: h.left, right: h.right }}
+          className={`absolute ${h.w} opacity-90 ${h.desktop ? 'hidden md:block' : ''}`}
+          style={{ top: h.top, left: h.left, right: h.right, rotate: `${(i % 2 ? 1 : -1) * (8 + i * 3)}deg` }}
         />
       ))}
 
-      {/* ประกายดาว: กะพริบช้า ๆ นุ่ม ๆ แทนการกะพริบแรง */}
       {sparkles.map((s, i) => (
         <Sparkle
           key={i}
-          className={`absolute ${s.size} ${s.color} opacity-70`}
+          className={`absolute ${s.w} ${s.c} drop-shadow-[0_0_6px_rgba(255,255,255,0.9)] ${s.desktop ? 'hidden md:block' : ''}`}
           style={{ top: s.top, left: s.left, right: s.right }}
         />
       ))}

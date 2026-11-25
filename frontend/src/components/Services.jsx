@@ -67,7 +67,7 @@ function ServiceRow({ service, icon }) {
   )
   return (
     <li
-      className="group relative flex items-center gap-3 sm:gap-4 rounded-[20px] border border-[#1f1b16]/[0.06] bg-white/85 shadow-soft p-3 pr-4 transition-colors duration-150 hover:bg-white"
+      className="group relative flex items-center gap-3 sm:gap-4 rounded-[24px] glass p-3 pr-4 transition-transform duration-200 hover:-translate-y-0.5"
     >
       <Thumb src={service.image_url} name={name} categoryId={service.category_id} />
       <div className="min-w-0 flex-1">
@@ -144,7 +144,7 @@ export default function Services() {
         <Bone className="mx-auto mb-8 h-14 w-full max-w-lg !rounded-full" />
         <ul className="grid gap-4 md:grid-cols-2">
           {Array.from({ length: 4 }, (_, i) => (
-            <li key={i} className="flex items-center gap-4 rounded-[20px] border border-[#1f1b16]/[0.06] bg-white/85 shadow-soft p-3">
+            <li key={i} className="flex items-center gap-4 rounded-[24px] glass p-3">
               <Bone className="h-20 w-24 sm:h-24 sm:w-32 shrink-0 !rounded-[1.1rem]" />
               <div className="flex-1 space-y-2.5">
                 <Bone className="h-5 w-2/3" />
@@ -186,7 +186,7 @@ export default function Services() {
         <div
           role="tablist"
           aria-label="หมวดบริการ"
-          className="mx-auto mb-8 flex w-full max-w-lg gap-2 rounded-full border border-[#1f1b16]/[0.06] bg-white/85 p-1.5 shadow-hair"
+          className="mx-auto mb-8 flex w-full max-w-lg gap-2 rounded-full glass p-1.5"
         >
           {tabs.map((t, i) => {
             const selected = t.id === active.id

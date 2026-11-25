@@ -45,7 +45,7 @@ export default function Reviews() {
         </div>
 
         {reviews && reviews.length === 0 && (
-          <div className="mx-auto max-w-md rounded-[20px] border border-[#1f1b16]/[0.06] bg-white/85 p-8 text-center shadow-soft">
+          <div className="mx-auto max-w-md rounded-[24px] glass p-8 text-center">
             <p className="font-display font-semibold text-gray-800">ยังไม่มีรีวิว</p>
             <p className="mt-2 text-sm text-gray-600">ใช้บริการแล้ว รีวิวได้ที่หน้าประวัติของฉัน</p>
             <Link to="/history" className="btn-candy-soft mt-5 px-5 py-2.5 text-sm">
@@ -57,7 +57,7 @@ export default function Reviews() {
         <div className="grid md:grid-cols-3 gap-6" aria-busy={!reviews}>
           {!reviews &&
             Array.from({ length: 3 }, (_, i) => (
-              <div key={i} aria-hidden="true" className="rounded-[20px] border border-[#1f1b16]/[0.06] bg-white/70 p-6 space-y-3">
+              <div key={i} aria-hidden="true" className="rounded-[24px] glass p-6 space-y-3">
                 <div className="flex items-center gap-3">
                   <Bone className="w-10 h-10 !rounded-full" />
                   <div className="flex-1 space-y-2">
@@ -70,7 +70,7 @@ export default function Reviews() {
               </div>
             ))}
           {(reviews || []).map((r, i) => (
-            <div key={`${r.name}-${i}`} className="rounded-[20px] border border-[#1f1b16]/[0.06] bg-white/90 p-6 shadow-soft">
+            <div key={`${r.name}-${i}`} className="rounded-[24px] glass p-6">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center font-display font-semibold text-rose-600">
                   {r.name.charAt(0)}

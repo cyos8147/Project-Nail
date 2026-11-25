@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getNailDesigns } from '../api/client.js'
 import NailThumb from './NailThumb.jsx'
 import { Bone } from './Skeleton.jsx'
 import Icon from './Icon.jsx'
+import { Sparkle } from './Decor.jsx'
 
 const fallbackNails = [
   { id: 'f1', name: 'Minimal Nude', accent: '#E8C39E' },
@@ -13,8 +14,10 @@ const fallbackNails = [
   { id: 'f5', name: 'Marble', accent: '#9C6B7A' },
 ]
 
+// การ์ด "ลายเล็บยอดนิยม" (Our Nails ในภาพตัวอย่าง): แถวรูปผลงาน เลื่อนด้วยลูกศรหรือปัดนิ้ว
 export default function PopularNails() {
   const [nails, setNails] = useState(null) // null = กำลังโหลด
+  const rowRef = useRef(null)
 
   useEffect(() => {
     getNailDesigns()
@@ -22,44 +25,66 @@ export default function PopularNails() {
       .catch(() => setNails(fallbackNails)) // ใช้ข้อมูลตัวอย่างเมื่อโหลดไม่สำเร็จเท่านั้น
   }, [])
 
-  return (
-    <section id="popular" className="py-16 scroll-mt-20">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
-          <div>
-            <h2 className="font-display text-3xl font-semibold text-gray-800">ลายเล็บยอดนิยม</h2>
-            <p className="text-gray-600 mt-2">ผลงานจากร้านของเรา แตะเพื่อดูทั้งหมดในแกลเลอรี</p>
-          </div>
-          <Link to="/gallery" className="btn-candy-soft px-5 py-2.5 text-sm">
-            ดูผลงานทั้งหมด <Icon name="arrow" className="h-4 w-4" />
-          </Link>
-        </div>
+  const scroll = (dir) => {
+    const el = rowRef.current
+    if (el) el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: 'smooth' })
+  }
 
-        {/* แถบรูปย่อเรียงแนวนอน (ไม่ซ้ำกับการ์ดใหญ่ใน Hero) เลื่อนด้วยนิ้วได้บนมือถือ */}
-        <ul className="-mx-4 px-4 sm:mx-0 sm:px-0 flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 [scrollbar-width:none]">
+  return (
+    <section id="popular" className="glass relative h-full min-w-0 rounded-[30px] p-5 sm:p-6 scroll-mt-24">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="flex items-center gap-2 font-display text-2xl font-semibold text-[#4A2A37]">
+            <Sparkle className="h-6 w-6 text-rose-400" />
+            ลายเล็บยอดนิยม
+          </h2>
+          <p className="mt-1 text-sm text-[#7A4A5E]">ผลงานของร้าน พร้อมให้คุณเลือกจอง</p>
+        </div>
+        <Link to="/gallery" className="glass-btn gap-1.5 px-4 py-2 text-sm font-display font-semibold">
+          ดูทั้งหมด <Icon name="arrow" className="h-4 w-4" />
+        </Link>
+      </div>
+
+      <div className="relative mt-5">
+        <ul ref={rowRef} className="-mx-1 px-1 flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory pb-2 [scrollbar-width:none]">
           {!nails &&
-            Array.from({ length: 6 }, (_, i) => (
-              <li key={i} aria-hidden="true" className="w-36 sm:w-40 shrink-0 space-y-2">
-                <Bone className="aspect-square !rounded-2xl" />
+            Array.from({ length: 4 }, (_, i) => (
+              <li key={i} aria-hidden="true" className="w-[44%] sm:w-[30%] lg:w-[31%] shrink-0 space-y-2">
+                <Bone className="aspect-[4/5] !rounded-2xl" />
                 <Bone className="h-4 w-3/4" />
               </li>
             ))}
           {(nails || []).map((n) => (
-            <li key={n.id} className="w-36 sm:w-40 shrink-0 snap-start">
-              <Link to="/gallery" className="group block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-rose-400 rounded-2xl">
-                <div className="aspect-square overflow-hidden rounded-2xl bg-rose-50 shadow-soft">
+            <li key={n.id} className="w-[44%] sm:w-[30%] lg:w-[31%] shrink-0 snap-start">
+              <Link
+                to="/gallery"
+                className="group block rounded-[18px] bg-white/85 p-1.5 shadow-[0_12px_24px_-16px_rgba(150,40,85,0.6)] transition-transform duration-200 hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400"
+              >
+                <div className="aspect-[4/5] overflow-hidden rounded-[13px] bg-rose-50">
                   {n.image_url ? (
-                    <img loading="lazy" decoding="async" src={n.image_url} alt={n.name} className="w-full h-full object-cover transition-opacity duration-150 group-hover:opacity-90" />
+                    <img loading="lazy" decoding="async" src={n.image_url} alt={n.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   ) : (
                     <NailThumb label={n.name} accent={n.accent || n.color_hex || '#E8C39E'} />
                   )}
                 </div>
-                <p className="mt-2 text-sm font-medium text-gray-800 truncate">{n.name}</p>
-                {n.price != null && <p className="text-xs text-gray-500 tabular-nums">{Number(n.price).toLocaleString('th-TH')} บาท</p>}
+                <div className="flex items-baseline justify-between gap-2 px-1.5 pt-2 pb-1">
+                  <p className="text-sm font-medium text-[#4A2A37] truncate">{n.name}</p>
+                  {n.price != null && <p className="shrink-0 text-xs font-semibold text-rose-600 tabular-nums">{Number(n.price).toLocaleString('th-TH')}฿</p>}
+                </div>
               </Link>
             </li>
           ))}
         </ul>
+        {nails && nails.length > 2 && (
+          <>
+            <button type="button" onClick={() => scroll(-1)} aria-label="เลื่อนไปทางซ้าย" className="glass-btn hidden sm:inline-flex absolute -left-4 top-[42%] -translate-y-1/2 h-10 w-10">
+              <Icon name="chevronLeft" />
+            </button>
+            <button type="button" onClick={() => scroll(1)} aria-label="เลื่อนไปทางขวา" className="glass-btn hidden sm:inline-flex absolute -right-4 top-[42%] -translate-y-1/2 h-10 w-10">
+              <Icon name="chevronRight" />
+            </button>
+          </>
+        )}
       </div>
     </section>
   )
