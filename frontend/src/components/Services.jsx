@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getServiceCategories, getServices } from '../api/client.js'
+import ServiceArt from './ServiceArt.jsx'
 
 const FALLBACK_CATEGORIES = [
   { id: 'hair', name: 'ทำผม', icon: '💇‍♀️' },
@@ -30,14 +31,14 @@ function formatDuration(minutes) {
   return m ? `${h} ชม. ${m} นาที` : `${h} ชม.`
 }
 
-function Thumb({ src, icon, name }) {
+function Thumb({ src, name, categoryId }) {
   const [failed, setFailed] = useState(false)
   return (
     <div className="flex h-20 w-24 sm:h-24 sm:w-32 lg:h-28 lg:w-36 shrink-0 items-center justify-center overflow-hidden rounded-[1.1rem] bg-gradient-to-br from-rose-100 via-pink-50 to-white text-3xl ring-2 ring-white shadow-[0_6px_14px_-8px_rgba(217,59,114,0.5)]">
       {src && !failed ? (
         <img src={src} alt={name} loading="lazy" onError={() => setFailed(true)} className="h-full w-full object-cover" />
       ) : (
-        <span aria-hidden="true">{icon}</span>
+        <ServiceArt name={name} categoryId={categoryId} className="h-full w-full" />
       )}
     </div>
   )
@@ -67,7 +68,7 @@ function ServiceRow({ service, icon }) {
       className="group relative flex items-center gap-3 sm:gap-4 rounded-[1.6rem] border-2 border-white/90 p-2.5 pr-3 sm:p-3 sm:pr-4 shadow-[0_12px_28px_-14px_rgba(217,59,114,0.55),inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-sm transition-transform hover:-translate-y-0.5"
       style={{ background: 'linear-gradient(135deg, rgba(255,244,248,0.85) 0%, rgba(252,220,233,0.6) 100%)' }}
     >
-      <Thumb src={service.image_url} icon={icon} name={name} />
+      <Thumb src={service.image_url} name={name} categoryId={service.category_id} />
       <div className="min-w-0 flex-1">
         <h3 className="font-display font-bold leading-snug text-gray-800 line-clamp-2 text-base sm:text-lg">{name}</h3>
         {description && description !== name && (
