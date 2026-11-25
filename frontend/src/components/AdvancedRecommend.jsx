@@ -105,10 +105,8 @@ export default function AdvancedRecommend({ skinTone = null }) {
   return (
     <section id="ai-advanced-recommend" className="max-w-5xl mx-auto px-6 py-20">
       <div className="text-center mb-4">
-        <span className="inline-block bg-white text-rose-600 text-xs font-semibold px-4 py-1.5 rounded-full mb-4 border border-blush-200 shadow-card">
-          AI แนะนำลายเล็บ
-        </span>
-        <h2 className="font-display text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight">ให้ AI เลือกลายที่ใช่ให้คุณ</h2>
+        <p className="font-script text-4xl text-rose-500">Find Your Style</p>
+        <h2 className="font-display text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight mt-1">ให้ AI เลือกลายที่ใช่ให้คุณ</h2>
         <p className="text-gray-500 mt-2">ตอบไม่กี่ข้อ แล้วดูลายที่เหมาะกับคุณที่สุดจากลายของร้าน</p>
       </div>
 

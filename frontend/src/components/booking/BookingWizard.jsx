@@ -434,7 +434,8 @@ export default function BookingWizard() {
   return (
     <section id="booking" className="max-w-4xl mx-auto px-6 py-16">
       <div className="text-center mb-2">
-        <h2 className="font-display text-3xl font-bold text-gray-800">จองคิวออนไลน์</h2>
+        <p className="font-script text-4xl text-rose-500">Book Your Visit</p>
+        <h2 className="font-display text-3xl font-bold text-gray-800 mt-1">จองคิวออนไลน์</h2>
         <p className="text-gray-500 mt-2">ดูปฏิทิน เลือกเวลาว่าง และเลือกบริการที่ต้องการได้ในที่เดียว</p>
       </div>
 

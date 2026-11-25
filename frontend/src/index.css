@@ -124,6 +124,12 @@ h1, h2, h3, .font-display {
   animation: lucky-skeleton 1.4s ease-in-out infinite;
 }
 
+@keyframes lucky-page-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.lucky-page { animation: lucky-page-in 0.35s ease-out; }
+
 .lucky-fade-up { animation: lucky-fade-up 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 .lucky-kenburns { animation: lucky-kenburns 6s ease-out both; }
 .lucky-progress { transform-origin: left; animation: lucky-progress linear both; }
@@ -147,6 +153,7 @@ h1, h2, h3, .font-display {
   .lucky-splash__tag,
   .lucky-splash__crown,
   .lucky-splash__heart,
+  .lucky-page,
   .lucky-shine,
   .lucky-skeleton,
   .lucky-kenburns,

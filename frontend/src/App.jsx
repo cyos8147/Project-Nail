@@ -1,4 +1,5 @@
-import { Route, Routes } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Route, Routes, useLocation } from 'react-router-dom'
 import HomePage from './pages/HomePage.jsx'
 import BookingPage from './pages/BookingPage.jsx'
 import EditBookingPage from './pages/EditBookingPage.jsx'
@@ -20,9 +21,17 @@ import AdminReportsPage from './pages/admin/AdminReportsPage.jsx'
 import SplashIntro from './components/SplashIntro.jsx'
 
 export default function App() {
+  const { pathname, hash } = useLocation()
+  // เปลี่ยนหน้าแล้วเริ่มที่ด้านบนเสมอ (ยกเว้นลิงก์ที่ชี้ไปส่วนในหน้า เช่น /#services)
+  useEffect(() => {
+    if (!hash) window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [pathname, hash])
+  // เปลี่ยนหน้าแบบจางเข้า (เฉพาะหน้าลูกค้า หน้าแอดมินไม่ทำ เพื่อไม่ให้เมนูแอดมินโหลดใหม่ทุกครั้ง)
+  const pageKey = pathname.startsWith('/admin') ? 'admin' : pathname
   return (
     <>
     <SplashIntro />
+    <div key={pageKey} className={pageKey === 'admin' ? undefined : 'lucky-page'}>
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/booking" element={<BookingPage />} />
@@ -46,6 +55,7 @@ export default function App() {
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    </div>
     </>
   )
 }

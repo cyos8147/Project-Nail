@@ -53,10 +53,8 @@ export default function NailRecommendation({ skinTone }) {
   return (
     <section id="ai-recommend" className="max-w-6xl mx-auto px-6 py-20">
       <div className="text-center mb-4">
-        <span className="inline-block bg-white text-rose-600 text-xs font-semibold px-4 py-1.5 rounded-full mb-4 border border-blush-200 shadow-card">
-          {personalized ? 'AI จัดอันดับให้คุณ' : 'ลายเล็บยอดนิยม'}
-        </span>
-        <h2 className="font-display text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight">
+        <p className="font-script text-4xl text-rose-500">{personalized ? 'Picked for You' : 'Trending Styles'}</p>
+        <h2 className="font-display text-3xl sm:text-4xl font-bold text-gray-800 tracking-tight mt-1">
           {personalized ? `ลายเล็บที่เหมาะกับผิว${TONE_LABEL[skinTone]}ของคุณ` : 'ลายเล็บยอดนิยมของร้าน'}
         </h2>
         <p className="text-gray-500 mt-2">

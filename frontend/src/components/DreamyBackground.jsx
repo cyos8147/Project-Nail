@@ -67,45 +67,60 @@ const SPARKLES = [
   { top: '35%', left: '48%', size: 'w-3', color: 'text-rose-200' },
 ]
 
-export default function DreamyBackground() {
+// variant="full"  หน้าแรก: หวานเต็มที่ (ริบบิ้นสองมุม โบว์ หัวใจ 6 ดวง ประกาย 7 จุด)
+// variant="calm"  หน้าอื่น: เรียบขึ้นให้เนื้อหาเด่น (ริบบิ้นเส้นเดียวจาง ๆ หัวใจ 2 ดวง ไม่มีโบว์ ประกาย 3 จุด)
+export default function DreamyBackground({ variant = 'calm' }) {
+  const full = variant === 'full'
+  const hearts = full ? HEARTS : HEARTS.filter((h) => !h.desktopOnly).slice(1, 3)
+  const sparkles = full ? SPARKLES : SPARKLES.filter((_, i) => i % 2 === 1)
   return (
     <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden select-none">
-      {/* พื้นชมพูไล่เฉด + แสงฟุ้ง */}
+      {/* พื้นชมพูไล่เฉด + แสงฟุ้ง (แบบเรียบสีอ่อนกว่า) */}
       <div
         className="absolute inset-0"
         style={{
-          background: [
-            'radial-gradient(60rem 40rem at 85% -10%, rgba(249,168,201,0.55), transparent 60%)',
-            'radial-gradient(50rem 36rem at -10% 40%, rgba(252,205,224,0.7), transparent 60%)',
-            'radial-gradient(40rem 30rem at 70% 105%, rgba(244,114,160,0.28), transparent 60%)',
-            'linear-gradient(180deg, #FFF1F6 0%, #FCE4EE 45%, #FDEAF2 100%)',
-          ].join(','),
+          background: full
+            ? [
+                'radial-gradient(60rem 40rem at 85% -10%, rgba(249,168,201,0.55), transparent 60%)',
+                'radial-gradient(50rem 36rem at -10% 40%, rgba(252,205,224,0.7), transparent 60%)',
+                'radial-gradient(40rem 30rem at 70% 105%, rgba(244,114,160,0.28), transparent 60%)',
+                'linear-gradient(180deg, #FFF1F6 0%, #FCE4EE 45%, #FDEAF2 100%)',
+              ].join(',')
+            : [
+                'radial-gradient(60rem 40rem at 90% -15%, rgba(249,168,201,0.35), transparent 60%)',
+                'radial-gradient(50rem 36rem at -15% 60%, rgba(252,205,224,0.45), transparent 60%)',
+                'linear-gradient(180deg, #FFF6F9 0%, #FDEEF4 100%)',
+              ].join(','),
         }}
       />
 
-      {/* ริบบิ้นสองมุม */}
-      <RibbonSwoosh className="absolute -top-10 -left-24 w-[26rem] sm:w-[34rem] opacity-80" />
-      <RibbonSwoosh flip className="absolute bottom-0 -right-24 w-[26rem] sm:w-[34rem] opacity-70" />
+      {/* ริบบิ้น */}
+      <RibbonSwoosh className={`absolute -top-10 -left-24 w-[26rem] sm:w-[34rem] ${full ? 'opacity-80' : 'opacity-35'}`} />
+      {full && <RibbonSwoosh flip className="absolute bottom-0 -right-24 w-[26rem] sm:w-[34rem] opacity-70" />}
 
-      {/* โบว์มุมบน */}
-      <span className="absolute top-20 left-3 sm:left-8 text-4xl sm:text-5xl opacity-90 rotate-[-18deg]">🎀</span>
-      <span className="absolute top-24 right-3 sm:right-10 text-3xl sm:text-5xl opacity-90 rotate-[14deg] hidden sm:block">🎀</span>
+      {/* โบว์มุมบน (เฉพาะหน้าแรก) */}
+      {full && (
+        <>
+          <span className="absolute top-20 left-3 sm:left-8 text-4xl sm:text-5xl opacity-90 rotate-[-18deg]">🎀</span>
+          <span className="absolute top-24 right-3 sm:right-10 text-3xl sm:text-5xl opacity-90 rotate-[14deg] hidden sm:block">🎀</span>
+        </>
+      )}
 
-      {/* หัวใจแก้วลอย */}
-      {HEARTS.map((h, i) => (
+      {/* หัวใจแก้วลอย (ลอยช้า ๆ) */}
+      {hearts.map((h, i) => (
         <GlassHeart
           key={i}
-          className={`absolute ${h.size} ${h.desktopOnly ? 'hidden md:block' : ''} drop-shadow-[0_6px_12px_rgba(236,76,130,0.25)] motion-safe:animate-float`}
-          style={{ top: h.top, left: h.left, right: h.right, animationDelay: h.delay }}
+          className={`absolute ${full ? h.size : 'w-8 sm:w-10 opacity-60'} ${h.desktopOnly ? 'hidden md:block' : ''} drop-shadow-[0_6px_12px_rgba(236,76,130,0.25)] motion-safe:animate-float`}
+          style={{ top: h.top, left: h.left, right: h.right, animationDelay: h.delay, animationDuration: '7s' }}
         />
       ))}
 
-      {/* ประกายดาว */}
-      {SPARKLES.map((s, i) => (
+      {/* ประกายดาว: กะพริบช้า ๆ นุ่ม ๆ แทนการกะพริบแรง */}
+      {sparkles.map((s, i) => (
         <Sparkle
           key={i}
-          className={`absolute ${s.size} ${s.color} motion-safe:animate-pulse`}
-          style={{ top: s.top, left: s.left, right: s.right, animationDelay: `${i * 0.4}s` }}
+          className={`lucky-twinkle absolute ${s.size} ${s.color}`}
+          style={{ top: s.top, left: s.left, right: s.right, animationDelay: `${i * 0.7}s`, animationDuration: '4.5s' }}
         />
       ))}
     </div>
