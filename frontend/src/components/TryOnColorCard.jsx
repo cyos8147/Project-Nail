@@ -89,7 +89,7 @@ export default function TryOnColorCard() {
   }
 
   return (
-    <div className="glass relative h-full min-w-0 rounded-[30px] p-5 sm:p-6 flex flex-col">
+    <div className="glass relative min-w-0 rounded-[30px] p-5 sm:p-6 flex flex-col">
       <h2 className="flex items-center gap-2 font-display text-2xl font-semibold text-[#4A2A37]">
         <Sparkle className="h-6 w-6 text-rose-400" />
         ลองเลือกสีที่ชอบ
@@ -104,8 +104,8 @@ export default function TryOnColorCard() {
 
       {/* กรอบตัวอย่าง: รูปมือจริงเป็นฉาก + เล็บ 3D แสดงสีที่เลือก + ปุ่มเครื่องมือด้านขวา */}
       <div className="relative mt-3 flex-1 min-h-[220px] overflow-hidden rounded-[22px] border-[5px] border-white/90 shadow-[0_14px_30px_-18px_rgba(150,40,85,0.6)]">
-        <img src="/photos/tryon-hand.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover object-[60%_55%]" />
-        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-[#FFF3F7]/95 via-[#FFF3F7]/55 to-transparent" />
+        <img src="/photos/tryon-hand.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover object-[60%_55%] saturate-50 blur-[2px]" />
+        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-[#FFF3F7]/95 via-[#FFF3F7]/75 to-[#FFF3F7]/35" />
 
         <div className="lucky-3d relative flex h-full items-center gap-3 p-4">
           <div key={selected.hex} className="lucky-nail-turn w-24 sm:w-28 shrink-0" style={{ transformStyle: 'preserve-3d' }}>
@@ -118,11 +118,7 @@ export default function TryOnColorCard() {
         </div>
 
         <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex flex-col gap-2">
-          {[
-            { to: '/ai', icon: 'hand', label: 'ลองบนมือ' },
-            { onClick: randomize, icon: 'repeat', label: 'สุ่มสี' },
-            { to: '/ai', icon: 'wand', label: 'AI แนะนำ' },
-          ].map((t) => {
+          {[{ onClick: randomize, icon: 'repeat', label: 'สุ่มสี' }].map((t) => {
             const inner = (
               <>
                 <span className="glass-btn h-10 w-10"><Icon name={t.icon} /></span>

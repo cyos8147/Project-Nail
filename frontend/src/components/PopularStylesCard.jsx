@@ -116,7 +116,7 @@ export default function PopularStylesCard() {
             onPointerCancel={() => (pointerX.current = null)}
           >
             {count === 0 && !loaded && <Bone className="absolute inset-0 !rounded-none" />}
-            {count === 0 && loaded && <div className="w-full h-full flex items-center justify-center text-[#7A4A5E] text-sm">ลายเล็บยอดนิยม</div>}
+            {count === 0 && loaded && <div className="w-full h-full flex items-center justify-center px-6 text-center text-[#7A4A5E] text-sm">ร้านกำลังอัปโหลดรูปลายเล็บ ดูราคาบริการด้านล่างได้เลย</div>}
 
             {/* ทุกภาพซ้อนกันอยู่ ภาพที่แสดงพลิกเข้ามาแบบ 3D ภาพอื่นจางออก */}
             {designs.map((d, i) => {
@@ -161,9 +161,12 @@ export default function PopularStylesCard() {
         </div>
 
         <div className="lucky-z1 mt-3 flex items-center justify-between gap-3 pl-1">
-          <p key={`name-${index}`} aria-live={playing ? 'off' : 'polite'} className="lucky-fade-up min-w-0 font-display font-semibold text-[#4A2A37] truncate">
-            {current?.name || '\u00a0'}
-          </p>
+          <div key={`name-${index}`} aria-live={playing ? 'off' : 'polite'} className="lucky-fade-up min-w-0">
+            <p className="font-display font-semibold text-[#4A2A37] truncate">{current?.name || '\u00a0'}</p>
+            {current?.price != null && (
+              <p className="text-sm font-semibold text-berry tabular-nums">{Number(current.price).toLocaleString('th-TH')} บาท</p>
+            )}
+          </div>
           {current && (
             <button type="button" onClick={bookCurrent} className="btn-candy shrink-0 px-4 py-2 text-sm">
               <Icon name="calendar" className="h-4 w-4" /> จองลายนี้

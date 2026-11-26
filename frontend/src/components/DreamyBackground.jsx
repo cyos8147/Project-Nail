@@ -6,7 +6,7 @@ import { GlassHeart, RibbonSwoosh, SatinBow, Sparkle } from './Decor.jsx'
 // - รูปพื้นหลังเป็นรูปชั่วคราว (public/photos) เปลี่ยนเป็นรูปร้านจริงได้โดยใช้ชื่อไฟล์เดิม
 
 const HEARTS = [
-  { top: '14%', left: '3%', w: 'w-12 sm:w-16' },
+  { top: '4%', right: '40%', w: 'w-10 sm:w-14', desktop: true },
   { top: '9%', right: '24%', w: 'w-10 sm:w-14', desktop: true },
   { top: '44%', right: '2%', w: 'w-10 sm:w-14' },
   { top: '62%', left: '2%', w: 'w-9 sm:w-12', desktop: true },

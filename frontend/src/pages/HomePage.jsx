@@ -51,7 +51,7 @@ export default function HomePage() {
       <Header />
       <Hero />
       <Reveal>
-        <section className="relative max-w-7xl mx-auto px-4 sm:px-6 grid gap-6 lg:grid-cols-[5fr_7fr] items-stretch">
+        <section className="relative max-w-7xl mx-auto px-4 sm:px-6 grid gap-6 lg:grid-cols-[5fr_7fr] items-start">
           <TryOnColorCard />
           <PopularNails />
           <PolishBottle className="pointer-events-none hidden xl:block absolute -left-20 bottom-[-28px] w-24 -rotate-[8deg]" />

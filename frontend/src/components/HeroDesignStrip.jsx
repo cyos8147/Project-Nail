@@ -23,7 +23,7 @@ export default function HeroDesignStrip({ className = '' }) {
   }
 
   return (
-    <ul aria-label="ผลงานเล็บของร้าน" className={`-mx-4 flex gap-2.5 overflow-x-auto px-4 pb-1 snap-x [scrollbar-width:none] ${className}`}>
+    <ul aria-label="ผลงานเล็บของร้าน" className={`flex max-w-full gap-2.5 overflow-x-auto pb-1 snap-x [scrollbar-width:none] ${className}`}>
       {designs.map((d) => (
         <li key={d.id} className="w-[30%] max-w-[7.5rem] shrink-0 snap-start">
           <button type="button" onClick={() => book(d)} aria-label={`จองลาย ${d.name}`} className="block w-full rounded-[16px] bg-white/85 p-1 text-left shadow-[0_10px_20px_-14px_rgba(150,40,85,0.7)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-400">

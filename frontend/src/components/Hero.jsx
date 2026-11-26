@@ -60,7 +60,7 @@ export default function Hero() {
         }}
       />
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-10 sm:pt-10 lg:pt-2 lg:pb-6 grid items-center gap-10 lg:grid-cols-[1.1fr_0.8fr_1fr] lg:gap-6">
-        <div className="relative z-10 text-center lg:text-left">
+        <div className="relative z-10 min-w-0 text-center lg:text-left">
           <h1 className="lucky-fade-up font-display text-[2.15rem]/[1.4] sm:text-5xl/[1.4] lg:text-[2.4rem]/[1.4] xl:text-[2.75rem]/[1.4] font-semibold text-[#3D2230] text-balance [text-shadow:0_2px_0_rgba(255,255,255,0.7)]">
             <span className="sm:whitespace-nowrap">ลองสีเล็บบนมือคุณ</span>
             <br />
@@ -82,7 +82,7 @@ export default function Hero() {
               <Icon name="arrow" className="h-4 w-4" />
             </Link>
             <a href="#popular" className="glass inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full px-7 py-3.5 font-display font-semibold text-berry hover:text-rose-700">
-              ดูลายเล็บยอดนิยม
+              ดูลายเล็บของร้าน
             </a>
           </div>
 

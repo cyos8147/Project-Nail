@@ -7,7 +7,7 @@ import { RibbonSwoosh } from './Decor.jsx'
 
 const QUICK_LINKS = [
   { label: 'จองคิว', to: '/booking', icon: 'calendar' },
-  { label: 'แกลเลอรี', to: '/gallery', icon: 'palette' },
+  { label: 'ลายเล็บ', to: '/gallery', icon: 'palette' },
   { label: 'ประวัติของฉัน', to: '/history', icon: 'clock' },
   { label: 'ติดต่อร้าน', href: '/#contact', icon: 'chat' },
 ]

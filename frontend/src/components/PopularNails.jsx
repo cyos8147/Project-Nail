@@ -41,12 +41,12 @@ export default function PopularNails() {
   }
 
   return (
-    <section id="popular" className="glass relative h-full min-w-0 rounded-[30px] p-5 sm:p-6 scroll-mt-24">
+    <section id="popular" className="glass relative min-w-0 rounded-[30px] p-5 sm:p-6 scroll-mt-24">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="flex items-center gap-2 font-display text-2xl font-semibold text-[#4A2A37]">
             <Sparkle className="h-6 w-6 text-rose-400" />
-            ผลงานของร้าน
+            ลายเล็บของร้าน
           </h2>
           <p className="mt-1 text-sm text-[#7A4A5E]">แตะลายที่ชอบเพื่อจองได้เลย</p>
         </div>

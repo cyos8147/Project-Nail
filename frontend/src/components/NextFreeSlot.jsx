@@ -45,7 +45,7 @@ export default function NextFreeSlot({ className = '' }) {
             const shortest = list.reduce((a, b) => (b.duration_minutes < a.duration_minutes ? b : a))
             // API คิวว่างรับขั้นต่ำ 15 นาที
             const when = await findNext(c.id, Math.max(15, shortest.duration_minutes)).catch(() => null)
-            return when ? { id: c.id, name: c.name, when, serviceId: shortest.id } : null
+            return when ? { id: c.id, name: c.name, when, serviceId: shortest.id, serviceName: shortest.name } : null
           }),
         )
         if (alive) setItems(found.filter(Boolean))
@@ -58,26 +58,30 @@ export default function NextFreeSlot({ className = '' }) {
 
   if (!items?.length) return null
 
+  // แต่ละหมวดเป็นลิงก์ของตัวเอง และบอกชื่อบริการที่ใช้คำนวณเวลา (ไม่สัญญาเกินกว่าที่หน้าจองเลือกให้)
   return (
-    <Link
-      to={`/booking?service=${encodeURIComponent(items[0].serviceId)}`}
-      className={`glass group inline-flex max-w-full items-center gap-3 rounded-full py-2 pl-2 pr-4 text-left transition-transform duration-200 hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-rose-300 ${className}`}
-    >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/90 text-berry">
+    <div className={`glass inline-flex max-w-full items-start gap-3 rounded-[22px] py-2.5 pl-2.5 pr-3 text-left ${className}`}>
+      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/90 text-berry">
         <Icon name="clock" className="h-[18px] w-[18px]" />
       </span>
-      <span className="min-w-0 text-sm leading-snug">
-        <span className="block font-display font-semibold text-[#4A2A37]">คิวว่างถัดไป</span>
-        <span className="block truncate text-[#6E4255] tabular-nums">
-          {items.map((it, i) => (
-            <span key={it.id}>
-              {i > 0 && <span aria-hidden="true"> · </span>}
-              {it.name} {it.when}
-            </span>
+      <div className="min-w-0 text-sm leading-snug">
+        <p className="font-display font-semibold text-[#4A2A37]">คิวว่างถัดไป</p>
+        <ul className="mt-0.5 space-y-0.5">
+          {items.map((it) => (
+            <li key={it.id}>
+              <Link
+                to={`/booking?service=${encodeURIComponent(it.serviceId)}`}
+                className="group inline-flex min-h-[32px] max-w-full items-center gap-1 rounded-full text-[#6E4255] hover:text-berry focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-400"
+              >
+                <span className="min-w-0">
+                  <span className="font-semibold text-berry tabular-nums">{it.when}</span> · {it.serviceName}
+                </span>
+                <Icon name="chevronRight" className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            </li>
           ))}
-        </span>
-      </span>
-      <Icon name="chevronRight" className="h-4 w-4 shrink-0 text-berry transition-transform group-hover:translate-x-0.5" />
-    </Link>
+        </ul>
+      </div>
+    </div>
   )
 }
