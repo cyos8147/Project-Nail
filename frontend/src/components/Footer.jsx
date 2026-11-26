@@ -52,7 +52,7 @@ export default function Footer() {
         <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#7A4A5E]">
           <p>
             © 2026 Lucky Salon ·{' '}
-            <Link to="/privacy" className="inline-block py-3 underline decoration-rose-200 underline-offset-2 hover:text-berry transition-colors">
+            <Link to="/privacy" className="inline-block py-3.5 underline decoration-rose-200 underline-offset-2 hover:text-berry transition-colors">
               นโยบายความเป็นส่วนตัว
             </Link>
           </p>

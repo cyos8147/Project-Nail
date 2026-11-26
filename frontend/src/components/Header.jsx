@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import BrandLogo from './BrandLogo.jsx'
 import Icon from './Icon.jsx'
@@ -45,6 +45,20 @@ function NavLink({ item, active, className, children, onClick }) {
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const menuBtnRef = useRef(null)
+
+  // กด Esc ปิดเมนูมือถือ แล้วคืนโฟกัสให้ปุ่มเมนู
+  useEffect(() => {
+    if (!menuOpen) return undefined
+    const onKey = (e) => {
+      if (e.key === 'Escape') {
+        setMenuOpen(false)
+        menuBtnRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [menuOpen])
   const { pathname } = useLocation()
   const pill = 'inline-flex items-center gap-1.5 rounded-full px-4 xl:px-3 py-2 text-sm xl:text-[13px] font-display font-semibold whitespace-nowrap transition-colors'
 
@@ -89,16 +103,17 @@ export default function Header() {
             className={`glass hidden sm:inline-flex ${pill} ${pathname === '/ai' ? 'text-berry' : 'text-[#6E4255] hover:text-berry'}`}
           >
             <Icon name="sparkle" className="h-4 w-4 text-rose-500" />
-            AI วิเคราะห์ลายเล็บ
+            ลองสีบนมือคุณ
           </Link>
           <Link to="/booking" className="btn-candy hidden md:inline-flex text-sm xl:text-[13px] px-5 xl:px-4 py-2.5">
             <NavIcon name="calendar" />
             จองคิวเลย
           </Link>
           <button
+            ref={menuBtnRef}
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
-            aria-label="เปิดเมนู"
+            aria-label={menuOpen ? 'ปิดเมนู' : 'เปิดเมนู'}
             aria-expanded={menuOpen}
             className="glass-btn xl:hidden w-11 h-11 flex-shrink-0 flex-col gap-1.5"
           >
@@ -130,7 +145,7 @@ export default function Header() {
             ประวัติของฉัน
           </Link>
           <Link to="/ai" onClick={() => setMenuOpen(false)} className="py-3 border-t border-rose-100/80 hover:text-berry sm:hidden">
-            AI วิเคราะห์ลายเล็บ
+            ลองสีบนมือคุณ
           </Link>
         </nav>
       )}

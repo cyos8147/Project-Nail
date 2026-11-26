@@ -65,18 +65,18 @@ export default function NextFreeSlot({ className = '' }) {
         <Icon name="clock" className="h-[18px] w-[18px]" />
       </span>
       <div className="min-w-0 text-sm leading-snug">
-        <p className="font-display font-semibold text-[#4A2A37]">คิวว่างถัดไป</p>
-        <ul className="mt-0.5 space-y-0.5">
+        <p className="font-display font-semibold text-[#4A2A37]">ว่างเร็วสุด</p>
+        <ul>
           {items.map((it) => (
             <li key={it.id}>
               <Link
                 to={`/booking?service=${encodeURIComponent(it.serviceId)}`}
-                className="group inline-flex min-h-[32px] max-w-full items-center gap-1 rounded-full text-[#6E4255] hover:text-berry focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-400"
+                className="group inline-flex min-h-[44px] max-w-full items-center gap-1.5 rounded-full text-[#6E4255] hover:text-berry focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-400"
               >
                 <span className="min-w-0">
                   <span className="font-semibold text-berry tabular-nums">{it.when}</span> · {it.serviceName}
                 </span>
-                <Icon name="chevronRight" className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                <span className="shrink-0 rounded-full bg-white/80 px-2 py-0.5 text-xs font-semibold text-berry">เลือกเวลา</span>
               </Link>
             </li>
           ))}

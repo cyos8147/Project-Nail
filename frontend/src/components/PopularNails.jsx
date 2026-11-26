@@ -8,11 +8,11 @@ import Icon from './Icon.jsx'
 import { Sparkle } from './Decor.jsx'
 
 const fallbackNails = [
-  { id: 'f1', name: 'Minimal Nude', accent: '#E8C39E' },
-  { id: 'f2', name: 'Korean Pink', accent: '#F2A6C0' },
-  { id: 'f3', name: 'French Classic', accent: '#D93B72' },
-  { id: 'f4', name: 'Cat Eye', accent: '#6B3FA0' },
-  { id: 'f5', name: 'Marble', accent: '#9C6B7A' },
+  { id: 'f1', name: 'Minimal Nude', sample: true, accent: '#E8C39E' },
+  { id: 'f2', name: 'Korean Pink', sample: true, accent: '#F2A6C0' },
+  { id: 'f3', name: 'French Classic', sample: true, accent: '#D93B72' },
+  { id: 'f4', name: 'Cat Eye', sample: true, accent: '#6B3FA0' },
+  { id: 'f5', name: 'Marble', sample: true, accent: '#9C6B7A' },
 ]
 
 // การ์ด "ลายเล็บยอดนิยม" (Our Nails ในภาพตัวอย่าง): แถวรูปผลงาน เลื่อนด้วยลูกศรหรือปัดนิ้ว
@@ -23,7 +23,8 @@ export default function PopularNails() {
 
   // แตะลายไหนก็จองลายนั้นได้เลย: ส่งลายไปหน้าจองแบบเดียวกับปุ่ม "จองลายนี้" ในแกลเลอรี
   function book(n) {
-    if (!String(n.id).startsWith('f')) {
+    // ลายตัวอย่าง (ใช้ตอนโหลดไม่สำเร็จ) ไม่มีในระบบ จึงไม่ส่งต่อ ส่วนลายจริงส่งทุกลาย
+    if (!n.sample) {
       saveCarryDesign({ source: 'design', nail_design_id: n.id, nail_design_name: n.name, color_hex: n.color_hex, summary: n.name })
     }
     navigate('/booking')
@@ -31,7 +32,13 @@ export default function PopularNails() {
 
   useEffect(() => {
     getNailDesigns()
-      .then((data) => setNails(data?.length ? data.slice(0, 8) : fallbackNails))
+      .then((data) => {
+        if (!data?.length) return setNails(fallbackNails)
+        // สไลด์ด้านบนโชว์ 6 ลายแรกที่มีรูปแล้ว แถวนี้เลยเริ่มจากลายอื่นก่อน ไม่ให้เห็นซ้ำติดกัน
+        const inCarousel = new Set(data.filter((d) => d.image_url).slice(0, 6).map((d) => d.id))
+        const rest = data.filter((d) => !inCarousel.has(d.id))
+        setNails([...rest, ...data.filter((d) => inCarousel.has(d.id))].slice(0, 8))
+      })
       .catch(() => setNails(fallbackNails)) // ใช้ข้อมูลตัวอย่างเมื่อโหลดไม่สำเร็จเท่านั้น
   }, [])
 

@@ -13,7 +13,7 @@ export default function MobileStickyBar() {
         <Icon name="clock" className="h-5 w-5" />
         ประวัติ
       </Link>
-      <Link to="/ai" aria-label="ลองลายเล็บด้วย AI" className={side}>
+      <Link to="/ai" aria-label="ลองสีบนมือคุณ" className={side}>
         <Icon name="hand" className="h-5 w-5" />
         ลองสี
       </Link>

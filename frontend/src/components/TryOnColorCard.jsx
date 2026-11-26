@@ -121,7 +121,7 @@ export default function TryOnColorCard() {
           {[{ onClick: randomize, icon: 'repeat', label: 'สุ่มสี' }].map((t) => {
             const inner = (
               <>
-                <span className="glass-btn h-10 w-10"><Icon name={t.icon} /></span>
+                <span className="glass-btn h-11 w-11"><Icon name={t.icon} /></span>
                 <span className="text-[11px] font-display font-semibold leading-none text-[#4A2A37]">{t.label}</span>
               </>
             )
@@ -136,7 +136,7 @@ export default function TryOnColorCard() {
       </div>
 
       <Link to="/ai" className="btn-candy mt-5 self-start px-7 py-3">
-        <Icon name="hand" /> ลองบนมือคุณ
+        <Icon name="hand" /> ลองสีบนมือคุณ
       </Link>
     </div>
   )
