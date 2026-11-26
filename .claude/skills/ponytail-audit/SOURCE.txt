@@ -1,0 +1,4 @@
+Source: https://github.com/DietrichGebert/ponytail
+Commit: ebd8654c2c627f721eb8f9c0d1bd4090a29f9e10
+License: MIT
+Vendored: 2026-11-26 (skills only; hooks, statusline and band were not installed)

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getPublicHolidays, getShopSettings } from '../api/client.js'
 import { longDate } from '../utils/dashboardFormat.js'
 import { toWeekRows } from '../utils/shopHours.js'
+import SectionTitle from './SectionTitle.jsx'
 
 // ลิงก์โซเชียลของร้าน ใส่เพิ่มได้ตรงนี้ เช่น { label: 'Facebook', href: 'https://facebook.com/ชื่อเพจ' }
 // ถ้าปล่อยว่างไว้จะไม่แสดงส่วนนี้
@@ -75,14 +76,13 @@ const ChatIcon = () => (
   </Icon>
 )
 
-const ContactHeading = () => (
-  <div className="text-center mb-10">
-    <h2 className="font-display text-3xl font-bold text-gray-800">ที่ตั้งและเวลาทำการ</h2>
-    <p className="text-gray-500 mt-2">แวะมาหาเราได้เลย หรือทักไลน์ถามก่อนก็ได้</p>
-  </div>
+// ร้านยังไม่ได้ใส่ LINE ก็ไม่ชวน "ทักไลน์" (ไม่สัญญาสิ่งที่ยังกดไม่ได้)
+const ContactHeading = ({ hasLine = false }) => (
+  <SectionTitle title="เวลาทำการและติดต่อร้าน" sub={hasLine ? 'แวะมาได้เลยค่ะ หรือทักไลน์มาถามก่อนก็ได้นะคะ' : 'เช็กวันเวลาเปิดร้านก่อนแวะมานะคะ'} />
 )
 
-export default function ShopInfo() {
+export default function ShopInfo({ embedded = false }) {
+  const sectionCls = embedded ? 'scroll-mt-24' : 'max-w-6xl mx-auto px-6 py-16 scroll-mt-16'
   const [settings, setSettings] = useState(null)
   const [failed, setFailed] = useState(false)
   const [holidays, setHolidays] = useState([]) // วันหยุดพิเศษที่ยังไม่ถึง (โหลดไม่ได้ก็ไม่เป็นไร แค่ไม่แสดงส่วนนี้)
@@ -118,10 +118,10 @@ export default function ShopInfo() {
   // เพราะอาจไม่ตรงกับจริง
   if (!settings) {
     return (
-      <section id="contact" className="max-w-6xl mx-auto px-6 py-16 scroll-mt-16">
+      <section id="contact" className={sectionCls}>
         <ContactHeading />
-        <p className="mx-auto max-w-md rounded-2xl bg-white p-6 text-center text-gray-500 shadow-card">
-          {failed ? 'โหลดเวลาทำการไม่สำเร็จ รีเฟรชหน้านี้อีกครั้ง' : 'กำลังโหลดเวลาทำการและช่องทางติดต่อ...'}
+        <p className="mx-auto max-w-md rounded-[24px] glass-solid p-6 text-center text-[#7A4A5E]">
+          {failed ? 'ตอนนี้โหลดเวลาทำการไม่ได้ ลองรีเฟรชหน้านี้อีกครั้งนะคะ' : 'กำลังโหลดเวลาทำการและช่องทางติดต่อ...'}
         </p>
       </section>
     )
@@ -140,13 +140,13 @@ export default function ShopInfo() {
     : null
 
   return (
-    <section id="contact" className="max-w-6xl mx-auto px-6 py-16 scroll-mt-16">
-      <ContactHeading />
+    <section id="contact" className={sectionCls}>
+      <ContactHeading hasLine={Boolean(lineId)} />
 
-      <div className={hasContact ? 'grid gap-5 md:grid-cols-2' : 'mx-auto max-w-md'}>
-        <div className="rounded-2xl bg-white p-6 shadow-card">
-          <h3 className="flex items-center gap-2 font-semibold text-gray-800">
-            <span className="text-rose-500">
+      <div className={hasContact ? `grid gap-5 ${embedded ? '' : 'md:grid-cols-2'}` : embedded ? '' : 'mx-auto max-w-md'}>
+        <div className="relative rounded-[24px] glass-solid p-6">
+          <h3 className="flex items-center gap-2 font-semibold text-[#4A2A37]">
+            <span className="text-[#C2185B]">
               <ClockIcon />
             </span>
             เวลาทำการ
@@ -154,53 +154,53 @@ export default function ShopInfo() {
           <ul className="mt-4 divide-y divide-blush-100">
             {groups.map((g, i) => (
               <li key={`${g.label}-${i}`} className="flex items-center justify-between gap-4 py-2.5">
-                <span className="text-gray-600">{g.label}</span>
+                <span className="text-[#7A4A5E]">{g.label}</span>
                 {g.closed ? (
-                  <span className="rounded-full bg-blush-100 px-3 py-0.5 text-sm font-semibold text-rose-600">หยุด</span>
+                  <span className="rounded-full bg-white/80 px-3 py-0.5 text-sm font-semibold text-berry">หยุด</span>
                 ) : (
-                  <span className="font-semibold tabular-nums text-gray-800">{g.hours}</span>
+                  <span className="font-semibold tabular-nums text-[#4A2A37]">{g.hours}</span>
                 )}
               </li>
             ))}
           </ul>
           {holidays.length > 0 && (
             <div className="mt-5 rounded-xl bg-blush-50 px-4 py-3">
-              <p className="text-sm font-semibold text-gray-800">วันหยุดพิเศษที่ร้านแจ้งไว้</p>
+              <p className="text-sm font-semibold text-[#4A2A37]">วันหยุดพิเศษที่ร้านแจ้งไว้</p>
               <ul className="mt-2 space-y-1.5">
                 {holidays.slice(0, 8).map((h) => (
                   <li key={h.holiday_date} className="flex items-baseline justify-between gap-3 text-sm">
-                    <span className="font-medium tabular-nums text-gray-700">{longDate(h.holiday_date)}</span>
-                    <span className="text-right text-gray-500">{h.note || 'ร้านหยุด'}</span>
+                    <span className="font-medium tabular-nums text-[#4A2A37]">{longDate(h.holiday_date)}</span>
+                    <span className="text-right text-[#7A4A5E]">{h.note || 'ร้านหยุด'}</span>
                   </li>
                 ))}
               </ul>
-              {holidays.length > 8 && <p className="mt-2 text-xs text-gray-400">และอีก {holidays.length - 8} วัน</p>}
-              <p className="mt-2 text-xs text-gray-400">วันเหล่านี้จองคิวออนไลน์ไม่ได้</p>
+              {holidays.length > 8 && <p className="mt-2 text-xs text-[#7A4A5E]">และอีก {holidays.length - 8} วัน</p>}
+              <p className="mt-2 text-xs text-[#7A4A5E]">วันเหล่านี้ร้านหยุด จองออนไลน์ไม่ได้นะคะ</p>
             </div>
           )}
         </div>
 
         {hasContact && (
-          <div className="rounded-2xl bg-white p-6 shadow-card">
-            <h3 className="flex items-center gap-2 font-semibold text-gray-800">
-              <span className="text-rose-500">
+          <div className="rounded-[24px] glass-solid p-6">
+            <h3 className="flex items-center gap-2 font-semibold text-[#4A2A37]">
+              <span className="text-[#C2185B]">
                 <PinIcon />
               </span>
               ติดต่อและที่ตั้ง
             </h3>
 
-            {address && <p className="mt-4 whitespace-pre-line leading-relaxed text-gray-600">{address}</p>}
+            {address && <p className="mt-4 whitespace-pre-line leading-relaxed text-[#7A4A5E]">{address}</p>}
             {phone && (
-              <p className="mt-3 flex items-center gap-2 text-gray-600">
-                <span className="text-rose-500">
+              <p className="mt-3 flex items-center gap-2 text-[#7A4A5E]">
+                <span className="text-[#C2185B]">
                   <PhoneIcon />
                 </span>
                 {phone}
               </p>
             )}
             {lineId && (
-              <p className="mt-2 flex items-center gap-2 text-gray-600">
-                <span className="text-rose-500">
+              <p className="mt-2 flex items-center gap-2 text-[#7A4A5E]">
+                <span className="text-[#C2185B]">
                   <ChatIcon />
                 </span>
                 LINE: {lineId}
@@ -213,7 +213,7 @@ export default function ShopInfo() {
                   href={mapUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-rose-500 px-5 py-2.5 text-sm font-semibold text-white shadow-card transition-colors hover:bg-rose-600"
+                  className="glass-btn gap-1.5 px-5 py-2.5 text-sm font-display font-semibold"
                 >
                   <PinIcon />
                   เปิดแผนที่
@@ -222,7 +222,7 @@ export default function ShopInfo() {
               {telUrl && (
                 <a
                   href={telUrl}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-blush-200 bg-white px-5 py-2.5 text-sm font-semibold text-rose-600 transition-colors hover:bg-blush-100"
+                  className="glass-btn gap-1.5 px-5 py-2.5 text-sm font-display font-semibold"
                 >
                   <PhoneIcon />
                   โทรเลย
@@ -233,7 +233,7 @@ export default function ShopInfo() {
                   href={lineUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-[#06C755] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#05b34c]"
+                  className="btn-candy btn-line gap-1.5 px-5 py-2.5 text-sm"
                 >
                   <ChatIcon />
                   ทักไลน์
@@ -245,7 +245,7 @@ export default function ShopInfo() {
                   href={s.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center rounded-full border border-blush-200 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-blush-100"
+                  className="inline-flex items-center rounded-full border border-blush-200 bg-white px-5 py-2.5 text-sm font-semibold text-[#4A2A37] transition-colors hover:bg-blush-100"
                 >
                   {s.label}
                 </a>

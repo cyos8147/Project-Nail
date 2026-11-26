@@ -1,0 +1,4 @@
+Source: https://github.com/obra/superpowers
+Commit: 22f0b463e7a5e579904dd6211a520321035526f7
+License: MIT
+Vendored: 2026-11-26 (skills only; the SessionStart hook was not installed)

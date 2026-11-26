@@ -2,14 +2,15 @@ import { useEffect, useState } from 'react'
 import { getShopSettings } from '../api/client.js'
 import Header from '../components/Header.jsx'
 import Footer from '../components/Footer.jsx'
+import DreamyBackground from '../components/DreamyBackground.jsx'
 
 const UPDATED_AT = '30 กันยายน 2569'
 
 function Section({ title, children }) {
   return (
     <section className="mt-10">
-      <h2 className="font-display text-xl font-bold text-gray-800">{title}</h2>
-      <div className="mt-3 space-y-3 leading-relaxed text-gray-600">{children}</div>
+      <h2 className="font-display text-xl font-semibold text-[#2E1F26]">{title}</h2>
+      <div className="mt-3 space-y-3 leading-relaxed text-[#5B4650]">{children}</div>
     </section>
   )
 }
@@ -46,13 +47,14 @@ export default function PrivacyPage() {
   const lineId = settings?.line_oa_basic_id?.trim()
 
   return (
-    <div className="min-h-screen bg-blush-50 text-gray-800">
+    <div className="relative isolate min-h-screen text-[#2E1F26] overflow-x-clip">
+      <DreamyBackground />
       <Header />
 
       <main className="mx-auto max-w-3xl px-6 py-12">
-        <h1 className="font-display text-3xl font-bold text-gray-800">นโยบายความเป็นส่วนตัว</h1>
-        <p className="mt-2 text-sm text-gray-400">ปรับปรุงล่าสุด {UPDATED_AT}</p>
-        <p className="mt-6 leading-relaxed text-gray-600">
+        <h1 className="font-display text-3xl font-semibold text-[#2E1F26]">นโยบายความเป็นส่วนตัว</h1>
+        <p className="mt-2 text-sm text-[#6B5560]">ปรับปรุงล่าสุด {UPDATED_AT}</p>
+        <p className="mt-6 leading-relaxed text-[#5B4650]">
           Lucky Salon (&ldquo;ร้าน&rdquo;) ให้ความสำคัญกับข้อมูลส่วนบุคคลของคุณ
           หน้านี้อธิบายว่าเว็บไซต์นี้เก็บข้อมูลอะไร เก็บไปทำอะไร ใครดูได้ และคุณมีสิทธิ์อะไรบ้าง
         </p>

@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getServiceCategories, getServices } from '../api/client.js'
+import ServiceArt from './ServiceArt.jsx'
+import { Bone, SlowNote, useSlow } from './Skeleton.jsx'
+import Icon from './Icon.jsx'
+import SectionTitle from './SectionTitle.jsx'
 
 const FALLBACK_CATEGORIES = [
-  { id: 'hair', name: 'ทำผม', icon: '💇‍♀️' },
-  { id: 'nail', name: 'ทำเล็บ', icon: '💅' },
+  { id: 'hair', name: 'ทำผม' },
+  { id: 'nail', name: 'ทำเล็บ' },
 ]
 
 const FALLBACK_SERVICES = [
@@ -30,48 +34,71 @@ function formatDuration(minutes) {
   return m ? `${h} ชม. ${m} นาที` : `${h} ชม.`
 }
 
-function Thumb({ src, icon }) {
+function Thumb({ src, name, categoryId }) {
   const [failed, setFailed] = useState(false)
   return (
-    <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-blush-100 to-peach/60 text-2xl">
+    <div className="flex h-20 w-24 sm:h-24 sm:w-32 lg:h-28 lg:w-36 shrink-0 items-center justify-center overflow-hidden rounded-[12px] bg-rose-50 text-3xl">
       {src && !failed ? (
-        <img src={src} alt="" loading="lazy" onError={() => setFailed(true)} className="h-full w-full object-cover" />
+        <img src={src} alt={name} loading="lazy" onError={() => setFailed(true)} className="h-full w-full object-cover" />
       ) : (
-        <span aria-hidden="true">{icon}</span>
+        <ServiceArt name={name} categoryId={categoryId} className="h-full w-full" />
       )}
     </div>
   )
 }
 
-function ServiceRow({ service, icon }) {
+function ClockIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 shrink-0" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function ServiceRow({ service }) {
   const name = service.name.trim()
   const description = service.description?.trim()
   const duration = formatDuration(service.duration_minutes)
+  const price = (
+    <>
+      <span className="font-display font-semibold text-berry tabular-nums">{formatPrice(service.price)}</span>
+      <span className="ml-1 text-sm font-semibold text-berry">บาท</span>
+    </>
+  )
   return (
-    <li className="flex items-center gap-4 rounded-2xl bg-white p-3 pr-5 shadow-card ring-1 ring-transparent transition hover:-translate-y-0.5 hover:ring-blush-200">
-      <Thumb src={service.image_url} icon={icon} />
+    <li
+      className="group relative flex items-center gap-3 sm:gap-4 rounded-[24px] glass p-3 pr-4 transition-transform duration-200 hover:-translate-y-0.5"
+    >
+      <Thumb src={service.image_url} name={name} categoryId={service.category_id} />
       <div className="min-w-0 flex-1">
-        <h3 className="font-semibold leading-snug text-gray-800">{name}</h3>
+        <h3 className="font-display font-semibold leading-snug text-[#4A2A37] line-clamp-2 text-base sm:text-lg">{name}</h3>
         {description && description !== name && (
-          <p className="mt-0.5 line-clamp-2 text-xs text-gray-500">{description}</p>
+          <p className="mt-0.5 line-clamp-2 text-xs sm:text-sm text-[#7A4A5E]">{description}</p>
         )}
         {duration && (
-          <p className="mt-1 flex items-center gap-1 text-xs text-gray-400">
-            <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5" aria-hidden="true">
-              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-              <path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+          <p className="mt-1.5 flex items-center gap-1.5 whitespace-nowrap text-xs sm:text-sm text-[#7A4A5E]">
+            <ClockIcon />
             {duration}
           </p>
         )}
-      </div>
-      <div className="shrink-0 text-right">
-        <p className="text-[11px] leading-none text-gray-400">เริ่มต้น</p>
-        <p className="mt-1 font-bold leading-none text-rose-600">
-          {formatPrice(service.price)}
-          <span className="ml-0.5 text-xs font-medium">บาท</span>
+        <p className="mt-1 lg:hidden text-xs text-[#7A4A5E]">
+          เริ่มต้น <span className="text-lg">{price}</span>
         </p>
       </div>
+      <div className="hidden lg:block shrink-0 text-right">
+        <p className="text-xs leading-none text-[#7A4A5E]">เริ่มต้น</p>
+        <p className="mt-1.5 whitespace-nowrap leading-none text-2xl">{price}</p>
+      </div>
+      <Link
+        to={`/booking?service=${encodeURIComponent(service.id)}`}
+        aria-label={`จอง ${name}`}
+        className="glass-btn h-11 w-11 shrink-0"
+      >
+        <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
+          <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </Link>
     </li>
   )
 }
@@ -81,6 +108,8 @@ export default function Services() {
   const [services, setServices] = useState(FALLBACK_SERVICES)
   const [activeId, setActiveId] = useState(null)
   const [expanded, setExpanded] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const slow = useSlow(loading)
   const tabRefs = useRef({})
 
   useEffect(() => {
@@ -90,6 +119,7 @@ export default function Services() {
       if (!alive) return
       if (cats.status === 'fulfilled' && cats.value?.length) setCategories(cats.value)
       if (svcs.status === 'fulfilled' && svcs.value?.length) setServices(svcs.value)
+      setLoading(false)
     })
     return () => {
       alive = false
@@ -99,7 +129,35 @@ export default function Services() {
   const tabs = categories
     .map((c) => ({ ...c, items: services.filter((s) => s.category_id === c.id) }))
     .filter((t) => t.items.length > 0)
-  const active = tabs.find((t) => t.id === activeId) || tabs[0]
+  // เปิดมาที่หมวดทำเล็บก่อน (งานหลักของร้าน) ถ้าไม่มีค่อยใช้หมวดแรก
+  const active = tabs.find((t) => t.id === activeId) || tabs.find((t) => t.id === 'nail') || tabs[0]
+  const header = (
+    <SectionTitle title="บริการของร้าน" sub="ราคาเริ่มต้นและเวลาโดยประมาณของแต่ละบริการค่ะ" />
+  )
+
+  // ระหว่างโหลด: โครงการ์ดแทนข้อมูลตัวอย่าง (ข้อมูลตัวอย่างใช้เมื่อโหลดไม่สำเร็จเท่านั้น จะได้ไม่เห็นราคาที่ไม่ใช่ของจริง)
+  if (loading) {
+    return (
+      <section id="services" aria-busy="true" className="max-w-7xl mx-auto px-4 sm:px-6 py-16 scroll-mt-20">
+        {header}
+        <Bone className="mx-auto mb-8 h-14 w-full max-w-lg !rounded-full" />
+        <ul className="grid gap-4 md:grid-cols-2">
+          {Array.from({ length: 4 }, (_, i) => (
+            <li key={i} className="flex items-center gap-4 rounded-[24px] glass p-3">
+              <Bone className="h-20 w-24 sm:h-24 sm:w-32 shrink-0 !rounded-[1.1rem]" />
+              <div className="flex-1 space-y-2.5">
+                <Bone className="h-5 w-2/3" />
+                <Bone className="h-4 w-1/3" />
+                <Bone className="h-4 w-1/4" />
+              </div>
+              <Bone className="h-10 w-10 shrink-0 !rounded-full" />
+            </li>
+          ))}
+        </ul>
+        <SlowNote show={slow} />
+      </section>
+    )
+  }
   if (!active) return null
 
   const collapsible = active.items.length > COLLAPSE_OVER
@@ -120,17 +178,14 @@ export default function Services() {
   }
 
   return (
-    <section id="services" className="max-w-6xl mx-auto px-6 py-16">
-      <div className="text-center mb-8">
-        <h2 className="font-display text-3xl font-bold text-gray-800">บริการของร้าน</h2>
-        <p className="text-gray-500 mt-2">เลือกหมวดที่สนใจ แล้วจองคิวได้ทันที</p>
-      </div>
+    <section id="services" className="max-w-7xl mx-auto px-4 sm:px-6 py-16 scroll-mt-20">
+      {header}
 
       {tabs.length > 1 && (
         <div
           role="tablist"
           aria-label="หมวดบริการ"
-          className="mx-auto mb-8 flex w-full max-w-md gap-1 rounded-full border border-blush-200 bg-white p-1.5 shadow-card"
+          className="mx-auto mb-8 flex w-full max-w-lg gap-2 rounded-full glass p-1.5"
         >
           {tabs.map((t, i) => {
             const selected = t.id === active.id
@@ -148,19 +203,13 @@ export default function Services() {
                 tabIndex={selected ? 0 : -1}
                 onClick={() => selectTab(t.id)}
                 onKeyDown={(e) => onTabKeyDown(e, i)}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2.5 font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 ${
-                  selected ? 'bg-rose-500 text-white shadow-card' : 'text-gray-600 hover:bg-blush-100'
+                className={`flex-1 px-4 py-2.5 text-base ${
+                  selected ? 'btn-candy' : 'btn-candy-soft !border-transparent !shadow-none !bg-transparent hover:!bg-white/70 !text-[#4A2A37]'
                 }`}
               >
-                <span aria-hidden="true">{t.icon}</span>
+                <Icon name={t.id === 'hair' ? 'scissors' : t.id === 'nail' ? 'brush' : 'palette'} />
                 {t.name}
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                    selected ? 'bg-white/25 text-white' : 'bg-blush-100 text-rose-600'
-                  }`}
-                >
-                  {t.items.length}
-                </span>
+                <span className={`text-xs font-normal tabular-nums ${selected ? 'text-white' : 'text-[#7A4A5E]'}`}>{t.items.length}</span>
               </button>
             )
           })}
@@ -168,9 +217,9 @@ export default function Services() {
       )}
 
       <div id="services-panel" role="tabpanel" aria-labelledby={`services-tab-${active.id}`}>
-        <ul className="grid gap-3 md:grid-cols-2">
+        <ul className="grid gap-4 md:grid-cols-2">
           {visible.map((s) => (
-            <ServiceRow key={s.id} service={s} icon={active.icon} />
+            <ServiceRow key={s.id} service={s} />
           ))}
         </ul>
 
@@ -180,7 +229,7 @@ export default function Services() {
               type="button"
               aria-expanded={expanded}
               onClick={() => setExpanded((v) => !v)}
-              className="inline-flex items-center gap-2 rounded-full border border-blush-200 bg-white px-6 py-2.5 text-sm font-semibold text-rose-600 transition-colors hover:bg-blush-100"
+              className="btn-candy-soft px-6 py-2.5 text-sm"
             >
               {expanded ? 'ย่อรายการ' : `ดูทั้งหมด ${active.items.length} รายการ`}
               <svg
@@ -196,12 +245,14 @@ export default function Services() {
         )}
       </div>
 
-      <div className="mt-10 text-center">
+      <div className="mt-10 hidden md:block text-center">
         <Link
           to="/booking"
-          className="inline-block rounded-full bg-rose-500 px-8 py-3 font-semibold text-white shadow-card transition-colors hover:bg-rose-600"
+          className="btn-candy px-10 py-3.5 text-lg"
         >
+          <Icon name="calendar" />
           จองคิวเลย
+          <Icon name="chevronRight" className="h-4 w-4" />
         </Link>
       </div>
     </section>

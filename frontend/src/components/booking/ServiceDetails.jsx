@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { colorShades } from '../../data/bookingData.js'
 import { aiAnalyzeStyle, fileToBase64 } from '../../api/client.js'
 import ZoomableImage from '../ZoomableImage.jsx'
+import Icon from '../Icon.jsx'
 
 export default function ServiceDetails({
   category,
@@ -40,10 +41,10 @@ export default function ServiceDetails({
 
   return (
     <div>
-      <h2 className="font-display text-2xl font-bold text-gray-800 text-center mb-1">
+      <h2 className="font-display text-2xl font-bold text-[#2E1F26] text-center mb-1">
         {isHairColor ? 'เลือกโทนสีที่ต้องการ' : 'แนบรูปลายเล็บที่อยากได้'}
       </h2>
-      <p className="text-gray-500 text-center text-sm mb-8">
+      <p className="text-[#6B5560] text-center text-sm mb-8">
         {isHairColor
           ? 'เลือกโทนสีคร่าวๆ และแนบรูปตัวอย่างเพิ่มเติมได้ (ไม่บังคับ)'
           : 'แนบรูปตัวอย่างลายเล็บที่อยากทำ เพื่อให้ช่างเตรียมงานได้ตรงใจที่สุด (ไม่บังคับ)'}
@@ -53,11 +54,11 @@ export default function ServiceDetails({
         <div className="mb-6 flex items-center gap-3 bg-rose-50 border border-rose-200 rounded-xl p-4">
           <span className="w-10 h-10 rounded-full border border-black/10 flex-shrink-0" style={{ backgroundColor: carriedDesign.color_hex }} />
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-800">ลายที่เลือกจาก AI: {carriedDesign.nail_design_name}</p>
-            <p className="text-xs text-gray-400">จะแนบไปกับการจองคิวนี้โดยอัตโนมัติ</p>
+            <p className="text-sm font-medium text-[#2E1F26]">ลายที่เลือกจาก AI: {carriedDesign.nail_design_name}</p>
+            <p className="text-xs text-[#6B5560]">จะแนบไปกับการจองคิวนี้โดยอัตโนมัติ</p>
           </div>
-          <button type="button" onClick={onClearCarriedDesign} className="text-xs text-gray-400 hover:text-rose-500">
-            ✕ ล้าง
+          <button type="button" onClick={onClearCarriedDesign} className="inline-flex items-center gap-1 text-xs text-[#6B5560] hover:text-[#C2185B]">
+            <Icon name="x" className="h-3.5 w-3.5" /> ล้าง
           </button>
         </div>
       )}
@@ -71,18 +72,18 @@ export default function ServiceDetails({
             className="w-24 h-24 rounded-xl flex-shrink-0 bg-white"
           />
           <div className="flex-1">
-            <p className="text-sm font-medium text-gray-800">ใช้รูปที่ลองสีจาก AI{carriedDesign.summary ? `: ${carriedDesign.summary}` : ''}</p>
-            <p className="text-xs text-gray-400">จะแนบไปกับการจองคิวนี้โดยอัตโนมัติ</p>
+            <p className="text-sm font-medium text-[#2E1F26]">ใช้รูปที่ลองสีจาก AI{carriedDesign.summary ? `: ${carriedDesign.summary}` : ''}</p>
+            <p className="text-xs text-[#6B5560]">จะแนบไปกับการจองคิวนี้โดยอัตโนมัติ</p>
           </div>
-          <button type="button" onClick={onClearCarriedDesign} className="text-xs text-gray-400 hover:text-rose-500">
-            ✕ ล้าง
+          <button type="button" onClick={onClearCarriedDesign} className="inline-flex items-center gap-1 text-xs text-[#6B5560] hover:text-[#C2185B]">
+            <Icon name="x" className="h-3.5 w-3.5" /> ล้าง
           </button>
         </div>
       )}
 
       {isHairColor && (
         <div className="mb-8">
-          <p className="text-sm font-medium text-gray-700 mb-3">โทนสียอดนิยม</p>
+          <p className="text-sm font-medium text-[#3A2A31] mb-3">โทนสียอดนิยม</p>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
             {colorShades.map((shade) => {
               const isSelected = selectedShade?.id === shade.id
@@ -99,7 +100,7 @@ export default function ServiceDetails({
                     className="w-10 h-10 rounded-full border border-black/10 shadow-sm"
                     style={{ backgroundColor: shade.hex }}
                   />
-                  <span className="text-[11px] text-gray-600 text-center leading-tight">{shade.name}</span>
+                  <span className="text-xs text-[#5B4650] text-center leading-tight">{shade.name}</span>
                 </button>
               )
             })}
@@ -108,7 +109,7 @@ export default function ServiceDetails({
       )}
 
       <div>
-        <p className="text-sm font-medium text-gray-700 mb-2">
+        <p className="text-sm font-medium text-[#3A2A31] mb-2">
           {isNail ? 'รูปลายเล็บที่อยากทำ' : 'รูปตัวอย่างสีผมที่ต้องการ (ถ้ามี)'}
         </p>
         <label
@@ -118,9 +119,9 @@ export default function ServiceDetails({
           {imagePreview ? (
             <img src={imagePreview} alt="ตัวอย่างที่แนบ" className="w-16 h-16 object-cover rounded-lg" />
           ) : (
-            <span className="w-16 h-16 rounded-lg bg-blush-100 flex items-center justify-center text-xl">📷</span>
+            <span className="w-16 h-16 rounded-lg bg-[#FFEAF2] text-[#C2185B] flex items-center justify-center"><Icon name="camera" className="h-6 w-6" /></span>
           )}
-          <span className="text-sm text-gray-500">{imageName || 'คลิกเพื่ออัปโหลดรูปภาพ (JPG, PNG)'}</span>
+          <span className="text-sm text-[#6B5560]">{imageName || 'แตะเพื่อแนบรูปลายที่อยากได้ (JPG, PNG)'}</span>
         </label>
         <input id="refImage" type="file" accept="image/*" onChange={onImageChange} className="hidden" />
       </div>
@@ -128,20 +129,20 @@ export default function ServiceDetails({
       {isNail && imageFile && (
         <div className="mt-5 bg-blush-50 border border-blush-200 rounded-xl p-4">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-sm text-gray-700">ให้ AI วิเคราะห์ลายจากรูปนี้ และประเมินเวลาทำเพิ่มเติม</p>
+            <p className="text-sm text-[#3A2A31]">ให้ AI วิเคราะห์ลายจากรูปนี้ และประเมินเวลาทำเพิ่มเติม</p>
             <button
               type="button"
               onClick={handleAnalyze}
               disabled={aiStatus === 'loading'}
-              className="text-xs font-semibold text-white bg-rose-500 hover:bg-rose-600 disabled:bg-blush-200 px-4 py-2 rounded-full whitespace-nowrap"
+              className="btn-candy text-xs px-4 py-2 whitespace-nowrap"
             >
               {aiStatus === 'loading' ? 'กำลังวิเคราะห์...' : '🤖 วิเคราะห์ลาย'}
             </button>
           </div>
           {aiError && <p className="text-xs text-red-500 mt-2">{aiError}</p>}
           {aiStatus === 'done' && aiResult && (
-            <p className="text-xs text-gray-600 mt-3">
-              สไตล์ที่ตรวจพบ: <span className="font-medium text-rose-600">{aiResult.style_tag}</span> ·
+            <p className="text-xs text-[#5B4650] mt-3">
+              สไตล์ที่ตรวจพบ: <span className="font-medium text-berry">{aiResult.style_tag}</span> ·
               เวลาทำเพิ่มเติมโดยประมาณ +{aiResult.extra_minutes} นาที
             </p>
           )}

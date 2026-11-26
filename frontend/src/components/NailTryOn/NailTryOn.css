@@ -1306,7 +1306,8 @@
    Visual polish pass -- appearance only, no layout/behavior changes
    ===================================================================== */
 
-.page { padding-top: 8px; padding-bottom: 56px; min-height: 0; }
+/* พื้นหลังของหน้าใช้ DreamyBackground ร่วมกับหน้าแรก ส่วนนี้จึงโปร่งใส (ตัวแปร --bg ยังใช้กับปุ่มด้านใน) */
+.page { padding-top: 8px; padding-bottom: 56px; min-height: 0; background: transparent; }
 
 /* gradient frame with a soft colored halo */
 .card {
@@ -1485,4 +1486,146 @@
   .saved-grid { grid-template-columns: repeat(3, 1fr); }
   .upload-actions { flex-direction: column; width: 100%; }
   .upload-actions .btn-primary, .upload-actions .btn-secondary { width: 100%; justify-content: center; }
+}
+
+/* ===== ปุ่มแบบลูกอม (ให้เหมือนปุ่มทั้งเว็บ): ขอบล่างหนา กดแล้วยุบ มีรอยเย็บเส้นปะ ===== */
+.page .btn-primary,
+.page .btn-book {
+  position: relative;
+  border: none;
+  border-radius: 999px;
+  color: #fff;
+  font-family: 'Mali', 'Prompt', sans-serif;
+  font-weight: 700;
+  background: linear-gradient(180deg, #F88AB0 0%, #EC4C82 100%);
+  box-shadow: 0 4px 0 #C9336A, 0 10px 18px -8px rgba(201, 51, 106, .55), inset 0 2px 0 rgba(255, 255, 255, .45);
+  transition: transform .12s ease, box-shadow .12s ease, filter .15s ease;
+}
+.page .btn-primary::after,
+.page .btn-book::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: inherit;
+  border: 1.5px dashed rgba(255, 255, 255, .7);
+  pointer-events: none;
+}
+.page .btn-primary:hover,
+.page .btn-book:hover { filter: brightness(1.05); transform: translateY(-1px); box-shadow: 0 5px 0 #C9336A, 0 12px 20px -8px rgba(201, 51, 106, .55), inset 0 2px 0 rgba(255, 255, 255, .45); }
+.page .btn-primary:active,
+.page .btn-book:active { transform: translateY(3px); box-shadow: 0 1px 0 #C9336A, inset 0 2px 0 rgba(255, 255, 255, .4); }
+.page .btn-book:disabled { opacity: .45; transform: none; box-shadow: 0 4px 0 #C9336A; }
+
+.page .btn-secondary,
+.page .btn-reuse {
+  border-radius: 999px;
+  color: #D93B72;
+  background: #fff;
+  border: 2px solid #F9B9CF;
+  font-family: 'Mali', 'Prompt', sans-serif;
+  font-weight: 700;
+  box-shadow: 0 3px 0 #F9B9CF;
+  transition: transform .12s ease, box-shadow .12s ease, background-color .15s ease;
+}
+.page .btn-secondary:hover,
+.page .btn-reuse:hover { background: #FFF4F8; border-color: #F9B9CF; color: #D93B72; transform: translateY(-1px); }
+.page .btn-secondary:active,
+.page .btn-reuse:active { transform: translateY(2px); box-shadow: 0 1px 0 #F9B9CF; }
+
+/* =====================================================================
+   ธีมขาวสะอาด (2026-11-26) ให้เข้าชุดกับทั้งเว็บ ตาม DESIGN.md
+   เปลี่ยนหน้าตาภายนอกเท่านั้น: ไม่แตะการลงสี/การวิเคราะห์ผิว/canvas
+   ===================================================================== */
+.page {
+  --bg: #FFF8FA;
+  --stage-bg: linear-gradient(160deg, #FFF8FA, #FCEEF3);
+  --text-primary: #2E1F26;
+  --text-secondary: #6B5560;
+  --accent: #C2185B;
+  --accent-soft: #FFEAF2;
+  --border: #F1E6EA;
+  --shadow-lg: 0 18px 40px -24px rgba(194, 24, 91, .28);
+  --shadow-sm: 0 6px 16px -10px rgba(46, 31, 38, .28);
+  font-family: 'Prompt', ui-sans-serif, system-ui, sans-serif;
+}
+/* ไม่มีของลอยตกแต่ง: วงเบลอ ดาว/หัวใจลอย และแสงวิ่งวนบนรูป */
+.page::before, .page::after, .blob-peach, .deco, .deco-bottle, .deco-dot, .deco-bow { display: none; }
+.viewer-stage::after { animation: none; background: none; }
+
+.card {
+  padding: 0;
+  background: #fff;
+  border: 1px solid rgba(46, 31, 38, .06);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-lg);
+}
+.card-inner, .topbar, .col-controls, .col-saved { background: #fff; }
+.brand .title-icon { color: #C2185B; background: #FFEAF2; box-shadow: none; }
+.brand-sub { font-size: 12px; letter-spacing: 0; }
+
+.page-nav, .mode-toggle { background: #FFF1F6; box-shadow: none; }
+.page-nav-btn, .mode-btn { min-height: 44px; }
+.page-nav-btn.active { background: #C2185B; color: #fff; box-shadow: 0 6px 14px -8px rgba(194, 24, 91, .6); }
+.mode-btn.active { color: #C2185B; }
+
+.section-label { color: #5B4650; font-size: 13px; letter-spacing: 0; }
+.section-label::before { width: 6px; height: 6px; border-radius: 50%; background: #E0457E; }
+
+.viewer-stage { box-shadow: inset 0 0 0 1px rgba(46, 31, 38, .06); }
+.swatch-item.selected .swatch-dot { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #C2185B, 0 8px 16px -8px rgba(194, 24, 91, .5); }
+
+/* ตัวหนังสือเล็กสุด 12px (เดิม 9.5–11px อ่านยากบนมือถือ) */
+.swatch-label, .finish-label, .length-label, .shape-label, .compare-label { font-size: 12px; }
+.tone-label, .skin-result-confidence { font-size: 11.5px !important; }
+.skin-result-text span, .hist-meta, .hist-time, .hist-note, .skin-saved-text span { font-size: 12px; }
+
+.upload-zone { border: 1.5px dashed #F3B4CB; background: #fff; }
+.upload-icon, .tips-icon { background: #FFEAF2; color: #C2185B; }
+
+/* ปุ่มหลักแบบเดียวกับ btn-candy ทั้งเว็บ: ชมพูแบน เงานุ่ม (ไม่มีรอยเย็บ/ขอบล่างหนา) */
+.page .btn-primary,
+.page .btn-book {
+  font-family: 'Prompt', sans-serif;
+  font-weight: 500;
+  background: linear-gradient(180deg, #D6336C 0%, #C2185B 100%);
+  box-shadow: 0 10px 22px -10px rgba(194, 24, 91, .6);
+  min-height: 44px;
+}
+.page .btn-primary::after,
+.page .btn-book::after { display: none; }
+.page .btn-primary:hover,
+.page .btn-book:hover { filter: brightness(1.06); transform: translateY(-1px); box-shadow: 0 12px 24px -10px rgba(194, 24, 91, .6); }
+.page .btn-primary:active,
+.page .btn-book:active { transform: scale(.97); box-shadow: 0 4px 10px -6px rgba(194, 24, 91, .6); }
+.page .btn-book:disabled { box-shadow: none; }
+.page .btn-secondary,
+.page .btn-reuse {
+  font-family: 'Prompt', sans-serif;
+  font-weight: 500;
+  color: #C2185B;
+  border: 1.5px solid #F3B4CB;
+  box-shadow: none;
+  min-height: 44px;
+}
+.page .btn-secondary:hover,
+.page .btn-reuse:hover { background: #FFF1F6; color: #C2185B; border-color: #F3B4CB; }
+.page .btn-secondary:active,
+.page .btn-reuse:active { transform: translateY(1px); box-shadow: none; }
+
+.tool-rail { box-shadow: 0 10px 24px -14px rgba(46, 31, 38, .35); }
+.tool-btn { box-shadow: 0 4px 10px -6px rgba(46, 31, 38, .3); }
+.icon-btn, .tool-btn { width: 44px; height: 44px; }
+.skin-result-badge { box-shadow: 0 12px 28px -16px rgba(46, 31, 38, .45); }
+
+.hist-item { border-color: rgba(46, 31, 38, .07); box-shadow: 0 6px 16px -12px rgba(46, 31, 38, .35); }
+.hist-item:hover { box-shadow: 0 10px 22px -12px rgba(194, 24, 91, .35); }
+.hist-item.picked { background: #FFF6F9; }
+.saved-empty { background: #FFF8FA; border: 1px solid rgba(46, 31, 38, .07); color: #6B5560; }
+.skin-saved-card { background: #FFF6F9; border: 1px solid rgba(46, 31, 38, .07); }
+.steps-list { color: #5B4650; }
+
+@media (max-width: 980px) {
+  .col-viewer { box-shadow: 0 12px 20px -18px rgba(46, 31, 38, .4); }
+  .tool-btn, .icon-btn { width: 44px; height: 44px; }
+  .page-nav-btn { font-size: 13px; }
 }

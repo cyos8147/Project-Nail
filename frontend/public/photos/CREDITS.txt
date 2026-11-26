@@ -1,0 +1,5 @@
+Placeholder photos from Unsplash (https://unsplash.com/license — free to use, no attribution required).
+Replace with the shop's real photos before handover (keep the same file names).
+
+tryon-hand.webp      https://images.unsplash.com/photo-1607779097040-26e80aa78e66
+hero-white.webp      https://images.unsplash.com/photo-1607779097040-26e80aa78e66 (1800px; hero-white-900.webp is the same photo at 900px for phones — replace both)

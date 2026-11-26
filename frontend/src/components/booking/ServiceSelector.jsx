@@ -1,3 +1,4 @@
+import Icon from '../Icon.jsx'
 import { categories as fallbackCategories, servicesByCategory as fallbackServices } from '../../data/bookingData.js'
 
 export default function ServiceSelector({ category, setCategory, service, setService, categories, servicesByCategory }) {
@@ -11,8 +12,8 @@ export default function ServiceSelector({ category, setCategory, service, setSer
 
   return (
     <div>
-      <h2 className="font-display text-2xl font-bold text-gray-800 text-center mb-1">เลือกบริการ</h2>
-      <p className="text-gray-500 text-center text-sm mb-6">เลือกหมวดหมู่ก่อน แล้วค่อยเลือกบริการที่ต้องการ</p>
+      <h2 className="font-display text-2xl font-semibold text-[#4A2A37] text-center mb-1">เลือกบริการ</h2>
+      <p className="text-gray-500 text-center text-sm mb-6">เลือกทำผมหรือทำเล็บก่อน แล้วเลือกบริการที่อยากทำได้เลยค่ะ</p>
 
       {/* Category tabs */}
       <div className="flex justify-center gap-3 mb-8">
@@ -21,13 +22,9 @@ export default function ServiceSelector({ category, setCategory, service, setSer
             key={c.id}
             type="button"
             onClick={() => handleCategoryChange(c.id)}
-            className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-sm transition-colors ${
-              category === c.id
-                ? 'bg-rose-500 text-white shadow-card'
-                : 'bg-white text-gray-500 border border-blush-200 hover:bg-blush-100'
-            }`}
+            className={`px-6 py-3 text-sm ${category === c.id ? 'btn-candy' : 'btn-candy-soft'}`}
           >
-            <span className="text-lg">{c.icon}</span>
+            <Icon name={c.id === 'nail' ? 'brush' : 'scissors'} />
             {c.name || c.label}
           </button>
         ))}
@@ -47,20 +44,20 @@ export default function ServiceSelector({ category, setCategory, service, setSer
               className={`text-left rounded-2xl border p-5 transition-colors ${
                 isSelected
                   ? 'border-rose-400 bg-rose-50 ring-2 ring-rose-200'
-                  : 'border-blush-200 bg-white hover:border-rose-200'
+                  : 'border-white/90 bg-white/70 hover:bg-white/90 shadow-[0_10px_22px_-16px_rgba(150,40,85,0.55)]'
               }`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold text-gray-800">{s.name}</p>
-                  <p className="text-xs text-gray-400 mt-1">ใช้เวลาประมาณ {duration} นาที</p>
+                  <p className="text-xs text-[#7A4A5E] mt-1">ใช้เวลาประมาณ {duration} นาที</p>
                   {category === 'hair' && isColor && (
-                    <span className="inline-block mt-2 text-[11px] font-medium text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full">
+                    <span className="inline-block mt-2 text-[11px] font-medium text-berry bg-rose-100 px-2 py-0.5 rounded-full">
                       เลือกโทนสีได้
                     </span>
                   )}
                 </div>
-                <p className="text-rose-600 font-semibold text-sm whitespace-nowrap">{s.price} บาท</p>
+                <p className="text-berry font-semibold text-sm whitespace-nowrap tabular-nums">{Number(s.price).toLocaleString('th-TH')} บาท</p>
               </div>
             </button>
           )

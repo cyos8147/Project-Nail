@@ -20,6 +20,10 @@ import {
 import { pickNailService, shadeFromCarry, takeCarryDesign } from '../../utils/carryDesign.js'
 import { buildChain, chainParam, chainTotals } from '../../utils/multiBooking.js'
 import ZoomableImage from '../ZoomableImage.jsx'
+import Icon from '../Icon.jsx'
+import { Bone } from '../Skeleton.jsx'
+import { CrownBear } from '../Decor.jsx'
+import CarriedDesignThumb from './CarriedDesignThumb.jsx'
 
 const THAI_MONTHS_SHORT = [
   'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
@@ -117,6 +121,21 @@ export default function BookingWizard() {
     }
   }, [carriedDesign, servicesLoaded, servicesByCategory])
 
+  // กดลูกศรจากการ์ดบริการหน้าแรก (/booking?service=<id>) → เลือกบริการนั้นให้เลย ทำครั้งเดียว
+  // ถ้ามีสีที่ส่งมาจากหน้า AI ให้ใช้ทางนั้นก่อน (ลูกค้าเปลี่ยนบริการเองได้เสมอ)
+  const urlServiceAppliedRef = useRef(false)
+  useEffect(() => {
+    if (urlServiceAppliedRef.current || !servicesLoaded || carriedDesign) return
+    urlServiceAppliedRef.current = true
+    const wanted = new URLSearchParams(window.location.search).get('service')
+    if (!wanted) return
+    const found = Object.values(servicesByCategory).flat().find((s) => String(s.id) === wanted)
+    if (found) {
+      setCategory(found.category_id)
+      setService(found)
+    }
+  }, [servicesLoaded, servicesByCategory, carriedDesign])
+
   // สีจาก AI ที่จะบันทึกในใบจอง ใช้เฉพาะบริการทำเล็บ (ถ้าลูกค้าเปลี่ยนไปทำผม สีเล็บไม่เกี่ยว)
   const carriedShade = useMemo(() => (category === 'nail' ? shadeFromCarry(carriedDesign) : null), [carriedDesign, category])
 
@@ -189,13 +208,13 @@ export default function BookingWizard() {
 
   function validateContact() {
     const next = {}
-    if (!form.name.trim()) next.name = 'กรุณากรอกชื่อ-นามสกุล'
+    if (!form.name.trim()) next.name = 'รบกวนกรอกชื่อ-นามสกุลด้วยนะคะ'
     if (!form.phone.trim()) {
-      next.phone = 'กรุณากรอกเบอร์โทร'
+      next.phone = 'รบกวนกรอกเบอร์โทรด้วยนะคะ'
     } else if (!/^0[0-9]{8,9}$/.test(form.phone.trim())) {
-      next.phone = 'รูปแบบเบอร์โทรไม่ถูกต้อง'
+      next.phone = 'เบอร์โทรดูไม่ครบ ลองเช็กอีกครั้งนะคะ'
     }
-    if (!form.lineId.trim()) next.lineId = 'กรุณากรอกไอดีไลน์'
+    if (!form.lineId.trim()) next.lineId = 'รบกวนกรอกไอดีไลน์ด้วยนะคะ'
     return next
   }
 
@@ -263,7 +282,7 @@ export default function BookingWizard() {
       setBookingResult(result)
       setSubmitted(true)
     } catch (err) {
-      setSubmitError(err.message || 'บันทึกการจองไม่สำเร็จ กรุณาลองใหม่อีกครั้ง หรือติดต่อร้านโดยตรงถ้ายังไม่หาย')
+      setSubmitError(err.message || 'จองไม่สำเร็จ ลองกดยืนยันอีกครั้งนะคะ ถ้ายังไม่ได้ ทักหรือโทรหาร้านได้เลยค่ะ')
     } finally {
       setSubmitting(false)
     }
@@ -309,70 +328,73 @@ export default function BookingWizard() {
   if (submitted) {
     return (
       <section id="booking" className="max-w-2xl mx-auto px-6 py-16 text-center">
-        <div className="bg-white rounded-3xl shadow-card p-10">
-          <div className="text-5xl mb-4">🎉</div>
-          <h2 className="font-display text-2xl font-bold text-gray-800">จองคิวสำเร็จแล้ว!</h2>
-          <p className="text-gray-500 mt-2">ขอบคุณที่ใช้บริการ Lucky Salon</p>
+        <div className="glass-solid rounded-3xl p-10">
+          <CrownBear className="mx-auto mb-2 w-28" />
+          <h1 className="font-display text-2xl font-semibold text-[#2E1F26]">จองคิวสำเร็จแล้ว</h1>
+          <p className="text-[#6B5560] mt-2">ขอบคุณที่เลือก Lucky Salon นะคะ แล้วเจอกันค่ะ</p>
 
-          <div className="mt-6 bg-blush-50 border border-blush-200 rounded-2xl p-5 max-w-xs mx-auto text-left space-y-2.5">
+          {bookingResult?.booking_code && (
+            <div className="mt-6">
+              <p className="text-sm text-[#5B4650]">{bookingResult?.all ? 'รหัสคิวบริการแรก (รหัสของแต่ละบริการอยู่ด้านล่าง)' : 'รหัสคิวของคุณ'}</p>
+              <p className="mt-1 whitespace-nowrap font-display text-2xl sm:text-3xl font-semibold text-[#C2185B] tabular-nums">{bookingResult.booking_code}</p>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard?.writeText(bookingResult.booking_code).then(() => setCodeCopied(true)).catch(() => {})
+                }}
+                className="btn-candy-soft mt-3 gap-1.5 px-5 py-2.5 text-sm"
+              >
+                <Icon name={codeCopied ? 'check' : 'copy'} className="h-4 w-4" />
+                {codeCopied ? 'คัดลอกแล้ว' : 'คัดลอกรหัสคิว'}
+              </button>
+            </div>
+          )}
+
+          <div className="mt-6 bg-[#FFF6F9] border border-[#2E1F26]/[0.07] rounded-2xl p-5 max-w-xs mx-auto text-left space-y-2.5">
             {bookingResult?.all ? (
               <>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">วันที่</span>
-                  <span className="font-medium text-gray-800">{formatDateKey(selectedDate)}</span>
+                  <span className="text-[#6B5560]">วันที่</span>
+                  <span className="font-medium text-[#2E1F26]">{formatDateKey(selectedDate)}</span>
                 </div>
                 {bookingResult.all.map((b, i) => (
                   <div key={b.id} className="text-sm pt-2 border-t border-blush-200">
                     <div className="flex justify-between gap-2">
-                      <span className="font-medium text-gray-800">{i + 1}. {b.service_name}</span>
-                      <span className="text-gray-600 whitespace-nowrap">{b.booking_time} น.</span>
+                      <span className="font-medium text-[#2E1F26]">{i + 1}. {b.service_name}</span>
+                      <span className="text-[#5B4650] whitespace-nowrap">{b.booking_time} น.</span>
                     </div>
-                    <p className="text-xs text-gray-400">รหัสคิว <span className="font-display font-bold text-rose-600">{b.booking_code}</span></p>
+                    <p className="text-xs text-[#6B5560]">รหัสคิว <span className="font-display font-bold text-berry">{b.booking_code}</span></p>
                   </div>
                 ))}
               </>
             ) : (
               <>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">บริการ</span>
-                  <span className="font-medium text-gray-800">{service?.name}</span>
+                  <span className="text-[#6B5560]">บริการ</span>
+                  <span className="font-medium text-[#2E1F26]">{service?.name}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">วันที่</span>
-                  <span className="font-medium text-gray-800">{formatDateKey(selectedDate)}</span>
+                  <span className="text-[#6B5560]">วันที่</span>
+                  <span className="font-medium text-[#2E1F26]">{formatDateKey(selectedDate)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">เวลา</span>
-                  <span className="font-medium text-gray-800">{selectedTime} น.</span>
+                  <span className="text-[#6B5560]">เวลา</span>
+                  <span className="font-medium text-[#2E1F26]">{selectedTime} น.</span>
                 </div>
               </>
             )}
-            {bookingResult?.booking_code && !bookingResult?.all && (
-              <div className="flex justify-between items-center text-sm pt-2.5 mt-1 border-t border-blush-200">
-                <span className="text-gray-500">รหัสคิว</span>
-                <span className="font-display font-bold text-rose-600">{bookingResult.booking_code}</span>
-              </div>
-            )}
           </div>
 
-          <div className="mt-5 max-w-sm mx-auto text-left bg-amber-50 border border-amber-200 rounded-2xl p-4">
-            <p className="text-sm font-semibold text-amber-800">สถานะตอนนี้: รอร้านยืนยันคิว</p>
-            <ul className="mt-2 space-y-1.5 text-xs text-amber-900/80 leading-relaxed list-disc pl-4">
-              <li>เก็บ<b>รหัสคิว</b>ไว้ (แคปหน้าจอนี้ หรือกดคัดลอก) ใช้คู่กับเบอร์โทรเพื่อดูสถานะ เลื่อน หรือยกเลิกคิว</li>
-              <li>ดูได้ตลอดที่หน้า <a href="/history" className="underline font-semibold">ประวัติของฉัน</a> เครื่องนี้จำรหัสคิวไว้ให้แล้ว</li>
-              <li>ถ้ายังไม่ผูก LINE จะไม่มีข้อความแจ้งเตือน กรุณาเข้ามาเช็กสถานะก่อนวันนัด หรือโทรหาร้าน</li>
+          {/* สถานะเป็นโน้ตสงบ ๆ ไม่ใช่กล่องเตือน: คิวจองแล้ว แค่รอร้านกดยืนยัน */}
+          <div className="mt-5 max-w-sm mx-auto text-left rounded-2xl border border-[#2E1F26]/[0.07] bg-white p-4">
+            <p className="flex items-center gap-2 text-sm font-semibold text-[#2E1F26]">
+              <Icon name="clock" className="h-4 w-4 text-[#C2185B]" /> ร้านจะยืนยันคิวให้อีกครั้งนะคะ
+            </p>
+            <ul className="mt-2 space-y-1.5 text-xs text-[#5B4650] leading-relaxed list-disc pl-5">
+              <li>ใช้<b>รหัสคิว</b>คู่กับเบอร์โทร เพื่อดูสถานะ เลื่อน หรือยกเลิกคิว</li>
+              <li>ดูได้ตลอดที่หน้า <a href="/history" className="underline font-semibold text-[#C2185B]">ประวัติของฉัน</a> เครื่องนี้จำรหัสคิวไว้ให้แล้ว</li>
+              <li>ถ้ายังไม่ได้ผูก LINE จะไม่มีข้อความเตือน แวะเช็กสถานะก่อนวันนัด หรือโทรถามร้านได้เลยค่ะ</li>
             </ul>
-            {bookingResult?.booking_code && (
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard?.writeText(bookingResult.booking_code).then(() => setCodeCopied(true)).catch(() => {})
-                }}
-                className="mt-3 w-full bg-white border border-amber-300 hover:bg-amber-100 text-amber-800 text-sm font-semibold py-2.5 rounded-full transition-colors"
-              >
-                {codeCopied ? '✓ คัดลอกรหัสคิวแล้ว' : `คัดลอกรหัสคิว ${bookingResult.booking_code}`}
-              </button>
-            )}
           </div>
 
           <div className="mt-4 max-w-sm mx-auto">
@@ -382,18 +404,18 @@ export default function BookingWizard() {
                   href={buildLineAddLink(shopLineId, bookingResult.booking_code)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 bg-[#06C755] hover:brightness-95 text-white text-sm font-semibold py-3 rounded-full transition-all"
+                  className="btn-candy btn-line gap-2 text-sm py-3"
                 >
-                  💬 ผูก LINE รับแจ้งเตือนคิวอัตโนมัติ
+                  <Icon name="chat" className="h-4 w-4" /> ผูก LINE รับแจ้งเตือนคิวอัตโนมัติ
                 </a>
-                <p className="text-[11px] text-gray-400 mt-2">
+                <p className="text-xs text-[#6B5560] mt-2">
                   เปิดแชท LINE ร้านพร้อมกรอกรหัสคิวให้แล้ว กดส่งได้เลย (ไม่บังคับ)
                 </p>
               </>
             ) : (
               <div className="bg-white border border-blush-200 rounded-2xl p-4 flex gap-3 text-left">
-                <span className="text-lg leading-none">💡</span>
-                <p className="text-xs text-gray-500 leading-relaxed">
+                <Icon name="bell" className="h-5 w-5 shrink-0 text-[#C2185B]" />
+                <p className="text-xs text-[#6B5560] leading-relaxed">
                   อยากได้แจ้งเตือนอัตโนมัติ: เพิ่มเพื่อน LINE ของร้าน (ดูไอดีได้ที่ท้ายเว็บไซต์) แล้วพิมพ์รหัสคิวส่งในแชท
                 </p>
               </div>
@@ -401,12 +423,12 @@ export default function BookingWizard() {
           </div>
           <CancelPolicyNote hours={cancelCutoffHours} className="mt-4 max-w-xs mx-auto" />
           <div className="flex flex-wrap justify-center gap-3 mt-6">
-            <a href="/history" className="bg-white hover:bg-blush-100 text-rose-600 text-sm font-semibold px-6 py-3 rounded-full border border-blush-200 transition-colors">
+            <a href="/history" className="btn-candy-soft text-sm px-6 py-3">
               ดูประวัติของฉัน
             </a>
             <button
               onClick={handleReset}
-              className="bg-rose-500 hover:bg-rose-600 text-white font-semibold px-6 py-3 rounded-full transition-colors"
+              className="btn-candy px-6 py-3"
             >
               จองคิวเพิ่ม
             </button>
@@ -419,11 +441,11 @@ export default function BookingWizard() {
   return (
     <section id="booking" className="max-w-4xl mx-auto px-6 py-16">
       <div className="text-center mb-2">
-        <h2 className="font-display text-3xl font-bold text-gray-800">จองคิวออนไลน์</h2>
-        <p className="text-gray-500 mt-2">ดูปฏิทิน เลือกเวลาว่าง และเลือกบริการที่ต้องการได้ในที่เดียว</p>
+        <h1 className="font-display text-3xl font-semibold text-[#2E1F26]">จองคิวออนไลน์</h1>
+        <p className="text-[#6B5560] mt-2">เลือกบริการ วัน และเวลาที่สะดวก แล้วกรอกชื่อกับเบอร์โทรก็เสร็จแล้วค่ะ</p>
       </div>
 
-      <div className="bg-white rounded-3xl shadow-card p-6 sm:p-10 mt-8">
+      <div className="glass-solid rounded-3xl p-6 sm:p-10 mt-8">
         <StepIndicator steps={steps} currentStep={step} />
 
         {currentStepName === 'เลือกบริการ' && (
@@ -433,12 +455,18 @@ export default function BookingWizard() {
                 <div className="mb-6 flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4">
                   {carriedDesign.reference_image_base64 ? (
                     <ZoomableImage src={carriedDesign.reference_image_base64} alt="รูปที่ลองสีจาก AI" caption={carriedDesign.summary} className="w-16 h-16 rounded-xl flex-shrink-0 bg-white" />
+                  ) : carriedDesign.source === 'design' && carriedDesign.nail_design_id ? (
+                    <CarriedDesignThumb designId={carriedDesign.nail_design_id} name={carriedDesign.nail_design_name} fallbackHex={carriedDesign.color_hex} />
                   ) : (
                     <span className="w-14 h-14 rounded-xl border border-black/10 flex-shrink-0" style={{ backgroundColor: carriedShade?.hex || carriedDesign.color_hex || '#F4C6CE' }} />
                   )}
                   <div className="flex-1 min-w-0 text-sm">
-                    <p className="font-semibold text-gray-800">จองต่อจาก AI Studio{carriedDesign.summary ? `: ${carriedDesign.summary}` : ''}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <p className="font-semibold text-[#4A2A37]">
+                      {carriedDesign.source === 'design'
+                        ? `ลายที่เลือก: ${carriedDesign.nail_design_name || carriedDesign.summary || 'ลายเล็บ'}`
+                        : `จองต่อจาก AI Studio${carriedDesign.summary ? `: ${carriedDesign.summary}` : ''}`}
+                    </p>
+                    <p className="text-xs text-[#6B5560] mt-0.5">
                       {autoPickedName ? `เลือกบริการ “${autoPickedName}” ให้แล้ว เปลี่ยนเป็นบริการอื่นได้` : 'เลือกบริการที่ต้องการด้านล่าง'}
                     </p>
                     {carriedDesign.imageDropped && (
@@ -465,7 +493,11 @@ export default function BookingWizard() {
             />
             </>
           ) : (
-            <p className="text-center text-gray-400 text-sm py-12">กำลังโหลดข้อมูลบริการ...</p>
+            <div role="status" aria-label="กำลังโหลดบริการ" className="grid gap-3 py-4 sm:grid-cols-2">
+              {Array.from({ length: 4 }, (_, i) => (
+                <Bone key={i} className="h-20 !rounded-2xl" />
+              ))}
+            </div>
           )
         )}
 
@@ -518,27 +550,30 @@ export default function BookingWizard() {
           />
         )}
 
+        {submitError && (
+          <p role="alert" className="mt-8 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 text-center">{submitError}</p>
+        )}
         {/* Navigation buttons: ติดขอบล่างจอบนมือถือ กดถัดไปได้โดยไม่ต้องเลื่อนลงไปหา พร้อมสรุปสิ่งที่เลือกและบอกว่ายังขาดอะไร */}
         <div className="sticky bottom-0 z-20 -mx-6 sm:mx-0 mt-10 px-6 sm:px-0 py-4 sm:pt-6 bg-white/95 backdrop-blur border-t border-blush-100 flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={goBack}
             disabled={step === 1}
-            className="px-4 py-2.5 rounded-full text-sm font-semibold text-gray-500 hover:bg-blush-100 disabled:opacity-0 transition-colors"
+            className="btn-candy-soft text-sm px-4 py-2 disabled:invisible"
           >
             ย้อนกลับ
           </button>
 
           <div className="flex-1 min-w-0 text-center text-xs leading-snug" aria-live="polite">
             {service ? (
-              <p className="text-gray-600 truncate">
-                <span className="font-semibold text-gray-800">{[service.name, ...extras.map((x) => x.name)].join(' + ')}</span>
+              <p className="text-[#5B4650] line-clamp-2">
+                <span className="font-semibold text-[#2E1F26]">{[service.name, ...extras.map((x) => x.name)].join(' + ')}</span>
                 {' · '}{isMulti ? chainTotals(chain).price : service.price} บาท
                 {selectedDate && selectedTime ? ` · ${formatDateKey(selectedDate)} ${selectedTime} น.` : ''}
               </p>
             ) : null}
             {!isStepValid(step) && (
-              <p className="text-rose-500 font-medium">
+              <p className="text-[#C2185B] font-medium">
                 {currentStepName === 'เลือกบริการ' ? 'เลือกบริการก่อน' : currentStepName === 'วันและเวลา' ? (selectedDate ? 'เลือกเวลาที่ว่าง' : 'เลือกวันจากปฏิทิน') : ''}
               </p>
             )}
@@ -549,7 +584,7 @@ export default function BookingWizard() {
               type="button"
               onClick={goNext}
               disabled={!isStepValid(step)}
-              className="bg-rose-500 hover:bg-rose-600 disabled:bg-blush-200 disabled:cursor-not-allowed text-white font-semibold px-6 sm:px-7 py-2.5 rounded-full shadow-card transition-colors whitespace-nowrap"
+              className="btn-candy px-6 sm:px-7 py-2.5 whitespace-nowrap"
             >
               ถัดไป
             </button>
@@ -558,7 +593,7 @@ export default function BookingWizard() {
               type="button"
               onClick={handleConfirm}
               disabled={submitting}
-              className="bg-rose-500 hover:bg-rose-600 disabled:bg-blush-200 disabled:cursor-not-allowed text-white font-semibold px-7 py-2.5 rounded-full shadow-card transition-colors"
+              className="btn-candy px-7 py-2.5"
             >
               {submitting ? 'กำลังบันทึก...' : 'ยืนยันการจองคิว'}
             </button>
@@ -566,14 +601,14 @@ export default function BookingWizard() {
         </div>
         {step === totalSteps && <CancelPolicyNote hours={cancelCutoffHours} className="mt-6" />}
         {step === totalSteps && (
-          <p className="mt-4 text-center text-xs text-gray-400">
+          <p className="mt-4 text-center text-xs text-[#6B5560]">
             การกดยืนยันการจองถือว่ารับทราบ{' '}
-            <Link to="/privacy" target="_blank" className="underline hover:text-rose-600">
+            <Link to="/privacy" target="_blank" className="underline hover:text-berry">
               นโยบายความเป็นส่วนตัว
             </Link>
           </p>
         )}
-        {submitError && <p className="text-sm text-red-500 text-center mt-4">{submitError}</p>}
+
       </div>
     </section>
   )

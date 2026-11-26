@@ -8,9 +8,283 @@ html {
 
 body {
   font-family: 'Prompt', sans-serif;
-  background-color: #FFF6F8;
+  background-color: #FFF8FA;
+  color: #2E1F26;
+  caret-color: #E0457E;
 }
 
 h1, h2, h3, .font-display {
-  font-family: 'Baloo 2', sans-serif;
+  font-family: 'Mali', 'Prompt', sans-serif;
+}
+
+/* ส่วนที่เบราว์เซอร์วาดเอง ก็ให้เป็นโทนเดียวกับร้าน */
+::selection { background: #F9B4CE; color: #3D2230; }
+html { scrollbar-color: #F09BBD transparent; scrollbar-width: thin; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: #F3BCD0; border-radius: 9999px; border: 2px solid #FFF8FA; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ===== การ์ดขาวสะอาด: พื้นผิวหลักของทุกการ์ด (ชื่อคลาสเดิม .glass ใช้ต่อได้ทุกหน้า) ===== */
+@layer components {
+  .glass {
+    background: #ffffff;
+    border: 1px solid rgba(46, 31, 38, 0.06);
+    box-shadow: 0 1px 2px rgba(46, 31, 38, 0.04), 0 18px 40px -24px rgba(196, 74, 120, 0.28);
+  }
+  /* การ์ดฟอร์มและข้อความยาว: ขาวเหมือนกัน */
+  .glass-solid {
+    background: #ffffff;
+    border: 1px solid rgba(46, 31, 38, 0.06);
+    box-shadow: 0 1px 2px rgba(46, 31, 38, 0.04), 0 18px 40px -24px rgba(196, 74, 120, 0.28);
+  }
+  /* ปุ่มวงกลม/ปุ่มรองสีขาว ตัวชมพู */
+  .glass-btn {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    color: #C2185B;
+    background: #ffffff;
+    border: 1px solid rgba(46, 31, 38, 0.08);
+    box-shadow: 0 6px 16px -10px rgba(196, 74, 120, 0.45);
+    transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.15s ease, border-color 0.15s ease;
+  }
+  .glass-btn:hover { background: #FFF1F6; border-color: #F6C3D6; }
+  .glass-btn:active { transform: scale(0.96); }
+  .glass-btn:focus-visible { outline: 2px solid #C2185B; outline-offset: 2px; }
+  .glass-btn:disabled { opacity: 0.45; transform: none; cursor: not-allowed; }
+}
+
+/* ===== ปุ่มหลัก: ชมพูแบนมน เงานุ่ม (ชื่อคลาสเดิม btn-candy ใช้ต่อได้ทุกหน้า) ===== */
+@layer components {
+  .btn-candy,
+  .btn-candy-soft {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 9999px;
+    font-family: 'Prompt', sans-serif;
+    font-weight: 500;
+    white-space: nowrap;
+    user-select: none;
+    min-height: 44px; /* ขนาดนิ้วแตะขั้นต่ำ */
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, filter 0.15s ease;
+  }
+  .btn-candy {
+    color: #fff;
+    background: linear-gradient(180deg, #D6336C 0%, #C2185B 100%);
+    box-shadow: 0 10px 22px -10px rgba(194, 24, 91, 0.6);
+  }
+  .btn-candy:hover { filter: brightness(1.06); transform: translateY(-1px); }
+  .btn-candy:active { transform: translateY(0); box-shadow: 0 4px 10px -6px rgba(194, 24, 91, 0.6); }
+  .btn-candy-soft {
+    color: #C2185B;
+    background: #fff;
+    border: 1.5px solid #F3B4CB;
+  }
+  .btn-candy-soft:hover { background: #FFF1F6; }
+  .btn-candy-soft:active { transform: translateY(1px); }
+  .btn-candy:focus-visible,
+  .btn-candy-soft:focus-visible { outline: 2px solid #C2185B; outline-offset: 3px; }
+  .btn-candy:disabled,
+  .btn-candy-soft:disabled { opacity: 0.45; transform: none; cursor: not-allowed; }
+  /* ปุ่ม LINE คงสีเขียวของ LINE */
+  .btn-candy.btn-line {
+    background: linear-gradient(180deg, #08C95A 0%, #06B04E 100%);
+    box-shadow: 0 10px 22px -10px rgba(6, 176, 78, 0.55);
+  }
+}
+
+/* ===== ภาพเคลื่อนไหว (ปิดทั้งหมดเมื่อเครื่องตั้งค่า "ลดการเคลื่อนไหว") ===== */
+@keyframes lucky-fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes lucky-write {
+  /* ขอบตัดกว้างกว่าตัวอักษร เพราะหางของฟอนต์ลายมือยื่นเกินกรอบ */
+  from { clip-path: inset(-30% 100% -30% -10%); }
+  to { clip-path: inset(-30% -10% -30% -10%); }
+}
+@keyframes lucky-pop {
+  0% { opacity: 0; transform: scale(0.3) rotate(-12deg); }
+  60% { opacity: 1; transform: scale(1.15) rotate(4deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+@keyframes lucky-rise {
+  0% { opacity: 0; transform: translateY(30px) scale(0.6); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-140px) scale(1); }
+}
+@keyframes lucky-splash-out {
+  to { opacity: 0; visibility: hidden; }
+}
+@keyframes lucky-shine {
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
+}
+
+@keyframes lucky-kenburns {
+  from { transform: scale(1.02) translate(0, 0); }
+  to { transform: scale(1.14) translate(-2%, -2%); }
+}
+@keyframes lucky-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes lucky-sweep {
+  from { transform: translateX(-130%) skewX(-18deg); }
+  to { transform: translateX(230%) skewX(-18deg); }
+}
+@keyframes lucky-twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.7) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.15) rotate(25deg); }
+}
+
+@keyframes lucky-skeleton {
+  from { background-position: 100% 50%; }
+  to { background-position: 0% 50%; }
+}
+.lucky-skeleton {
+  background: linear-gradient(90deg, rgba(251, 207, 224, 0.55) 25%, rgba(255, 244, 248, 0.95) 37%, rgba(251, 207, 224, 0.55) 63%);
+  background-size: 400% 100%;
+  animation: lucky-skeleton 1.4s ease-in-out infinite;
+}
+
+@keyframes lucky-page-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.lucky-page { animation: lucky-page-in 0.35s ease-out; }
+
+.lucky-fade-up { animation: lucky-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* ===== 3D ที่ตอบสนองต่อผู้ใช้ (ไม่วนเอง) ===== */
+.lucky-3d { perspective: 1100px; }
+.lucky-3d-inner {
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.lucky-z1 { transform: translateZ(28px); }
+.lucky-z2 { transform: translateZ(52px); }
+@keyframes lucky-flip-in {
+  from { opacity: 0; transform: rotateY(-22deg) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+.lucky-flip-in { animation: lucky-flip-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: left center; }
+@keyframes lucky-nail-turn {
+  0% { transform: rotateY(0deg) rotateX(0deg); }
+  45% { transform: rotateY(18deg) rotateX(-6deg); }
+  100% { transform: rotateY(0deg) rotateX(0deg); }
+}
+.lucky-nail-turn { animation: lucky-nail-turn 0.9s cubic-bezier(0.22, 1, 0.36, 1); }
+.lucky-kenburns { animation: lucky-kenburns 6s ease-out both; }
+.lucky-progress { transform-origin: left; animation: lucky-progress linear both; }
+.lucky-sweep { animation: lucky-sweep 1.3s ease-out 0.15s both; }
+.lucky-twinkle { animation: lucky-twinkle 2.4s ease-in-out infinite; }
+
+.lucky-splash { animation: lucky-splash-out 0.5s ease-in 1.7s forwards; }
+.lucky-splash__word { animation: lucky-write 1.1s cubic-bezier(0.6, 0, 0.3, 1) 0.15s both; }
+.lucky-splash__tag { animation: lucky-fade-up 0.6s ease-out 0.9s both; }
+.lucky-splash__crown { animation: lucky-pop 0.6s ease-out 0.05s both; }
+.lucky-splash__heart { animation: lucky-rise 1.8s ease-out both; }
+.lucky-shine {
+  background-image: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%);
+  background-size: 200% 100%;
+  animation: lucky-shine 3.5s linear infinite;
+}
+
+/* เปิดหน้าแรก: วงโคจรวาดเส้น + โบว์เด้งเข้า (ครั้งเดียว) */
+@keyframes lucky-orbit-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.lucky-orbit-draw { stroke-dasharray: 1; stroke-dashoffset: 0; animation: lucky-orbit-draw 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both; }
+.lucky-orbit-star--still { transform: translate(8px, 150px); }
+@keyframes lucky-bow-pop {
+  0% { opacity: 0; transform: scale(0.4) rotate(-20deg); }
+  65% { opacity: 1; transform: scale(1.08) rotate(4deg); }
+  100% { opacity: 1; transform: none; }
+}
+.lucky-bow-pop { animation: lucky-bow-pop 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.6s both; transform-origin: 40% 40%; }
+
+/* ===== หน้าแรก: ลูกเล่นชวนจอง =====
+   แสงเงาวาบผ่านปุ่มจอง 900ms (เหมือนท็อปโค้ต) · กดแล้วยุบ 0.97 ใน 120ms · ชี้แล้วลอย 2px (เฉพาะคอม)
+   เวลา "ว่างเร็วสุด" เลื่อนขึ้น 420ms · จุดเขียวข้อมูลสดกะพริบ 3 รอบแล้วนิ่ง */
+.lucky-gloss { overflow: hidden; isolation: isolate; }
+.lucky-gloss::after {
+  content: '';
+  position: absolute;
+  inset: -20% auto -20% 0;
+  width: 45%;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  transform: translateX(-160%) skewX(-18deg);
+}
+@keyframes lucky-gloss { to { transform: translateX(330%) skewX(-18deg); } }
+.lucky-gloss.is-shining::after { animation: lucky-gloss 900ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.btn-candy.lucky-gloss { transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms cubic-bezier(0.22, 1, 0.36, 1), filter 0.15s ease; }
+.btn-candy.lucky-gloss:active { transform: scale(0.97); transition-duration: 120ms; }
+.lucky-slot-arrow { display: inline-block; transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1); }
+@media (hover: hover) and (pointer: fine) {
+  .btn-candy.lucky-gloss:hover { transform: translateY(-2px); }
+  .btn-candy.lucky-gloss:hover::after { animation: lucky-gloss 900ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .btn-candy.lucky-gloss:active { transform: scale(0.97); }
+  .group:hover .lucky-slot-arrow { transform: translateX(4px); }
+}
+@keyframes lucky-slot-rise {
+  from { opacity: 0.15; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.lucky-slot-rise { display: inline-block; animation: lucky-slot-rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes lucky-live { 50% { opacity: 0.4; } }
+.lucky-live-dot { animation: lucky-live 2.4s ease-in-out 3; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lucky-gloss::after,
+  .lucky-slot-rise,
+  .lucky-live-dot { animation: none !important; }
+  .btn-candy.lucky-gloss,
+  .lucky-slot-arrow { transition: none !important; }
+  .btn-candy.lucky-gloss:hover,
+  .btn-candy.lucky-gloss:active,
+  .group:hover .lucky-slot-arrow { transform: none !important; }
+  .lucky-orbit-draw,
+  .lucky-bow-pop { animation: none !important; }
+  .lucky-3d-inner { transform: none !important; transition: none !important; }
+  .lucky-fade-up,
+  .lucky-splash__word,
+  .lucky-splash__tag,
+  .lucky-splash__crown,
+  .lucky-splash__heart,
+  .lucky-page,
+  .lucky-flip-in,
+  .lucky-nail-turn,
+  .lucky-shine,
+  .lucky-skeleton,
+  .lucky-kenburns,
+  .lucky-progress,
+  .lucky-sweep,
+  .lucky-twinkle { animation: none !important; }
+}
+
+/* วงโฟกัสคีย์บอร์ดสีชมพูของร้าน แทนเส้นดำของเบราว์เซอร์ (เมนูบน/ท้ายเว็บ/การ์ด) */
+header a:focus-visible,
+header button:focus-visible,
+footer a:focus-visible,
+.glass a:focus-visible,
+.glass button:focus-visible {
+  outline: 3px solid #E0457E;
+  outline-offset: 2px;
+}
+
+/* ดีไซน์ใหม่ (ขาวสะอาด): หน้าลูกค้าใช้ตัวอักษร Prompt ทั้งหัวข้อและเนื้อหา ให้เรียบและอ่านง่ายเหมือนภาพตัวอย่าง
+   จำกัดไว้ใน .lucky-page (ตัวห่อหน้าลูกค้าใน App.jsx) หน้าแอดมินจึงไม่เปลี่ยน */
+.lucky-page h1,
+.lucky-page h2,
+.lucky-page h3,
+.lucky-page .font-display {
+  font-family: 'Prompt', sans-serif;
 }

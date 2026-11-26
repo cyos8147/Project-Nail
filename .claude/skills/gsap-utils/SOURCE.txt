@@ -1,0 +1,4 @@
+Source: https://github.com/greensock/gsap-skills
+Commit: aed9cfd3277740755f6bfc1155c7aa645403b760
+License: MIT
+Vendored: 2026-11-26

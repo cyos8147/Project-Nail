@@ -1,0 +1,4 @@
+Source: https://github.com/cloudai-x/threejs-skills
+Commit: 0e181866f095b5f06d005133876e926515390d95
+License: MIT
+Vendored: 2026-11-26

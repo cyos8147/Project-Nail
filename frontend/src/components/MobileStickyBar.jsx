@@ -1,22 +1,27 @@
 import { Link } from 'react-router-dom'
+import Icon from './Icon.jsx'
+import useGloss from './useGloss.js'
 
-export default function MobileStickyBar() {
+// แถบล่างบนมือถือ: ประวัติของฉัน (ลูกค้าประจำ) · ลองลายด้วย AI · จองคิว (ปุ่มหลักปุ่มเดียว)
+// gloss: ปุ่มจองมีแสงเงาวาบ (ใช้ในหน้าแรกเท่านั้น)
+export default function MobileStickyBar({ gloss = false }) {
+  const glossRef = useGloss(gloss, '(max-width: 767px)')
+  const side = 'glass-btn flex-shrink-0 h-12 flex-col gap-0.5 px-3 text-xs font-display font-semibold leading-none'
   return (
     <div
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur border-t border-blush-200 px-4 py-3 flex items-center gap-3"
-      style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#2E1F26]/[0.06] px-3 py-2.5 flex items-center gap-2"
+      style={{ paddingBottom: 'max(0.625rem, env(safe-area-inset-bottom))' }}
     >
-      <Link
-        to="/ai"
-        aria-label="ลองลายเล็บด้วย AI"
-        className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-full bg-blush-100 text-xl"
-      >
-        ✨
+      <Link to="/history" className={side}>
+        <Icon name="clock" className="h-5 w-5" />
+        ประวัติ
       </Link>
-      <Link
-        to="/booking"
-        className="flex-1 text-center bg-rose-500 active:bg-rose-600 text-white font-semibold py-3 rounded-full shadow-card transition-colors"
-      >
+      <Link to="/ai" aria-label="ลองสีบนมือคุณ" className={side}>
+        <Icon name="hand" className="h-5 w-5" />
+        ลองสี
+      </Link>
+      <Link ref={glossRef} to="/booking" className={`btn-candy flex-1 py-3${gloss ? ' lucky-gloss' : ''}`}>
+        <Icon name="calendar" className="h-5 w-5" />
         จองคิวเลย
       </Link>
     </div>

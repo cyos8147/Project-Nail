@@ -1,0 +1,4 @@
+Source: https://github.com/LottieFiles/motion-design-skill
+Commit: d77a9fc8cb371cab1ba5420df5bfd232cd14c9bb
+License: MIT
+Vendored: 2026-11-26

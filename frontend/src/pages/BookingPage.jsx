@@ -1,34 +1,21 @@
-import { Link } from 'react-router-dom'
 import BookingWizard from '../components/booking/BookingWizard.jsx'
+import Header from '../components/Header.jsx'
 import Footer from '../components/Footer.jsx'
+import DreamyBackground from '../components/DreamyBackground.jsx'
+import usePageTitle from '../components/usePageTitle.js'
 
+// หัวเว็บใช้ตัวเดียวกับทุกหน้า (เมนู "จองคิว" ขึ้นเป็นหน้าปัจจุบัน)
 export default function BookingPage() {
+  usePageTitle('จองคิว | Lucky Salon')
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-blush-50 via-white to-blush-50 text-gray-800 overflow-x-clip">
-      <div className="pointer-events-none absolute inset-0 z-0 overflow-clip">
-        <div className="absolute top-0 -right-32 w-[28rem] h-[28rem] bg-peach/50 rounded-full blur-3xl" />
-        <div className="absolute top-[60%] -left-40 w-[26rem] h-[26rem] bg-rose-200/40 rounded-full blur-3xl" />
-      </div>
+    <div className="relative isolate min-h-screen text-[#2E1F26] overflow-x-clip">
+      <DreamyBackground />
 
       <div className="relative z-10">
-        <header className="sticky top-0 z-50 bg-blush-50/80 backdrop-blur border-b border-blush-200">
-          <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
-            <p className="flex items-center gap-2 font-display text-2xl font-bold text-rose-600 whitespace-nowrap">
-              <img src="/logo.jpg" alt="Lucky Salon" className="w-8 h-8 rounded-full object-cover" />
-              Lucky<span className="text-gray-800"> Salon</span>
-            </p>
-            <p className="text-sm font-medium text-gray-500 hidden sm:block">📅 จองคิวออนไลน์</p>
-            <Link
-              to="/"
-              className="bg-white hover:bg-blush-100 text-rose-600 text-sm font-semibold px-4 py-2.5 rounded-full border border-blush-200 transition-colors whitespace-nowrap"
-            >
-              ← กลับหน้าแรก
-            </Link>
-          </div>
-        </header>
-
-        <BookingWizard />
-
+        <Header />
+        <main>
+          <BookingWizard />
+        </main>
         <Footer />
       </div>
     </div>
