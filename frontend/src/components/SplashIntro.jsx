@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Crown, SolidHeart } from './Decor.jsx'
+import { SolidHeart } from './Decor.jsx'
 
 // ฉากเปิดเว็บ: ชื่อร้านค่อย ๆ เขียนออกมา มีมงกุฎและหัวใจลอย แล้วจางหายไปเอง (~2.2 วินาที)
 // - แสดงครั้งเดียวต่อการเปิดเว็บ (จำใน sessionStorage) จะได้ไม่รำคาญเวลาเปลี่ยนหน้า
@@ -65,12 +65,12 @@ export default function SplashIntro() {
         </span>
       ))}
 
-      <span className="lucky-splash__crown w-11 sm:w-14 text-[#D6336C]"><Crown className="w-full" /></span>
+      <img src="/logo-mark.png" alt="" aria-hidden="true" className="lucky-splash__crown h-28 w-28 sm:h-36 sm:w-36 drop-shadow-[0_6px_18px_rgba(255,255,255,0.9)]" />
       <p className="lucky-splash__word mt-1 font-script text-6xl sm:text-8xl text-berry leading-tight px-4 pb-2 drop-shadow-[0_4px_12px_rgba(255,255,255,0.8)]">
         Lucky Salon
       </p>
       <p className="lucky-splash__tag mt-2 text-sm sm:text-base text-[#7A4A5E]">
-        Nail &amp; Hair Salon
+        Hair &amp; Nail Salon
       </p>
     </div>
   )

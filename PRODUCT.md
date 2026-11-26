@@ -55,7 +55,7 @@ The site succeeds when a visitor goes from "I like this design" to a confirmed b
 
 ## Brand Commitments
 
-- **Name:** "Lucky Salon", with the subtitle "Nail & Hair Salon" and a small crown over a script wordmark. Never "Nailly"; that name appears in early mockups only.
+- **Name and logo:** "Lucky Salon", subtitle "Hair & Nail". The owner supplied the real logo on 2026-11-26: a gold line-art woman in profile with long flowing hair, inside a circle with leafy branches. The cut-out files are `frontend/public/logo-mark.png` (emblem only) and `frontend/public/logo-full.png` (with the name). Use these files and never redraw the logo. The site shows the emblem next to the script wordmark. Never "Nailly"; that name appears in early mockups only.
 - **Visual reference made binding by the owner:** the pink "Nailly" mockup and the Lucky Salon services mockup supplied in the conversation of 2026-11-25. They show:
   - a dreamy pink salon photo backdrop with frosted-glass cards;
   - a pill navigation bar with icons;

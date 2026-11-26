@@ -33,6 +33,16 @@ A dreamy pink nail salon, seen through frosted glass. A softly blurred photo of 
 - **Prompt**: body text.
 - **Great Vibes** (`font-script`): Latin-only accent lines such as "It's your style" and the logo. Never "AI" in script.
 
+## Logo
+
+- **Source:** the owner's gold emblem, cut out of its background, at `public/logo-mark.png` (emblem only) and `public/logo-full.png` (with the name).
+- **Where it is used:**
+  - `BrandLogo` places the emblem beside the pink script "Lucky Salon".
+  - The splash shows the emblem large.
+  - The favicon and app icons use the emblem on cream (#FFF8F0).
+  - `og-image.jpg` uses the full logo.
+- **Colour:** the gold (#AB7D1F) appears only in the logo and is not used as a UI colour.
+
 ## Decoration (`src/components/Decor.jsx`)
 
 The decorations are all hand-authored SVG:

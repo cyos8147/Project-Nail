@@ -1,17 +1,18 @@
-import { Crown } from './Decor.jsx'
-// โลโก้ร้าน: ชื่อ Lucky Salon ตัวเขียน มีมงกุฎเล็ก ๆ และบรรทัดรองด้านล่าง
+// โลโก้ร้าน: ตราจริงของร้าน (ผู้หญิงผมยาวในวงกลมใบไม้ สีทอง) + ชื่อ Lucky Salon ตัวเขียน + บรรทัดรอง
 // ใช้ร่วมกันทุกหน้า (หัวกระดาษ ท้ายเว็บ) จะได้หน้าตาเหมือนกันทั้งเว็บ
-export default function BrandLogo({ subtitle = 'Nail & Hair Salon', size = 'md' }) {
-  const word = size === 'sm' ? 'text-[2rem]' : 'text-[1.9rem] sm:text-[2.3rem]'
+// ไฟล์ตรา: public/logo-mark.png (ตัดพื้นหลังแล้ว) และ public/logo-full.png (มีชื่อร้านด้านล่าง)
+export default function BrandLogo({ subtitle = 'Hair & Nail Salon', size = 'md' }) {
+  const word = size === 'sm' ? 'text-[1.9rem]' : 'text-[1.8rem] sm:text-[2.2rem]'
+  const mark = size === 'sm' ? 'h-12 w-12' : 'h-12 w-12 sm:h-14 sm:w-14'
   return (
-    <span className="relative inline-flex flex-col items-start leading-none select-none">
-      <span aria-hidden="true" className="absolute -top-2.5 left-[62%] w-4 text-rose-400 rotate-[8deg]"><Crown className="w-full" /></span>
-      <span className={`font-script ${word} text-[#D6336C] drop-shadow-[0_2px_0_rgba(255,255,255,0.9)]`}>Lucky Salon</span>
-      {subtitle && (
-        <span className="mt-0.5 ml-auto pr-1 text-[11px] text-[#7A4A5E] whitespace-nowrap">
-          {subtitle}
-        </span>
-      )}
+    <span className="inline-flex items-center gap-2 leading-none select-none">
+      <img src="/logo-mark.png" alt="" aria-hidden="true" width="56" height="56" className={`${mark} shrink-0 drop-shadow-[0_2px_4px_rgba(255,255,255,0.9)]`} />
+      <span className="inline-flex flex-col items-start">
+        <span className={`font-script ${word} text-[#D6336C] drop-shadow-[0_2px_0_rgba(255,255,255,0.9)]`}>Lucky Salon</span>
+        {subtitle && (
+          <span className="mt-0.5 ml-auto pr-1 text-[11px] text-[#7A4A5E] whitespace-nowrap">{subtitle}</span>
+        )}
+      </span>
     </span>
   )
 }
