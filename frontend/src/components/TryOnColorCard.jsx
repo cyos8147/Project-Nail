@@ -95,7 +95,7 @@ export default function TryOnColorCard() {
         <Star className="h-6 w-6" />
         ลองเลือกสีที่ชอบ
       </h2>
-      <p className="mt-1 text-[#5B4650]">แตะสีเพื่อดูบนเล็บ แล้วไปลองบนรูปมือของคุณเองได้เลย</p>
+      <p className="mt-1 text-[#5B4650]">แตะสีดูก่อนว่าออกมาเป็นยังไง ถ้าถูกใจ ลองบนรูปมือของคุณเองต่อได้เลยค่ะ</p>
 
       <div role="radiogroup" aria-label="เลือกสีเล็บ" className="mt-4 flex flex-wrap gap-2.5 py-2">
         {SWATCHES.map((s) => (

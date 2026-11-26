@@ -178,7 +178,7 @@ export default function GalleryPage() {
             ผลงานลายเล็บของร้าน
           </h1>
           <p className="lucky-fade-up text-gray-600 mt-2" style={{ animationDelay: '0.06s' }}>
-            กดที่รูปเพื่อดูเต็มจอ ชอบลายไหนกดจองได้เลย
+            แตะรูปเพื่อดูใกล้ ๆ ชอบลายไหนจองลายนั้นได้เลยค่ะ
           </p>
         </div>
 
@@ -239,7 +239,7 @@ export default function GalleryPage() {
         <SlowNote show={slow} />
         {designs && designs.length === 0 && (
           <p className="mt-10 text-center text-gray-500">
-            {failed ? 'โหลดผลงานไม่สำเร็จ ลองรีเฟรชหน้าอีกครั้ง' : 'ยังไม่มีผลงานในแกลเลอรี'}
+            {failed ? 'ตอนนี้โหลดรูปผลงานไม่ได้ ลองรีเฟรชอีกครั้งนะคะ' : 'ร้านยังไม่ได้ลงรูปผลงาน แวะมาดูใหม่เร็ว ๆ นี้นะคะ'}
           </p>
         )}
 

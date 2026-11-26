@@ -63,7 +63,7 @@ function ReviewForm({ booking, phone, onSubmitted }) {
       <textarea
         value={comment}
         onChange={(e) => setComment(e.target.value)}
-        placeholder="เล่าประสบการณ์การใช้บริการ..."
+        placeholder="ชอบตรงไหน หรืออยากให้ร้านปรับอะไร เล่าให้ฟังได้เลยค่ะ"
         className="w-full rounded-xl border border-blush-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-rose-300 mb-2"
         rows={2}
       />
@@ -115,7 +115,7 @@ export default function CustomerHistoryPage() {
   }
 
   async function handleCancel(booking) {
-    if (!window.confirm('ยืนยันยกเลิกคิวนี้หรือไม่?')) return
+    if (!window.confirm('แน่ใจนะคะว่าจะยกเลิกคิวนี้?')) return
     try {
       await cancelBooking(booking.id, phone.trim())
       load(phone.trim(), bookingCode.trim())
@@ -134,7 +134,7 @@ export default function CustomerHistoryPage() {
         <div className="text-center mb-8">
           <h1 className="font-display text-3xl font-semibold text-gray-800">ประวัติของฉัน</h1>
           <p className="text-gray-500 mt-2">
-            กรอกเบอร์โทรเพื่อดูสรุปคิวที่เคยจอง หรือใส่รหัสคิวด้วยเพื่อดูรายละเอียด แก้ไข ยกเลิก และให้รีวิว
+            ใส่เบอร์โทรที่ใช้จอง จะเห็นคิวทั้งหมดของคุณค่ะ ถ้าใส่รหัสคิวด้วย จะเลื่อนนัด ยกเลิก หรือรีวิวได้เลย
           </p>
         </div>
 
@@ -176,7 +176,7 @@ export default function CustomerHistoryPage() {
             <div>
               <h2 className="font-display text-xl font-semibold text-gray-800 mb-4">ประวัติการจอง ({data.bookings.length})</h2>
               <div className="space-y-3">
-                {data.bookings.length === 0 && <p className="text-sm text-gray-500">ยังไม่มีประวัติการจอง</p>}
+                {data.bookings.length === 0 && <p className="text-sm text-gray-500">ยังไม่เจอคิวของเบอร์นี้นะคะ</p>}
                 {!data.verified && data.bookings.map((b, i) => (
                   <div key={i} className="glass-solid rounded-[24px] p-5">
                     <div className="flex items-center justify-between mb-1">
@@ -211,7 +211,7 @@ export default function CustomerHistoryPage() {
                     {['pending', 'confirmed'].includes(b.status) && isTooLateToChange(b, shop?.cancel_cutoff_hours) && (
                       <p className="mt-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
                         ใกล้เวลานัดแล้ว (ร้านให้ยกเลิก/เลื่อนผ่านเว็บได้ล่วงหน้าอย่างน้อย {shop.cancel_cutoff_hours} ชั่วโมง)
-                        หากไม่สะดวกมา กรุณาติดต่อร้านโดยตรง{shop.phone ? ` โทร ${shop.phone}` : ''}
+                        ถ้ามาไม่ได้ ทักหรือโทรบอกร้านได้เลยนะคะ{shop.phone ? ` โทร ${shop.phone}` : ''}
                       </p>
                     )}
                     {['pending', 'confirmed'].includes(b.status) && !isTooLateToChange(b, shop?.cancel_cutoff_hours) && (

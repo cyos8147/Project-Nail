@@ -101,7 +101,7 @@ export default function DateTimePicker({
   return (
     <div>
       <h2 className="font-display text-2xl font-bold text-gray-800 text-center mb-1">เลือกวันและเวลา</h2>
-      <p className="text-gray-500 text-center text-sm mb-8">ดูปฏิทินวันที่จองได้ และเลือกช่วงเวลาที่ว่าง</p>
+      <p className="text-gray-500 text-center text-sm mb-8">เลือกวันที่สะดวก แล้วเลือกเวลาที่ยังว่างอยู่ค่ะ</p>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Calendar */}
@@ -161,7 +161,7 @@ export default function DateTimePicker({
             })}
           </div>
 
-          <p className="text-[11px] text-gray-400 mt-4">* วันหยุดร้านตั้งค่าได้จากหน้าแอดมิน</p>
+          <p className="text-[11px] text-gray-400 mt-4">* วันที่กดไม่ได้ คือวันที่ร้านหยุดหรือเลยมาแล้วค่ะ</p>
         </div>
 
         {/* Time slots */}
@@ -172,7 +172,7 @@ export default function DateTimePicker({
 
           {!selectedDate && (
             <div className="h-full min-h-[180px] flex items-center justify-center text-sm text-gray-400">
-              เลือกวันที่จากปฏิทินด้านซ้าย
+              เลือกวันจากปฏิทินก่อนนะคะ
             </div>
           )}
 
@@ -189,7 +189,7 @@ export default function DateTimePicker({
           {selectedDate && !loadingSlots && !slotsError && (
             <div className="grid grid-cols-3 gap-2">
               {slots.length === 0 && (
-                <p className="col-span-3 text-sm text-gray-400 text-center py-8">ไม่มีช่วงเวลาว่างในวันนี้</p>
+                <p className="col-span-3 text-sm text-gray-400 text-center py-8">วันนี้คิวเต็มแล้ว ลองเลือกวันอื่นดูนะคะ</p>
               )}
               {slots.map((s) => {
                 const isSelected = selectedTime === s.time

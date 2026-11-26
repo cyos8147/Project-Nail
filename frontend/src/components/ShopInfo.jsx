@@ -78,7 +78,7 @@ const ChatIcon = () => (
 
 // ร้านยังไม่ได้ใส่ LINE ก็ไม่ชวน "ทักไลน์" (ไม่สัญญาสิ่งที่ยังกดไม่ได้)
 const ContactHeading = ({ hasLine = false }) => (
-  <SectionTitle title="เวลาทำการและติดต่อร้าน" sub={hasLine ? 'แวะมาหาเราได้เลย หรือทักไลน์ถามก่อนก็ได้' : 'ดูวันเวลาเปิดร้านก่อนแวะมาได้ที่นี่'} />
+  <SectionTitle title="เวลาทำการและติดต่อร้าน" sub={hasLine ? 'แวะมาได้เลยค่ะ หรือทักไลน์มาถามก่อนก็ได้นะคะ' : 'เช็กวันเวลาเปิดร้านก่อนแวะมานะคะ'} />
 )
 
 export default function ShopInfo({ embedded = false }) {
@@ -121,7 +121,7 @@ export default function ShopInfo({ embedded = false }) {
       <section id="contact" className={sectionCls}>
         <ContactHeading />
         <p className="mx-auto max-w-md rounded-[24px] glass-solid p-6 text-center text-[#7A4A5E]">
-          {failed ? 'โหลดเวลาทำการไม่สำเร็จ รีเฟรชหน้านี้อีกครั้ง' : 'กำลังโหลดเวลาทำการและช่องทางติดต่อ...'}
+          {failed ? 'ตอนนี้โหลดเวลาทำการไม่ได้ ลองรีเฟรชหน้านี้อีกครั้งนะคะ' : 'กำลังโหลดเวลาทำการและช่องทางติดต่อ...'}
         </p>
       </section>
     )
@@ -175,7 +175,7 @@ export default function ShopInfo({ embedded = false }) {
                 ))}
               </ul>
               {holidays.length > 8 && <p className="mt-2 text-xs text-[#7A4A5E]">และอีก {holidays.length - 8} วัน</p>}
-              <p className="mt-2 text-xs text-[#7A4A5E]">วันเหล่านี้จองคิวออนไลน์ไม่ได้</p>
+              <p className="mt-2 text-xs text-[#7A4A5E]">วันเหล่านี้ร้านหยุด จองออนไลน์ไม่ได้นะคะ</p>
             </div>
           )}
         </div>

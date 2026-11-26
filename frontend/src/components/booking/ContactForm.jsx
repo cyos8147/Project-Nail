@@ -26,7 +26,7 @@ export default function ContactForm({
   return (
     <div>
       <h2 className="font-display text-2xl font-bold text-gray-800 text-center mb-1">ข้อมูลติดต่อ</h2>
-      <p className="text-gray-500 text-center text-sm mb-8">กรอกข้อมูลเพื่อยืนยันการจองคิว</p>
+      <p className="text-gray-500 text-center text-sm mb-8">อีกขั้นเดียวก็จองเสร็จแล้วค่ะ</p>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Summary */}
@@ -96,7 +96,7 @@ export default function ContactForm({
             <span className="font-semibold text-berry">{chain ? chain.reduce((n, c) => n + c.price, 0) : service?.price} บาท</span>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed">
-            ตรวจรูป สี และบริการให้ถูกต้องก่อนกดยืนยัน ถ้าต้องการแก้ไขกด “ย้อนกลับ”
+            เช็กบริการ สี และรูปอีกครั้งนะคะ ถ้าอยากแก้ กด “ย้อนกลับ” ได้เลย
           </p>
         </div>
 

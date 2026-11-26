@@ -39,7 +39,7 @@ export default function Reviews({ embedded = false }) {
   return (
     <section id="reviews" className={`scroll-mt-24 ${embedded ? '' : 'py-16'}`}>
       <div className={embedded ? '' : 'max-w-6xl mx-auto px-4 sm:px-6'}>
-        <SectionTitle title="รีวิวจากลูกค้า" sub="จากลูกค้าที่ใช้บริการและรีวิวผ่านเว็บนี้" />
+        <SectionTitle title="รีวิวจากลูกค้า" sub="เสียงจากลูกค้าที่มาทำกับเราจริง ๆ" />
 
         {reviews && reviews.length === 0 && (
           <div className={`relative rounded-[24px] glass p-8 text-center ${embedded ? '' : 'mx-auto max-w-md'}`}>
@@ -47,7 +47,7 @@ export default function Reviews({ embedded = false }) {
               <Icon name="heart" className="h-7 w-7" />
             </span>
             <p className="font-display text-lg font-semibold text-[#4A2A37]">ยังไม่มีรีวิว</p>
-            <p className="mt-1 text-sm text-[#7A4A5E]">ใช้บริการแล้ว มาเล่าให้เราฟังได้ที่หน้าประวัติของฉัน</p>
+            <p className="mt-1 text-sm text-[#7A4A5E]">ถ้าเคยมาทำแล้ว เล่าให้เราฟังหน่อยนะคะ รีวิวได้ที่หน้าประวัติของฉัน</p>
             <Link to="/history" className="btn-candy-soft mt-5 px-5 py-2.5 text-sm">
               ไปที่ประวัติของฉัน
             </Link>

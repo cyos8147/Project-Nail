@@ -13,7 +13,7 @@ export default function ServiceSelector({ category, setCategory, service, setSer
   return (
     <div>
       <h2 className="font-display text-2xl font-semibold text-[#4A2A37] text-center mb-1">เลือกบริการ</h2>
-      <p className="text-gray-500 text-center text-sm mb-6">เลือกหมวดหมู่ก่อน แล้วค่อยเลือกบริการที่ต้องการ</p>
+      <p className="text-gray-500 text-center text-sm mb-6">เลือกทำผมหรือทำเล็บก่อน แล้วเลือกบริการที่อยากทำได้เลยค่ะ</p>
 
       {/* Category tabs */}
       <div className="flex justify-center gap-3 mb-8">

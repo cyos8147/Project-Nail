@@ -55,7 +55,7 @@ export default function PopularNails() {
             <Star className="h-6 w-6" />
             ลายเล็บของร้าน
           </h2>
-          <p className="mt-1 text-sm text-[#7A4A5E]">แตะลายที่ชอบเพื่อจองได้เลย</p>
+          <p className="mt-1 text-sm text-[#7A4A5E]">ชอบลายไหน แตะที่รูปแล้วจองลายนั้นได้เลยค่ะ</p>
         </div>
         <Link to="/gallery" className="glass-btn min-h-[44px] gap-1.5 px-4 py-2 text-sm font-display font-semibold">
           ดูทั้งหมด <Icon name="arrow" className="h-4 w-4" />

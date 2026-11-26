@@ -112,7 +112,7 @@ export default function PopularStylesCard() {
             onPointerCancel={() => (pointerX.current = null)}
           >
             {count === 0 && !loaded && <Bone className="absolute inset-0 !rounded-none" />}
-            {count === 0 && loaded && <div className="w-full h-full flex items-center justify-center px-6 text-center text-[#7A4A5E] text-sm">ร้านกำลังอัปโหลดรูปลายเล็บ ดูราคาบริการด้านล่างได้เลย</div>}
+            {count === 0 && loaded && <div className="w-full h-full flex items-center justify-center px-6 text-center text-[#7A4A5E] text-sm">รูปผลงานกำลังจะมาเร็ว ๆ นี้ค่ะ ระหว่างนี้ดูราคาบริการด้านล่างก่อนได้นะคะ</div>}
 
             {/* ทุกภาพซ้อนกันอยู่ ภาพที่แสดงพลิกเข้ามาแบบ 3D ภาพอื่นจางออก */}
             {designs.map((d, i) => {

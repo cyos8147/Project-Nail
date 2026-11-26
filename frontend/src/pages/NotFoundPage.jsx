@@ -19,7 +19,7 @@ export default function NotFoundPage() {
       <p className="mt-2 font-display text-6xl font-semibold text-rose-500 [text-shadow:0_3px_0_#fff]">404</p>
       <h1 className="mt-2 font-display text-2xl font-semibold">ไม่พบหน้าที่คุณกำลังหา</h1>
       <p className="mt-3 max-w-sm text-[#7A4A5E]">
-        ลิงก์อาจพิมพ์ไม่ครบหรือหน้านี้ถูกย้ายไปแล้ว ลองกลับไปหน้าแรก หรือจองคิวได้เลย
+        ลิงก์อาจพิมพ์ไม่ครบ หรือหน้านี้ย้ายไปแล้วค่ะ กลับไปหน้าแรก หรือจองคิวต่อได้เลยนะคะ
       </p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Link

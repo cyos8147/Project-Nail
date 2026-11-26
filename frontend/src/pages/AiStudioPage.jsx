@@ -48,7 +48,7 @@ export default function AiStudioPage() {
             แล้วให้ AI ช่วยเลือกลาย
           </h1>
           <p style={{ animationDelay: '0.12s' }} className="lucky-fade-up text-gray-600 mt-5 max-w-xl mx-auto text-lg leading-8">
-            วิเคราะห์สีผิว ลองสีเล็บบนรูปมือจริง รับคำแนะนำลายที่เหมาะกับคุณ แล้วจองคิวต่อได้ทันที
+            ถ่ายหรืออัปโหลดรูปมือ แล้วลองสีเล็บได้ตามใจ AI จะช่วยดูโทนผิวและแนะนำลายที่น่าจะเข้ากับคุณค่ะ
           </p>
 
           {/* 4 ขั้นตอนจริงของหน้านี้ ตามลำดับ จึงมีตัวเลข */}
@@ -72,7 +72,7 @@ export default function AiStudioPage() {
 
           <p className="mt-6 text-xs text-gray-500 flex items-center justify-center gap-1.5 flex-wrap">
             <Icon name="lock" className="h-4 w-4" />
-            รูปที่คุณอัปโหลดส่งไปประมวลผลชั่วคราวเท่านั้น ไม่ถูกเก็บไว้บนเซิร์ฟเวอร์ (เว้นแต่คุณกดจองคิวพร้อมรูป) ·{' '}
+            รูปมือของคุณใช้แค่ตอนลองสีเท่านั้น ร้านไม่ได้เก็บไว้ (ยกเว้นตอนที่คุณกดจองพร้อมแนบรูป) ·{' '}
             <Link to="/privacy" className="underline hover:text-berry">
               นโยบายความเป็นส่วนตัว
             </Link>

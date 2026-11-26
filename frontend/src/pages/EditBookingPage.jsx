@@ -81,7 +81,7 @@ export default function EditBookingPage() {
       <section className="max-w-2xl mx-auto px-6 py-16">
         <div className="text-center mb-8">
           <h1 className="font-display text-3xl font-semibold text-gray-800">แก้ไขวันเวลาการจอง</h1>
-          <p className="text-gray-500 mt-2">กรอกรหัสคิวและเบอร์โทรที่ใช้ตอนจอง</p>
+          <p className="text-gray-500 mt-2">ใส่รหัสคิวกับเบอร์โทรที่ใช้ตอนจองนะคะ</p>
         </div>
 
         {!booking && (
@@ -128,7 +128,7 @@ export default function EditBookingPage() {
               ร้านกำหนดให้เลื่อนหรือยกเลิกผ่านเว็บได้ล่วงหน้าอย่างน้อย {shop.cancel_cutoff_hours} ชั่วโมง
             </p>
             <p className="text-sm text-gray-700 font-medium">
-              กรุณาติดต่อร้านโดยตรง{shop.phone ? ` โทร ${shop.phone}` : ' ทาง LINE หรือโทรหาร้าน'}
+              รบกวนติดต่อร้านโดยตรงนะคะ{shop.phone ? ` โทร ${shop.phone}` : ' ทาง LINE หรือโทรหาร้าน'}
             </p>
             <Link to="/history" className="inline-block text-sm font-semibold text-berry hover:underline">ดูประวัติของฉัน</Link>
           </div>
@@ -169,7 +169,7 @@ export default function EditBookingPage() {
             </button>
             {saveError && <p className="text-sm text-red-500 text-center mt-3">{saveError}</p>}
             <p className="text-xs text-gray-500 text-center mt-4">
-              เมื่อยืนยันแล้ว สถานะคิวจะกลับเป็น "รอยืนยัน" อีกครั้ง ทางร้านจะติดต่อยืนยันเวลาใหม่ให้เร็วที่สุด
+              เมื่อยืนยันแล้ว สถานะคิวจะกลับเป็น "รอยืนยัน" อีกครั้ง แล้วร้านจะรีบยืนยันเวลาใหม่ให้นะคะ
             </p>
           </div>
         )}

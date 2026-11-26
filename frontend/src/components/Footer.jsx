@@ -27,7 +27,7 @@ export default function Footer() {
       <div className="relative max-w-6xl mx-auto px-6 py-10 grid gap-8 md:grid-cols-[auto_1fr] md:items-center">
         <div className="flex flex-col items-center md:items-start gap-2">
           <BrandLogo size="sm" />
-          <p className="text-sm text-[#7A4A5E]">ร้านทำผม ทำเล็บ จองคิวออนไลน์ได้ตลอด</p>
+          <p className="text-sm text-[#7A4A5E]">ร้านทำผมทำเล็บใกล้บ้าน จองคิวออนไลน์ได้ตลอด</p>
         </div>
 
         <nav aria-label="ลิงก์ท้ายเว็บ" className="flex flex-wrap justify-center md:justify-end gap-1 text-sm font-display font-semibold">

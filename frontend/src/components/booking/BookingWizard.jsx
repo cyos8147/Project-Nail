@@ -206,13 +206,13 @@ export default function BookingWizard() {
 
   function validateContact() {
     const next = {}
-    if (!form.name.trim()) next.name = 'กรุณากรอกชื่อ-นามสกุล'
+    if (!form.name.trim()) next.name = 'รบกวนกรอกชื่อ-นามสกุลด้วยนะคะ'
     if (!form.phone.trim()) {
-      next.phone = 'กรุณากรอกเบอร์โทร'
+      next.phone = 'รบกวนกรอกเบอร์โทรด้วยนะคะ'
     } else if (!/^0[0-9]{8,9}$/.test(form.phone.trim())) {
-      next.phone = 'รูปแบบเบอร์โทรไม่ถูกต้อง'
+      next.phone = 'เบอร์โทรดูไม่ครบ ลองเช็กอีกครั้งนะคะ'
     }
-    if (!form.lineId.trim()) next.lineId = 'กรุณากรอกไอดีไลน์'
+    if (!form.lineId.trim()) next.lineId = 'รบกวนกรอกไอดีไลน์ด้วยนะคะ'
     return next
   }
 
@@ -280,7 +280,7 @@ export default function BookingWizard() {
       setBookingResult(result)
       setSubmitted(true)
     } catch (err) {
-      setSubmitError(err.message || 'บันทึกการจองไม่สำเร็จ กรุณาลองใหม่อีกครั้ง หรือติดต่อร้านโดยตรงถ้ายังไม่หาย')
+      setSubmitError(err.message || 'จองไม่สำเร็จ ลองกดยืนยันอีกครั้งนะคะ ถ้ายังไม่ได้ ทักหรือโทรหาร้านได้เลยค่ะ')
     } finally {
       setSubmitting(false)
     }
@@ -329,7 +329,7 @@ export default function BookingWizard() {
         <div className="glass-solid rounded-3xl p-10">
           <CrownBear className="mx-auto mb-2 w-28" />
           <h2 className="font-display text-2xl font-semibold text-gray-800">จองคิวสำเร็จแล้ว</h2>
-          <p className="text-gray-500 mt-2">ขอบคุณที่ใช้บริการ Lucky Salon</p>
+          <p className="text-gray-500 mt-2">ขอบคุณที่เลือก Lucky Salon นะคะ แล้วเจอกันค่ะ</p>
 
           <div className="mt-6 bg-blush-50 border border-blush-200 rounded-2xl p-5 max-w-xs mx-auto text-left space-y-2.5">
             {bookingResult?.all ? (
@@ -377,7 +377,7 @@ export default function BookingWizard() {
             <ul className="mt-2 space-y-1.5 text-xs text-amber-900/80 leading-relaxed list-disc pl-4">
               <li>เก็บ<b>รหัสคิว</b>ไว้ (แคปหน้าจอนี้ หรือกดคัดลอก) ใช้คู่กับเบอร์โทรเพื่อดูสถานะ เลื่อน หรือยกเลิกคิว</li>
               <li>ดูได้ตลอดที่หน้า <a href="/history" className="underline font-semibold">ประวัติของฉัน</a> เครื่องนี้จำรหัสคิวไว้ให้แล้ว</li>
-              <li>ถ้ายังไม่ผูก LINE จะไม่มีข้อความแจ้งเตือน กรุณาเข้ามาเช็กสถานะก่อนวันนัด หรือโทรหาร้าน</li>
+              <li>ถ้ายังไม่ได้ผูก LINE จะยังไม่มีข้อความเตือนนะคะ แวะเข้ามาเช็กสถานะก่อนวันนัด หรือโทรถามร้านได้เลยค่ะ</li>
             </ul>
             {bookingResult?.booking_code && (
               <button
@@ -437,7 +437,7 @@ export default function BookingWizard() {
     <section id="booking" className="max-w-4xl mx-auto px-6 py-16">
       <div className="text-center mb-2">
         <h2 className="font-display text-3xl font-semibold text-gray-800">จองคิวออนไลน์</h2>
-        <p className="text-gray-500 mt-2">ดูปฏิทิน เลือกเวลาว่าง และเลือกบริการที่ต้องการได้ในที่เดียว</p>
+        <p className="text-gray-500 mt-2">เลือกบริการ วัน และเวลาที่สะดวก แล้วกรอกชื่อกับเบอร์โทรก็เสร็จแล้วค่ะ</p>
       </div>
 
       <div className="glass-solid rounded-3xl p-6 sm:p-10 mt-8">

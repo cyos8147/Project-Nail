@@ -34,7 +34,7 @@ export default function Hero() {
             <Icon name="heart" className="ml-2 inline-block h-8 w-8 sm:h-10 sm:w-10 -translate-y-2 text-[#D6336C]" strokeWidth={1.4} />
           </p>
           <p style={{ animationDelay: '0.16s' }} className="lucky-fade-up mt-3 max-w-[30rem] mx-auto lg:mx-0 text-[#4B3A42] text-lg leading-8">
-            ดูราคาบริการ เลือกเวลาที่ว่าง และลองสีเล็บบนรูปมือของคุณเองได้ในเว็บเดียว
+            เลือกสีที่ชอบ ลองบนรูปมือตัวเองก่อน ถูกใจแล้วค่อยจองเวลาที่สะดวกได้เลยค่ะ
           </p>
 
           <HeroDesignStrip className="lucky-fade-up mt-6 sm:hidden" />
@@ -45,7 +45,7 @@ export default function Hero() {
               <Icon name="arrow" className="h-4 w-4" />
             </Link>
             <a href="#services" className="btn-candy-soft px-8 py-3.5 text-base">
-              ดูรายละเอียดบริการ
+              ดูบริการและราคา
             </a>
           </div>
 
