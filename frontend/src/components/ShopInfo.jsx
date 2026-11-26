@@ -3,7 +3,6 @@ import { getPublicHolidays, getShopSettings } from '../api/client.js'
 import { longDate } from '../utils/dashboardFormat.js'
 import { toWeekRows } from '../utils/shopHours.js'
 import SectionTitle from './SectionTitle.jsx'
-import { SatinBow } from './Decor.jsx'
 
 // ลิงก์โซเชียลของร้าน ใส่เพิ่มได้ตรงนี้ เช่น { label: 'Facebook', href: 'https://facebook.com/ชื่อเพจ' }
 // ถ้าปล่อยว่างไว้จะไม่แสดงส่วนนี้
@@ -146,7 +145,6 @@ export default function ShopInfo({ embedded = false }) {
 
       <div className={hasContact ? `grid gap-5 ${embedded ? '' : 'md:grid-cols-2'}` : embedded ? '' : 'mx-auto max-w-md'}>
         <div className="relative rounded-[24px] glass-solid p-6">
-          <SatinBow className="pointer-events-none absolute -top-7 -right-5 w-20 rotate-[16deg]" />
           <h3 className="flex items-center gap-2 font-semibold text-[#4A2A37]">
             <span className="text-rose-500">
               <ClockIcon />

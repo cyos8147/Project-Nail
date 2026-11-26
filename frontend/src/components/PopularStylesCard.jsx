@@ -4,7 +4,6 @@ import { saveCarryDesign } from '../utils/carryDesign.js'
 import { getNailDesigns } from '../api/client.js'
 import { Bone } from './Skeleton.jsx'
 import Icon from './Icon.jsx'
-import { GlassHeart, SatinBow } from './Decor.jsx'
 
 // การ์ดลายเล็บยอดนิยม (หน้าแรก) แบบสไลด์โชว์
 // - เปลี่ยนภาพเองทุก SLIDE_MS: ภาพใหม่ค่อย ๆ จางเข้า + ซูมช้า ๆ + แสงสะท้อนวิ่งผ่านหนึ่งครั้ง
@@ -84,10 +83,7 @@ export default function PopularStylesCard() {
   }
 
   return (
-    <div className="relative mx-auto w-full max-w-sm md:max-w-md lg:max-w-none lg:rotate-[4deg]">
-      {/* โบว์ซาตินที่มุมการ์ด */}
-      <div className="lucky-bow-pop pointer-events-none absolute -top-16 -right-10 z-20 w-28 xl:w-36"><SatinBow className="w-full rotate-[18deg]" /></div>
-      <GlassHeart className="pointer-events-none absolute -top-5 -left-3 z-20 w-10 -rotate-12" />
+    <div className="relative mx-auto w-full max-w-sm md:max-w-md lg:max-w-none lg:rotate-[3deg]">
       <div className="lucky-3d" onPointerMove={onTiltMove} onPointerLeave={resetTilt}>
       <div
         ref={tiltRef}
@@ -98,18 +94,18 @@ export default function PopularStylesCard() {
         onPointerLeave={(e) => e.pointerType === 'mouse' && setHovering(false)}
         onFocus={(e) => e.target.matches?.(':focus-visible') && setFocused(true)}
         onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setFocused(false)}
-        className="lucky-3d-inner glass relative rounded-[30px] p-5 sm:p-6"
+        className="lucky-3d-inner glass relative rounded-[28px] p-5 sm:p-6"
       >
         <div className="lucky-z1 flex items-center justify-between gap-2 pl-1">
-          <h2 className="flex items-center gap-2 font-display text-xl font-semibold text-[#4A2A37]">
-            <Icon name="heart" className="h-5 w-5 text-rose-400" />
+          <h2 className="flex items-center gap-2 text-xl font-semibold text-[#2E1F26]">
+            <Icon name="sparkle" className="h-5 w-5 text-[#D6336C]" />
             ลายเล็บยอดนิยม
           </h2>
         </div>
 
         <div className="lucky-z2 relative mt-4">
           <div
-            className="relative aspect-[4/3] rounded-[20px] overflow-hidden bg-rose-50 select-none border-[5px] border-white/90 shadow-[0_14px_30px_-18px_rgba(150,40,85,0.6)]"
+            className="relative aspect-[4/3] rounded-[20px] overflow-hidden bg-rose-50 select-none border border-[#2E1F26]/[0.06]"
             style={{ touchAction: 'pan-y' }}
             onPointerDown={onPointerDown}
             onPointerUp={onPointerUp}

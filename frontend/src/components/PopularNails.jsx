@@ -5,7 +5,7 @@ import { getNailDesigns } from '../api/client.js'
 import NailThumb from './NailThumb.jsx'
 import { Bone } from './Skeleton.jsx'
 import Icon from './Icon.jsx'
-import { Sparkle } from './Decor.jsx'
+import { Star } from './Stars.jsx'
 
 const fallbackNails = [
   { id: 'f1', name: 'Minimal Nude', sample: true, accent: '#E8C39E' },
@@ -52,7 +52,7 @@ export default function PopularNails() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="flex items-center gap-2 font-display text-2xl font-semibold text-[#4A2A37]">
-            <Sparkle className="h-6 w-6 text-rose-400" />
+            <Star className="h-6 w-6" />
             ลายเล็บของร้าน
           </h2>
           <p className="mt-1 text-sm text-[#7A4A5E]">แตะลายที่ชอบเพื่อจองได้เลย</p>

@@ -5,7 +5,7 @@ import Icon from './Icon.jsx'
 
 // เมนูหลัก: ทุกลิงก์ชี้ไปที่เดิมเหมือนก่อนเปลี่ยนดีไซน์
 const navItems = [
-  { label: 'หน้าแรก', href: '/#home', icon: 'home', match: '/' },
+  { label: 'หน้าหลัก', href: '/#home', icon: 'home', match: '/' },
   { label: 'จองคิว', to: '/booking', icon: 'calendar', match: '/booking' },
   { label: 'ลายเล็บ', href: '/#popular', icon: 'image', match: '/gallery' },
   { label: 'บริการ', href: '/#services', icon: 'star' },
@@ -60,20 +60,17 @@ export default function Header() {
     return () => window.removeEventListener('keydown', onKey)
   }, [menuOpen])
   const { pathname } = useLocation()
-  const pill = 'inline-flex items-center gap-1.5 rounded-full px-4 xl:px-3 py-2 text-sm xl:text-[13px] font-display font-semibold whitespace-nowrap transition-colors'
 
   return (
-    <header className="sticky top-0 z-50" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-      {/* ม่านกระจกบาง ๆ ให้เมนูอ่านออกเมื่อเลื่อนทับเนื้อหา */}
-      <div aria-hidden="true" className="absolute inset-0 bg-[#FCE6EE]/80 backdrop-blur-lg [mask-image:linear-gradient(180deg,#000_78%,transparent)]" />
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap xl:flex-nowrap items-center justify-between gap-x-3 gap-y-2">
-        <a href="/#home" className="pt-2 shrink-0" aria-label="Lucky Salon หน้าแรก">
+    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#2E1F26]/[0.06]" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+        <a href="/#home" className="shrink-0" aria-label="Lucky Salon หน้าหลัก">
           <BrandLogo />
         </a>
 
-        {/* เมนูแคปซูลกระจก เมนูที่อยู่ตอนนี้เป็นปุ่มชมพูเต็ม */}
+        {/* เมนูหลัก: ตัวหนังสือล้วนในกรอบมนบาง ๆ เมนูที่อยู่ตอนนี้เป็นสีชมพูมีเส้นใต้ */}
         <nav aria-label="เมนูหลัก" className="hidden xl:flex">
-          <div className="glass flex items-center gap-0.5 rounded-full p-1 whitespace-nowrap">
+          <div className="flex items-center gap-1 rounded-full border border-[#2E1F26]/[0.07] bg-white px-3 py-1 whitespace-nowrap">
             {navItems.map((item) => {
               const active = item.match === pathname
               return (
@@ -81,31 +78,25 @@ export default function Header() {
                   key={item.label}
                   item={item}
                   active={active}
-                  className={`${pill} ${active ? 'text-white bg-gradient-to-b from-[#D6336C] to-[#B4235A] shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_6px_14px_-6px_rgba(201,51,106,0.7)]' : 'text-[#6E4255] hover:bg-white/70 hover:text-berry'}`}
+                  className={`relative px-4 py-2.5 text-[15px] transition-colors ${active ? 'text-[#C2185B] font-semibold' : 'text-[#3A2A31] hover:text-[#C2185B]'}`}
                 >
-                  <NavIcon name={item.icon} />
                   {item.label}
+                  {active && <span aria-hidden="true" className="absolute left-3 right-3 -bottom-px h-[2px] rounded-full bg-[#D6336C]" />}
                 </NavLink>
               )
             })}
           </div>
         </nav>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <Link
             to="/history"
-            className={`glass hidden md:inline-flex ${pill} ${pathname === '/history' ? 'text-berry' : 'text-[#6E4255] hover:text-berry'}`}
+            className={`hidden md:inline-flex items-center gap-1.5 rounded-full border px-5 py-2.5 text-sm transition-colors ${pathname === '/history' ? 'border-[#F3B4CB] text-[#C2185B]' : 'border-[#2E1F26]/[0.1] text-[#3A2A31] hover:border-[#F3B4CB] hover:text-[#C2185B]'}`}
           >
+            <Icon name="sparkle" className="h-4 w-4 text-[#E2A93B]" />
             ประวัติของฉัน
           </Link>
-          <Link
-            to="/ai"
-            className={`glass hidden sm:inline-flex ${pill} ${pathname === '/ai' ? 'text-berry' : 'text-[#6E4255] hover:text-berry'}`}
-          >
-            <Icon name="sparkle" className="h-4 w-4 text-rose-500" />
-            ลองสีบนมือคุณ
-          </Link>
-          <Link to="/booking" className="btn-candy hidden md:inline-flex text-sm xl:text-[13px] px-5 xl:px-4 py-2.5">
+          <Link to="/booking" className="btn-candy hidden md:inline-flex text-sm px-6 py-3">
             <NavIcon name="calendar" />
             จองคิวเลย
           </Link>
@@ -115,37 +106,39 @@ export default function Header() {
             onClick={() => setMenuOpen((v) => !v)}
             aria-label={menuOpen ? 'ปิดเมนู' : 'เปิดเมนู'}
             aria-expanded={menuOpen}
-            className="glass-btn xl:hidden w-11 h-11 flex-shrink-0 flex-col gap-1.5"
+            className="w-11 h-11 flex-shrink-0 inline-flex flex-col items-center justify-center gap-1.5 rounded-full hover:bg-[#FFF1F6] focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-[#F9A8C9]"
           >
-            <span className={`block w-4 h-0.5 bg-rose-600 rounded-full transition-transform ${menuOpen ? 'translate-y-2 rotate-45' : ''}`} />
-            <span className={`block w-4 h-0.5 bg-rose-600 rounded-full transition-opacity ${menuOpen ? 'opacity-0' : ''}`} />
-            <span className={`block w-4 h-0.5 bg-rose-600 rounded-full transition-transform ${menuOpen ? '-translate-y-2 -rotate-45' : ''}`} />
+            <span className={`block w-6 h-0.5 bg-[#D6336C] rounded-full transition-transform ${menuOpen ? 'translate-y-2 rotate-45' : ''}`} />
+            <span className={`block w-6 h-0.5 bg-[#D6336C] rounded-full transition-opacity ${menuOpen ? 'opacity-0' : ''}`} />
+            <span className={`block w-6 h-0.5 bg-[#D6336C] rounded-full transition-transform ${menuOpen ? '-translate-y-2 -rotate-45' : ''}`} />
           </button>
         </div>
       </div>
 
       {menuOpen && (
-        <button type="button" aria-label="ปิดเมนู" onClick={() => setMenuOpen(false)} className="fixed inset-0 z-40 cursor-default bg-[#3D2230]/10 xl:hidden" />
+        <button type="button" aria-label="ปิดเมนู" onClick={() => setMenuOpen(false)} className="fixed inset-0 z-40 cursor-default bg-[#2E1F26]/10" />
       )}
       {menuOpen && (
-        <nav aria-label="เมนูมือถือ" className="glass-solid absolute left-0 right-0 top-full z-50 xl:hidden mx-4 rounded-[24px] px-4 py-2 flex flex-col text-[15px] font-display font-semibold text-[#4A2A37]">
+        <nav aria-label="เมนูมือถือ" className="glass-solid absolute right-4 left-4 sm:left-auto sm:w-80 top-full z-50 mt-2 rounded-[24px] px-4 py-2 flex flex-col text-[15px] text-[#3A2A31]">
           {navItems.map((item) => (
             <NavLink
               key={item.label}
               item={item}
               active={item.match === pathname}
               onClick={() => setMenuOpen(false)}
-              className="flex items-center gap-3 py-3 border-b border-rose-100/80 last:border-0 hover:text-berry"
+              className={`flex items-center gap-3 py-3 border-b border-[#2E1F26]/[0.06] last:border-0 hover:text-[#C2185B] ${item.match === pathname ? 'text-[#C2185B] font-semibold' : ''}`}
             >
-              <NavIcon name={item.icon} className="h-[18px] w-[18px] text-rose-400" />
+              <NavIcon name={item.icon} className="h-[18px] w-[18px] text-[#E0457E]" />
               {item.label}
             </NavLink>
           ))}
-          <Link to="/history" onClick={() => setMenuOpen(false)} className="py-3 border-t border-rose-100/80 hover:text-berry md:hidden">
-            ประวัติของฉัน
-          </Link>
-          <Link to="/ai" onClick={() => setMenuOpen(false)} className="py-3 border-t border-rose-100/80 hover:text-berry sm:hidden">
+          <Link to="/ai" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 py-3 border-t border-[#2E1F26]/[0.06] hover:text-[#C2185B]">
+            <Icon name="hand" className="h-[18px] w-[18px] text-[#E0457E]" />
             ลองสีบนมือคุณ
+          </Link>
+          <Link to="/history" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 py-3 border-t border-[#2E1F26]/[0.06] hover:text-[#C2185B] md:hidden">
+            <Icon name="clock" className="h-[18px] w-[18px] text-[#E0457E]" />
+            ประวัติของฉัน
           </Link>
         </nav>
       )}

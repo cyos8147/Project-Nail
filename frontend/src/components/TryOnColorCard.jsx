@@ -1,7 +1,7 @@
 import { useId, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from './Icon.jsx'
-import { Sparkle } from './Decor.jsx'
+import { Star } from './Stars.jsx'
 
 // ส่วน "ลองสี" ในหน้าแรก: เลือกสีจากแผงปลายเล็บ แล้วเห็นเล็บ 3D เปลี่ยนสีตาม
 // กดปุ่มเพื่อไปลองสีบนรูปมือของตัวเองที่หน้า AI (ปลายทางเดิม)
@@ -89,12 +89,13 @@ export default function TryOnColorCard() {
   }
 
   return (
-    <div className="glass relative min-w-0 rounded-[30px] p-5 sm:p-6 flex flex-col">
-      <h2 className="flex items-center gap-2 font-display text-2xl font-semibold text-[#4A2A37]">
-        <Sparkle className="h-6 w-6 text-rose-400" />
+    <div className="glass relative min-w-0 rounded-[30px] p-5 sm:p-8 grid gap-x-10 gap-y-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-center">
+      <div className="min-w-0">
+      <h2 className="flex items-center gap-2.5 text-2xl font-semibold text-[#2E1F26]">
+        <Star className="h-6 w-6" />
         ลองเลือกสีที่ชอบ
       </h2>
-      <p className="mt-1 text-sm text-[#7A4A5E]">แตะสีเพื่อดูบนเล็บ แล้วไปลองบนรูปมือของคุณเองได้เลย</p>
+      <p className="mt-1 text-[#5B4650]">แตะสีเพื่อดูบนเล็บ แล้วไปลองบนรูปมือของคุณเองได้เลย</p>
 
       <div role="radiogroup" aria-label="เลือกสีเล็บ" className="mt-4 flex flex-wrap gap-2.5 py-2">
         {SWATCHES.map((s) => (
@@ -102,18 +103,23 @@ export default function TryOnColorCard() {
         ))}
       </div>
 
+      <Link to="/ai" className="btn-candy mt-5 hidden lg:inline-flex px-7 py-3">
+        <Icon name="hand" /> ลองสีบนมือคุณ
+      </Link>
+      </div>
+
       {/* กรอบตัวอย่าง: รูปมือจริงเป็นฉาก + เล็บ 3D แสดงสีที่เลือก + ปุ่มเครื่องมือด้านขวา */}
-      <div className="relative mt-3 flex-1 min-h-[220px] overflow-hidden rounded-[22px] border-[5px] border-white/90 shadow-[0_14px_30px_-18px_rgba(150,40,85,0.6)]">
+      <div className="relative mt-3 lg:mt-0 min-h-[240px] overflow-hidden rounded-[22px] border border-[#2E1F26]/[0.06]">
         <img src="/photos/tryon-hand.webp" alt="" aria-hidden="true" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover object-[60%_55%] saturate-50 blur-[2px]" />
-        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-[#FFF3F7]/95 via-[#FFF3F7]/75 to-[#FFF3F7]/35" />
+        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/75 to-white/30" />
 
         <div className="lucky-3d relative flex h-full items-center gap-3 p-4">
           <div key={selected.hex} className="lucky-nail-turn w-24 sm:w-28 shrink-0" style={{ transformStyle: 'preserve-3d' }}>
             <Nail3D hex={selected.hex} />
           </div>
           <div className="min-w-0">
-            <p className="text-xs text-[#7A4A5E]">สีที่เลือก</p>
-            <p className="font-display text-lg font-semibold text-[#4A2A37]">{selected.th}</p>
+            <p className="text-xs text-[#6B5560]">สีที่เลือก</p>
+            <p className="text-lg font-semibold text-[#2E1F26]">{selected.th}</p>
           </div>
         </div>
 
@@ -122,7 +128,7 @@ export default function TryOnColorCard() {
             const inner = (
               <>
                 <span className="glass-btn h-11 w-11"><Icon name={t.icon} /></span>
-                <span className="text-[11px] font-display font-semibold leading-none text-[#4A2A37]">{t.label}</span>
+                <span className="text-[11px] font-medium leading-none text-[#2E1F26]">{t.label}</span>
               </>
             )
             const cls = 'flex flex-col items-center gap-1 rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-400'
@@ -135,7 +141,7 @@ export default function TryOnColorCard() {
         </div>
       </div>
 
-      <Link to="/ai" className="btn-candy mt-5 self-start px-7 py-3">
+      <Link to="/ai" className="btn-candy mt-5 justify-self-start lg:hidden px-7 py-3">
         <Icon name="hand" /> ลองสีบนมือคุณ
       </Link>
     </div>

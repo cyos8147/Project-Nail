@@ -29,7 +29,7 @@ async function findNext(categoryId, duration) {
   return null
 }
 
-export default function NextFreeSlot({ className = '' }) {
+export default function NextFreeSlot({ className = '', bare = false }) {
   const [items, setItems] = useState(null)
 
   useEffect(() => {
@@ -59,28 +59,42 @@ export default function NextFreeSlot({ className = '' }) {
   if (!items?.length) return null
 
   // แต่ละหมวดเป็นลิงก์ของตัวเอง และบอกชื่อบริการที่ใช้คำนวณเวลา (ไม่สัญญาเกินกว่าที่หน้าจองเลือกให้)
+  const list = (
+    <ul>
+      {items.map((it) => (
+        <li key={it.id}>
+          <Link
+            to={`/booking?service=${encodeURIComponent(it.serviceId)}`}
+            className="group inline-flex min-h-[44px] max-w-full items-center gap-1.5 rounded-full text-[#5B4650] hover:text-[#C2185B] focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-400"
+          >
+            <span className="min-w-0">
+              <span className="font-semibold text-[#C2185B] tabular-nums">{it.when}</span> · {it.serviceName}
+            </span>
+            <span className="shrink-0 rounded-full bg-[#FFEAF2] px-2 py-0.5 text-xs font-medium text-[#C2185B]">เลือกเวลา</span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  )
+
+  // bare: ใช้ซ้อนในการ์ดอื่น (เช่นการ์ดเวลาทำการในหน้าแรก) ไม่วาดกรอบซ้ำ
+  if (bare) {
+    return (
+      <div className={`text-sm leading-snug ${className}`}>
+        <p className="font-medium text-[#2E1F26]">ว่างเร็วสุด</p>
+        {list}
+      </div>
+    )
+  }
+
   return (
     <div className={`glass inline-flex max-w-full items-start gap-3 rounded-[22px] py-2.5 pl-2.5 pr-3 text-left ${className}`}>
-      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/90 text-berry">
+      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FFEAF2] text-[#C2185B]">
         <Icon name="clock" className="h-[18px] w-[18px]" />
       </span>
       <div className="min-w-0 text-sm leading-snug">
-        <p className="font-display font-semibold text-[#4A2A37]">ว่างเร็วสุด</p>
-        <ul>
-          {items.map((it) => (
-            <li key={it.id}>
-              <Link
-                to={`/booking?service=${encodeURIComponent(it.serviceId)}`}
-                className="group inline-flex min-h-[44px] max-w-full items-center gap-1.5 rounded-full text-[#6E4255] hover:text-berry focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-400"
-              >
-                <span className="min-w-0">
-                  <span className="font-semibold text-berry tabular-nums">{it.when}</span> · {it.serviceName}
-                </span>
-                <span className="shrink-0 rounded-full bg-white/80 px-2 py-0.5 text-xs font-semibold text-berry">เลือกเวลา</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <p className="font-medium text-[#2E1F26]">ว่างเร็วสุด</p>
+        {list}
       </div>
     </div>
   )

@@ -10,7 +10,7 @@ import MobileStickyBar from '../components/MobileStickyBar.jsx'
 import DreamyBackground from '../components/DreamyBackground.jsx'
 import Reveal from '../components/Reveal.jsx'
 import Icon from '../components/Icon.jsx'
-import { CrownBear, PolishBottle } from '../components/Decor.jsx'
+import ServicesPreview from '../components/ServicesPreview.jsx'
 
 // จุดเด่นของร้าน (ข้อความอย่างเดียว ไม่มีปุ่ม)
 // ไอคอนเส้นวาดเอง (แทนอีโมจิ ซึ่งแสดงต่างกันในแต่ละเครื่องและดูไม่เป็นแบรนด์)
@@ -25,36 +25,38 @@ const HIGHLIGHTS = [
 function HighlightBar() {
   return (
     <section className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-4">
-      <ul className="glass rounded-[28px] xl:rounded-full px-4 py-4 xl:px-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-y-4 xl:divide-x xl:divide-white/90">
+      <ul className="glass rounded-[28px] xl:rounded-full px-4 py-4 xl:px-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-y-4 xl:divide-x xl:divide-[#2E1F26]/[0.06]">
         {HIGHLIGHTS.map((h) => (
           <li key={h.title} className="flex items-center gap-3 px-2 xl:px-4">
-            <span className="glass-btn h-11 w-11 shrink-0 !cursor-default hover:!transform-none">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FFEAF2] text-[#C2185B]">
               <Icon name={h.icon} className="h-5 w-5" />
             </span>
             <span className="text-left leading-snug">
-              <span className="block text-sm font-display font-semibold text-[#4A2A37]">{h.title}</span>
-              <span className="block text-xs text-[#7A4A5E]">{h.sub}</span>
+              <span className="block text-sm font-semibold text-[#2E1F26]">{h.title}</span>
+              <span className="block text-xs text-[#6B5560]">{h.sub}</span>
             </span>
           </li>
         ))}
       </ul>
-      {/* น้องหมีมงกุฎนั่งท้ายแถบ (เหมือนภาพตัวอย่าง) */}
-      <CrownBear className="pointer-events-none hidden xl:block absolute -right-28 -bottom-6 w-32 xl:w-36" />
     </section>
   )
 }
 
 export default function HomePage() {
   return (
-    <div className="relative isolate min-h-screen text-gray-800 pb-20 md:pb-0 overflow-x-clip">
+    <div className="relative isolate min-h-screen text-[#2E1F26] pb-20 md:pb-0 overflow-x-clip">
       <DreamyBackground variant="full" />
       <Header />
       <Hero />
       <Reveal>
-        <section className="relative max-w-7xl mx-auto px-4 sm:px-6 grid gap-6 lg:grid-cols-[5fr_7fr] items-start">
-          <TryOnColorCard />
+        <section className="relative max-w-7xl mx-auto px-4 sm:px-6 grid gap-6 lg:grid-cols-2 items-start">
           <PopularNails />
-          <PolishBottle className="pointer-events-none hidden xl:block absolute -left-20 bottom-[-28px] w-24 -rotate-[8deg]" />
+          <ServicesPreview />
+        </section>
+      </Reveal>
+      <Reveal>
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
+          <TryOnColorCard />
         </section>
       </Reveal>
       <Reveal><HighlightBar /></Reveal>

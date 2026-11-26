@@ -56,16 +56,17 @@ The site succeeds when a visitor goes from "I like this design" to a confirmed b
 ## Brand Commitments
 
 - **Name and logo:** "Lucky Salon", subtitle "Hair & Nail". The owner supplied the real logo on 2026-11-26: a gold line-art woman in profile with long flowing hair, inside a circle with leafy branches. The cut-out files are `frontend/public/logo-mark.png` (emblem only) and `frontend/public/logo-full.png` (with the name). Use these files and never redraw the logo. The site shows the emblem next to the script wordmark. Never "Nailly"; that name appears in early mockups only.
-- **Visual reference made binding by the owner:** the pink "Nailly" mockup and the Lucky Salon services mockup supplied in the conversation of 2026-11-25. They show:
-  - a dreamy pink salon photo backdrop with frosted-glass cards;
-  - a pill navigation bar with icons;
-  - a script headline "It's your style";
-  - a Popular Styles photo card, a Try On Color card, and an "Our Nails" photo strip;
-  - a highlight bar of four features;
-  - satin bows, ribbons, glossy hearts and sparkles as decoration;
-  - glossy candy-pink buttons.
+- **Visual reference made binding by the owner:** the "clean white" mockup supplied on 2026-11-26. It replaces the earlier pink dreamy-glass mockups and shows:
+  - a white header with an underlined active nav item;
+  - a large photo of a manicured hand fading to white behind the headline;
+  - the script line "It's your style";
+  - a white tilted card of popular designs;
+  - an opening-hours card;
+  - white "ลายเล็บยอดนิยม" and "บริการของเรา" cards;
+  - flat pink pill buttons;
+  - pink stars before headings.
 
-  The owner wants the site to look like these references.
+  There are no floating bows or hearts. The owner chose to keep the try-on card and the next-free-slot box in the same style.
 - **Voice:** sweet, friendly and caring, like a nail technician who pays attention to detail.
 
 ## Evidence on Hand

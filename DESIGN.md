@@ -1,69 +1,72 @@
 # Design
 
-Visual system of the Lucky Salon customer site, as built on 2026-11-25. The owner made the pink mockups binding (see PRODUCT.md › Brand Commitments). The admin pages are out of scope.
+Visual system of the Lucky Salon customer site, rebuilt on 2026-11-26 from the owner's "clean white" mockup (it replaces the earlier dreamy-glass look). The admin pages are out of scope.
 
 ## World
 
-A dreamy pink nail salon, seen through frosted glass. A softly blurred photo of the shop, tinted pink, sits behind everything. Content lives on frosted pink-white glass cards. Satin bows, ribbons, glossy hearts and white sparkles decorate the edges and never sit on top of text.
+A bright white nail desk in soft window light, with cream knit and pink polish. Chrome stays quiet (white surfaces, hairlines, one pink accent). The color and craft go into the photos of nail work: the hero hand photo, the design carousel and the design tiles.
 
 ## Color
 
 | Role | Value | Use |
 |---|---|---|
-| Ground | `#FBE3EC` plus `public/photos/salon-backdrop.webp` under a pink wash | page background (`DreamyBackground`) |
-| Ink | `#3D2230` / `#4A2A37` | headings, body |
-| Ink soft | `#7A4A5E` / `#6E4255` | secondary text on glass (rose-tinted, never gray) |
-| Accent | `#EC4C82`, gradient from `#F88AB0` | primary buttons, active nav, prices (`text-rose-600`) |
-| Decoration | `#F9A9C8`, `#FFE0EC`, white | bows, hearts, ribbons, sparkles |
+| Ground | `#FFF8FA`, soft gradient `#FFFAFB → #FFF6F9` | page background (`DreamyBackground`, no photo, no decoration) |
+| Surface | `#FFFFFF` + hairline `rgba(46,31,38,0.06)` | every card (`.glass` / `.glass-solid` now mean white card) |
+| Ink | `#2E1F26` | headings, body |
+| Ink soft | `#5B4650` / `#6B5560` | secondary text |
+| Accent | `#D6336C → #C2185B` | primary buttons, active nav underline, prices (`#C2185B`) |
+| Accent tint | `#FFEAF2` | badges, "ดูทั้งหมด" pills, icon circles |
+| Star | `#E0457E` | filled star before headings, review stars |
+| Logo gold | `#AB7D1F` | only inside the logo files, never as a UI colour |
 
 ## Surfaces (`src/index.css`)
 
-- **`.glass`**: frosted pink-white card. It has a 16px backdrop blur, a white hairline rim, an inner top highlight and a soft plum drop shadow. Use it for home cards, service rows and gallery cards.
-- **`.glass-solid`**: a more opaque version for forms, booking steps, history and long text.
-- **`.glass-btn`**: round glass button for chevrons, tool icons and small secondary links.
-- **`.btn-candy` / `.btn-candy-soft`**: glossy candy buttons with a dashed "stitch". Each screen has one primary action.
-- **Radii:**
-  - glass cards: 24–30px;
-  - photo frames: a 5px white border at 20–22px radius;
-  - pills: fully rounded.
+- **`.glass` / `.glass-solid`:** white card with a hairline border and a soft pink-tinted drop shadow. Cards are 22–30px radius.
+- **`.glass-btn`:** white circle or pill with a pink icon or text, and a pink tint on hover.
+- **`.btn-candy`:** the primary pill. Pink gradient, soft shadow, Prompt 500. The class names are kept from the old design so every page picked up the new look without logic edits.
+- **`.btn-candy-soft`:** the secondary pill. White with a pink border and pink text.
+- **Photo frames:** a 1px hairline at 20–22px radius.
 
 ## Type
 
-- **Mali** (`font-display`): headings and buttons, weight 600, line-height 1.4 or more for Thai.
-- **Prompt**: body text.
-- **Great Vibes** (`font-script`): Latin-only accent lines such as "It's your style" and the logo. Never "AI" in script.
+- **Prompt:** headings and body on customer pages. This is scoped by `.lucky-page` in `index.css`, so admin keeps its fonts. Headings use weight 600–700 with a Thai line-height of 1.3 or more.
+- **Wordmark:** "Lucky" in pink and "Salon" in ink, Prompt 600, beside the gold emblem, with the subtitle "Hair & Nail Salon".
+- **Great Vibes** (`font-script`): only for "It's your style". Latin text only.
 
-## Logo
+## Layout signatures
 
-- **Source:** the owner's gold emblem, cut out of its background, at `public/logo-mark.png` (emblem only) and `public/logo-full.png` (with the name).
-- **Where it is used:**
-  - `BrandLogo` places the emblem beside the pink script "Lucky Salon".
-  - The splash shows the emblem large.
-  - The favicon and app icons use the emblem on cream (#FFF8F0).
-  - `og-image.jpg` uses the full logo.
-- **Colour:** the gold (#AB7D1F) appears only in the logo and is not used as a UI colour.
+- **Header:**
+  - a white bar;
+  - text-only nav inside a thin rounded outline, with the active item in pink and a 2px underline;
+  - an outlined "ประวัติของฉัน" pill with a gold sparkle;
+  - a pink "จองคิวเลย" pill;
+  - a hamburger at every width.
+- **Hero:**
+  - on desktop, the hand photo (`public/photos/hero-white.webp`) fills the right ~64% and fades to white toward the text; on phones it sits on top and fades downward;
+  - the headline and script sit on the faded area;
+  - the white carousel card is tilted 3° on the right;
+  - the hours card (`HoursCard`, real settings and holidays) includes "ว่างเร็วสุด".
+- **Section headers:** a filled pink star, the title, and a "ดูทั้งหมด" pill on the right.
+- **Home order:**
+  1. Hero
+  2. "ลายเล็บของร้าน" with "บริการของเรา" beside it (`ServicesPreview`)
+  3. Try-on card (two columns)
+  4. Feature bar
+  5. Full services list
+  6. Reviews with contact beside it
+  7. Footer
 
-## Decoration (`src/components/Decor.jsx`)
+## Decoration
 
-The decorations are all hand-authored SVG:
-
-- `SatinBow`, `GlassHeart`, `Sparkle`, `RibbonSwoosh`, `PolishBottle`, `CrownBear`.
-- `DreamyBackground variant="full"` is for the home page; `"calm"` is for the other pages and has fewer pieces.
-- Corner bows, and the bow on the Popular Styles card corner, are part of the identity.
-
-## Icons
-
-`src/components/Icon.jsx` is the single line-icon set, at 24×24 with a 1.5 stroke. No emoji in the UI.
+None floating. Bows, ribbons, hearts, the polish bottle and the bear were removed, though `Decor.jsx` still holds the drawings. `CrownBear` remains only on the 404 page and the booking-success screen.
 
 ## Motion
 
-- Entrance uses `lucky-fade-up` with ease `cubic-bezier(0.22,1,0.36,1)`.
-- Signature moments:
-  - the Popular Styles card has a 3D mouse tilt and a flip-in slideshow;
-  - the 3D nail in the try-on card turns when the color changes.
-- Nothing loops except the carousel autoplay, which pauses on hover, focus and hidden tabs.
-- All motion is disabled under `prefers-reduced-motion`.
+- **Entrance:** a short fade-up (`lucky-fade-up`) on the hero blocks.
+- **Carousel:** 3D tilt on mouse, flip-in slides and a progress dot.
+- **Try-on:** the 3D nail turns when the colour changes.
+- **Reduced motion:** all of the above is disabled under `prefers-reduced-motion`.
 
 ## Photos
 
-The files in `public/photos/` are Unsplash placeholders (see `CREDITS.txt`). Replace them with the shop's real photos and keep the same file names. Nail designs and service images come from admin uploads.
+The photos in `public/photos/` are Unsplash placeholders, listed in `CREDITS.txt`. Replace each one with a real shop photo under the same file name. Nail designs and service images come from admin uploads.

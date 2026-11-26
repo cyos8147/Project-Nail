@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { getShopSettings } from '../api/client.js'
 import BrandLogo from './BrandLogo.jsx'
 import Icon from './Icon.jsx'
-import { RibbonSwoosh } from './Decor.jsx'
 
 const QUICK_LINKS = [
   { label: 'จองคิว', to: '/booking', icon: 'calendar' },
@@ -24,9 +23,7 @@ export default function Footer() {
   const linkCls = 'inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-3 py-2 text-[#6E4255] transition-colors hover:bg-white/70 hover:text-berry'
 
   return (
-    <footer className="relative mt-12 overflow-hidden border-t border-white/80 bg-[#FFF5F8]/65 backdrop-blur-md">
-      {/* ริบบิ้นบาง ๆ คั่นด้านบนของท้ายเว็บ */}
-      <RibbonSwoosh className="pointer-events-none absolute -top-24 left-1/2 w-[46rem] -translate-x-1/2 opacity-45" style={{ rotate: '180deg' }} />
+    <footer className="relative mt-12 overflow-hidden border-t border-[#2E1F26]/[0.06] bg-white">
       <div className="relative max-w-6xl mx-auto px-6 py-10 grid gap-8 md:grid-cols-[auto_1fr] md:items-center">
         <div className="flex flex-col items-center md:items-start gap-2">
           <BrandLogo size="sm" />
@@ -48,7 +45,7 @@ export default function Footer() {
         </nav>
       </div>
 
-      <div className="relative border-t border-white/80">
+      <div className="relative border-t border-[#2E1F26]/[0.06]">
         <div className="max-w-6xl mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#7A4A5E]">
           <p>
             © 2026 Lucky Salon ·{' '}

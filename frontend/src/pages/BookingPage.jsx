@@ -11,7 +11,7 @@ export default function BookingPage() {
       <DreamyBackground />
 
       <div className="relative z-10">
-        <header className="sticky top-0 z-50 bg-[#FCE6EE]/55 backdrop-blur-md">
+        <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#2E1F26]/[0.06]">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
             <Link to="/" className="pt-2" aria-label="Lucky Salon หน้าแรก">
               <BrandLogo />

@@ -6,7 +6,7 @@ export default function MobileStickyBar() {
   const side = 'glass-btn flex-shrink-0 h-12 flex-col gap-0.5 px-3 text-xs font-display font-semibold leading-none'
   return (
     <div
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FFF5F8]/85 backdrop-blur-md border-t border-white/90 px-3 py-2.5 flex items-center gap-2"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#2E1F26]/[0.06] px-3 py-2.5 flex items-center gap-2"
       style={{ paddingBottom: 'max(0.625rem, env(safe-area-inset-bottom))' }}
     >
       <Link to="/history" className={side}>

@@ -3,7 +3,7 @@ const STAR = 'M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9
 
 export function Star({ filled = true, className = 'h-4 w-4' }) {
   return (
-    <svg viewBox="0 0 24 24" className={`${className} ${filled ? 'text-rose-500' : 'text-rose-200'}`} aria-hidden="true">
+    <svg viewBox="0 0 24 24" className={`${className} ${filled ? 'text-[#E0457E]' : 'text-[#F6C9D8]'}`} aria-hidden="true">
       <path d={STAR} fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" />
     </svg>
   )

@@ -5,7 +5,6 @@ import { Bone } from './Skeleton.jsx'
 import StarRow from './Stars.jsx'
 import SectionTitle from './SectionTitle.jsx'
 import Icon from './Icon.jsx'
-import { SatinBow } from './Decor.jsx'
 
 // แสดงเฉพาะรีวิวจริงจากระบบ (ไม่มีรีวิวตัวอย่างที่แต่งขึ้น)
 
@@ -44,7 +43,6 @@ export default function Reviews({ embedded = false }) {
 
         {reviews && reviews.length === 0 && (
           <div className={`relative rounded-[24px] glass p-8 text-center ${embedded ? '' : 'mx-auto max-w-md'}`}>
-            <SatinBow className="pointer-events-none absolute -top-7 -right-5 w-20 rotate-[16deg]" />
             <span className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-white/80 text-rose-400 shadow-[inset_0_1px_0_#fff,0_8px_18px_-10px_rgba(150,40,85,0.55)]">
               <Icon name="heart" className="h-7 w-7" />
             </span>
