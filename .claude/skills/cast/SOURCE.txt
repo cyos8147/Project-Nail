@@ -1,0 +1,4 @@
+Source: https://github.com/AThevon/genjutsu
+Commit: a22540b623590505879d6489dd03d7f3072bce05
+License: MIT
+Vendored: 2026-11-26

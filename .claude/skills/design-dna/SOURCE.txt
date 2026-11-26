@@ -1,0 +1,4 @@
+Source: https://github.com/zanwei/design-dna
+Commit: 593e39bc9e3652734653bd75544a333d7d43615e
+License: MIT
+Vendored: 2026-11-26
