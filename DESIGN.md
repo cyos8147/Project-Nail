@@ -65,6 +65,10 @@ None floating. Bows, ribbons, hearts, the polish bottle and the bear were remove
 - **Entrance:** a short fade-up (`lucky-fade-up`) on the hero blocks.
 - **Carousel:** 3D tilt on mouse, flip-in slides and a progress dot.
 - **Try-on:** the 3D nail turns when the colour changes.
+- **Booking nudge (home only)** lives in `useGloss.js` and in the `.lucky-gloss` / `.lucky-slot-rise` / `.lucky-live-dot` rules of `index.css`:
+  - A white "top coat" gloss sweeps across the pink book button (hero and mobile bar) in 900ms. It plays 1.2s after load, then repeats every 7s at most 3 times, and stops as soon as the visitor scrolls, taps or types. On desktop it also plays on hover.
+  - The button presses down to 0.97 in 120ms. On pointer devices it lifts 2px on hover.
+  - The earliest-free time rises in over 420ms. A green dot (`#2F9E6B`) marks it as live; the dot breathes 3 times and then stays still. It only renders when the API returns a real free slot.
 - **Reduced motion:** all of the above is disabled under `prefers-reduced-motion`.
 
 ## Photos

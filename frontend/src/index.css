@@ -206,7 +206,48 @@ html { scrollbar-color: #F09BBD transparent; scrollbar-width: thin; }
 }
 .lucky-bow-pop { animation: lucky-bow-pop 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.6s both; transform-origin: 40% 40%; }
 
+/* ===== หน้าแรก: ลูกเล่นชวนจอง =====
+   แสงเงาวาบผ่านปุ่มจอง 900ms (เหมือนท็อปโค้ต) · กดแล้วยุบ 0.97 ใน 120ms · ชี้แล้วลอย 2px (เฉพาะคอม)
+   เวลา "ว่างเร็วสุด" เลื่อนขึ้น 420ms · จุดเขียวข้อมูลสดกะพริบ 3 รอบแล้วนิ่ง */
+.lucky-gloss { overflow: hidden; isolation: isolate; }
+.lucky-gloss::after {
+  content: '';
+  position: absolute;
+  inset: -20% auto -20% 0;
+  width: 45%;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+  transform: translateX(-160%) skewX(-18deg);
+}
+@keyframes lucky-gloss { to { transform: translateX(330%) skewX(-18deg); } }
+.lucky-gloss.is-shining::after { animation: lucky-gloss 900ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.btn-candy.lucky-gloss { transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms cubic-bezier(0.22, 1, 0.36, 1), filter 0.15s ease; }
+.btn-candy.lucky-gloss:active { transform: scale(0.97); transition-duration: 120ms; }
+.lucky-slot-arrow { display: inline-block; transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1); }
+@media (hover: hover) and (pointer: fine) {
+  .btn-candy.lucky-gloss:hover { transform: translateY(-2px); }
+  .btn-candy.lucky-gloss:hover::after { animation: lucky-gloss 900ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .btn-candy.lucky-gloss:active { transform: scale(0.97); }
+  .group:hover .lucky-slot-arrow { transform: translateX(4px); }
+}
+@keyframes lucky-slot-rise {
+  from { opacity: 0.15; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.lucky-slot-rise { display: inline-block; animation: lucky-slot-rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes lucky-live { 50% { opacity: 0.4; } }
+.lucky-live-dot { animation: lucky-live 2.4s ease-in-out 3; }
+
 @media (prefers-reduced-motion: reduce) {
+  .lucky-gloss::after,
+  .lucky-slot-rise,
+  .lucky-live-dot { animation: none !important; }
+  .btn-candy.lucky-gloss,
+  .lucky-slot-arrow { transition: none !important; }
+  .btn-candy.lucky-gloss:hover,
+  .btn-candy.lucky-gloss:active,
+  .group:hover .lucky-slot-arrow { transform: none !important; }
   .lucky-orbit-draw,
   .lucky-bow-pop { animation: none !important; }
   .lucky-3d-inner { transform: none !important; transition: none !important; }

@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom'
 import Icon from './Icon.jsx'
+import useGloss from './useGloss.js'
 
 // แถบล่างบนมือถือ: ประวัติของฉัน (ลูกค้าประจำ) · ลองลายด้วย AI · จองคิว (ปุ่มหลักปุ่มเดียว)
-export default function MobileStickyBar() {
+// gloss: ปุ่มจองมีแสงเงาวาบ (ใช้ในหน้าแรกเท่านั้น)
+export default function MobileStickyBar({ gloss = false }) {
+  const glossRef = useGloss(gloss)
   const side = 'glass-btn flex-shrink-0 h-12 flex-col gap-0.5 px-3 text-xs font-display font-semibold leading-none'
   return (
     <div
@@ -17,7 +20,7 @@ export default function MobileStickyBar() {
         <Icon name="hand" className="h-5 w-5" />
         ลองสี
       </Link>
-      <Link to="/booking" className="btn-candy flex-1 py-3">
+      <Link ref={glossRef} to="/booking" className={`btn-candy flex-1 py-3${gloss ? ' lucky-gloss' : ''}`}>
         <Icon name="calendar" className="h-5 w-5" />
         จองคิวเลย
       </Link>

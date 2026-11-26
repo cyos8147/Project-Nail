@@ -59,6 +59,8 @@ export default function NextFreeSlot({ className = '', bare = false }) {
   if (!items?.length) return null
 
   // แต่ละหมวดเป็นลิงก์ของตัวเอง และบอกชื่อบริการที่ใช้คำนวณเวลา (ไม่สัญญาเกินกว่าที่หน้าจองเลือกให้)
+  // bare (การ์ดเวลาทำการหน้าแรก): จุดเขียวบอกว่าเป็นคิวว่างจริงจากระบบ กะพริบ 3 รอบแล้วนิ่ง
+  // และเวลาเลื่อนขึ้นตอนข้อมูลมาถึง (แสดงเฉพาะเมื่อเจอคิวว่างจริง ไม่มีก็ไม่แสดงทั้งแถว)
   const list = (
     <ul>
       {items.map((it) => (
@@ -68,9 +70,13 @@ export default function NextFreeSlot({ className = '', bare = false }) {
             className="group inline-flex min-h-[44px] max-w-full items-center gap-1.5 rounded-full text-[#5B4650] hover:text-[#C2185B] focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-400"
           >
             <span className="min-w-0">
-              <span className="font-semibold text-[#C2185B] tabular-nums">{it.when}</span> · {it.serviceName}
+              {bare && <span aria-hidden="true" className="lucky-live-dot mr-1.5 inline-block h-[7px] w-[7px] rounded-full bg-[#2F9E6B] align-middle" />}
+              <span className={`font-semibold text-[#C2185B] tabular-nums${bare ? ' lucky-slot-rise' : ''}`}>{it.when}</span> · {it.serviceName}
             </span>
-            <span className="shrink-0 rounded-full bg-[#FFEAF2] px-2 py-0.5 text-xs font-medium text-[#C2185B]">เลือกเวลา</span>
+            <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-[#FFEAF2] px-2 py-0.5 text-xs font-medium text-[#C2185B] group-hover:bg-[#FFDDE9]">
+              เลือกเวลา
+              <Icon name="chevronRight" className="lucky-slot-arrow h-3 w-3" />
+            </span>
           </Link>
         </li>
       ))}

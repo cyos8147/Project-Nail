@@ -68,7 +68,7 @@ export default function HomePage() {
         </div>
       </Reveal>
       <Footer />
-      <MobileStickyBar />
+      <MobileStickyBar gloss />
     </div>
   )
 }

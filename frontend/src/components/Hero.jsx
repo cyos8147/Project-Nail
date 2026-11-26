@@ -3,11 +3,13 @@ import PopularStylesCard from './PopularStylesCard.jsx'
 import Icon from './Icon.jsx'
 import HoursCard from './HoursCard.jsx'
 import HeroDesignStrip from './HeroDesignStrip.jsx'
+import useGloss from './useGloss.js'
 
 // Hero ดีไซน์ใหม่ (ขาวสะอาด): รูปมือทำเล็บเต็มพื้นที่ จางเป็นขาวทางซ้าย · ข้อความวางบนส่วนที่จาง ·
 // การ์ดสไลด์ลายเล็บสีขาวเอียงทางขวา · ใต้ปุ่มเป็นการ์ดเวลาทำการ (รวมว่างเร็วสุด)
 // รูปเป็นรูปชั่วคราว (public/photos/hero-white.webp) เปลี่ยนเป็นผลงานจริงได้โดยใช้ชื่อไฟล์เดิม
 export default function Hero() {
+  const glossRef = useGloss()
   return (
     <section id="home" className="relative scroll-mt-24 overflow-hidden">
       {/* รูปมือ: จอใหญ่อยู่ครึ่งขวาเต็มความสูง จางเข้าหาข้อความ / มือถืออยู่ด้านบน จางลงล่าง */}
@@ -40,7 +42,7 @@ export default function Hero() {
           <HeroDesignStrip className="lucky-fade-up mt-6 sm:hidden" />
 
           <div style={{ animationDelay: '0.24s' }} className="lucky-fade-up mt-8 hidden sm:flex flex-row items-center justify-center lg:justify-start gap-3">
-            <Link to="/booking" className="btn-candy px-8 py-3.5 text-base">
+            <Link ref={glossRef} to="/booking" className="btn-candy lucky-gloss px-8 py-3.5 text-base">
               <Icon name="calendar" /> จองคิวเลย
               <Icon name="arrow" className="h-4 w-4" />
             </Link>
