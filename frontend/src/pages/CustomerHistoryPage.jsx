@@ -171,7 +171,7 @@ export default function CustomerHistoryPage() {
             {status === 'loading' ? 'กำลังค้นหา...' : 'ดูประวัติ'}
           </button>
           <p className="text-xs text-[#6B5560] sm:col-span-3">
-            รหัสคิวอยู่ในหน้าจองสำเร็จ และในแชท LINE ของร้าน ถ้าจองจากเครื่องนี้ เว็บจำไว้ให้แล้วค่ะ
+            รหัสคิวอยู่ในหน้าจองสำเร็จ (และในแชท LINE ของร้าน ถ้าผูก LINE ไว้) ถ้าจองจากเครื่องนี้ เว็บจำไว้ให้แล้วค่ะ
           </p>
         </form>
         {error && <p className="text-sm text-red-500 text-center mt-3">{error}</p>}

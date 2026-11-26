@@ -20,6 +20,14 @@ const AdminReviewsPage = lazy(() => import('./pages/admin/AdminReviewsPage.jsx')
 const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage.jsx'))
 const AdminReportsPage = lazy(() => import('./pages/admin/AdminReportsPage.jsx'))
 import SplashIntro from './components/SplashIntro.jsx'
+import ChunkErrorBoundary from './components/ChunkErrorBoundary.jsx'
+
+// แต่ละหน้าแอดมินมี Suspense ของตัวเอง เมนูข้างของแอดมินจึงไม่หายตอนโหลดหน้าครั้งแรก
+const lazyPage = (Page) => (
+  <Suspense fallback={<div className="min-h-[40vh]" aria-busy="true" />}>
+    <Page />
+  </Suspense>
+)
 
 export default function App() {
   const { pathname, hash } = useLocation()
@@ -33,7 +41,7 @@ export default function App() {
     <>
     <SplashIntro />
     <div key={pageKey} className={pageKey === 'admin' ? undefined : 'lucky-page'}>
-    <Suspense fallback={<div className="min-h-screen" aria-busy="true" />}>
+    <ChunkErrorBoundary>
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/booking" element={<BookingPage />} />
@@ -43,21 +51,21 @@ export default function App() {
       <Route path="/history" element={<CustomerHistoryPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
 
-      <Route path="/admin/login" element={<AdminLoginPage />} />
-      <Route path="/admin" element={<AdminLayout />}>
-        <Route index element={<DashboardPage />} />
-        <Route path="reports" element={<AdminReportsPage />} />
-        <Route path="bookings" element={<AdminBookingsPage />} />
-        <Route path="customers" element={<AdminCustomersPage />} />
-        <Route path="services" element={<AdminServicesPage />} />
-        <Route path="designs" element={<AdminDesignsPage />} />
-        <Route path="reviews" element={<AdminReviewsPage />} />
-        <Route path="settings" element={<AdminSettingsPage />} />
+      <Route path="/admin/login" element={lazyPage(AdminLoginPage)} />
+      <Route path="/admin" element={lazyPage(AdminLayout)}>
+        <Route index element={lazyPage(DashboardPage)} />
+        <Route path="reports" element={lazyPage(AdminReportsPage)} />
+        <Route path="bookings" element={lazyPage(AdminBookingsPage)} />
+        <Route path="customers" element={lazyPage(AdminCustomersPage)} />
+        <Route path="services" element={lazyPage(AdminServicesPage)} />
+        <Route path="designs" element={lazyPage(AdminDesignsPage)} />
+        <Route path="reviews" element={lazyPage(AdminReviewsPage)} />
+        <Route path="settings" element={lazyPage(AdminSettingsPage)} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
-    </Suspense>
+    </ChunkErrorBoundary>
     </div>
     </>
   )

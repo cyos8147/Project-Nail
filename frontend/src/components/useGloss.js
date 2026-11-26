@@ -2,19 +2,21 @@ import { useEffect, useRef } from 'react'
 
 // แสงเงาวาบผ่านปุ่มจอง (เหมือนเล็บที่เพิ่งทาท็อปโค้ต) ใช้กับปุ่มที่มีคลาส lucky-gloss
 // วาบครั้งแรกหลังเปิดหน้า 1.2 วิ แล้ววาบซ้ำทุก 7 วิ อีกไม่เกิน 3 ครั้ง
-// หยุดทันทีเมื่อผู้ใช้แตะ/พิมพ์/เลื่อนหน้า หรือสลับแท็บ และไม่ทำงานเลยถ้าเครื่องตั้งค่าลดการเคลื่อนไหว
+// หยุดทันทีเมื่อผู้ใช้แตะ/พิมพ์/เลื่อนหน้าเอง (wheel/touchmove ไม่นับการเลื่อนอัตโนมัติตอนเปลี่ยนหน้า) หรือสลับแท็บ และไม่ทำงานเลยถ้าเครื่องตั้งค่าลดการเคลื่อนไหว
 // ตอนชี้เมาส์ (เฉพาะคอม) CSS จะวาบเองผ่าน :hover
 const FIRST_MS = 1200
 const EVERY_MS = 7000
 const REPEATS = 3
 
-export default function useGloss(enabled = true) {
+// media: ทำงานเฉพาะขนาดจอที่ตรงเงื่อนไข (หน้าแรกให้วาบทีละปุ่ม: จอใหญ่ใช้ปุ่มใน hero จอเล็กใช้แถบล่าง)
+export default function useGloss(enabled = true, media = null) {
   const ref = useRef(null)
 
   useEffect(() => {
     const el = ref.current
     if (!enabled || !el || typeof window === 'undefined') return undefined
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined
+    if (media && window.matchMedia && !window.matchMedia(media).matches) return undefined
 
     const timers = []
     const shine = () => {
@@ -39,7 +41,8 @@ export default function useGloss(enabled = true) {
     const opts = { once: true, passive: true }
     window.addEventListener('pointerdown', stop, opts)
     window.addEventListener('keydown', stop, opts)
-    window.addEventListener('scroll', stop, opts)
+    window.addEventListener('wheel', stop, opts)
+    window.addEventListener('touchmove', stop, opts)
     document.addEventListener('visibilitychange', onVisibility)
 
     return () => {
@@ -49,10 +52,11 @@ export default function useGloss(enabled = true) {
       el.classList.remove('is-shining')
       window.removeEventListener('pointerdown', stop)
       window.removeEventListener('keydown', stop)
-      window.removeEventListener('scroll', stop)
+      window.removeEventListener('wheel', stop)
+      window.removeEventListener('touchmove', stop)
       document.removeEventListener('visibilitychange', onVisibility)
     }
-  }, [enabled])
+  }, [enabled, media])
 
   return ref
 }

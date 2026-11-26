@@ -5,7 +5,7 @@ import useGloss from './useGloss.js'
 // แถบล่างบนมือถือ: ประวัติของฉัน (ลูกค้าประจำ) · ลองลายด้วย AI · จองคิว (ปุ่มหลักปุ่มเดียว)
 // gloss: ปุ่มจองมีแสงเงาวาบ (ใช้ในหน้าแรกเท่านั้น)
 export default function MobileStickyBar({ gloss = false }) {
-  const glossRef = useGloss(gloss)
+  const glossRef = useGloss(gloss, '(max-width: 767px)')
   const side = 'glass-btn flex-shrink-0 h-12 flex-col gap-0.5 px-3 text-xs font-display font-semibold leading-none'
   return (
     <div

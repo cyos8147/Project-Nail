@@ -35,7 +35,7 @@ export default function StepIndicator({ steps, currentStep }) {
       })}
     </div>
       {/* มือถือซ่อนชื่อขั้นข้างวงกลม จึงบอกชื่อขั้นปัจจุบันไว้ใต้แถบ */}
-      <p className="sm:hidden mt-3 text-center text-sm text-[#5B4650]" aria-live="polite">
+      <p className="sm:hidden mt-3 text-center text-sm text-[#5B4650]" >
         ขั้นที่ {currentStep}/{steps.length} · <span className="font-semibold text-[#C2185B]">{steps[currentStep - 1]}</span>
       </p>
     </div>

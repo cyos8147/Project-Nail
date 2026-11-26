@@ -333,10 +333,10 @@ export default function BookingWizard() {
           <h1 className="font-display text-2xl font-semibold text-[#2E1F26]">จองคิวสำเร็จแล้ว</h1>
           <p className="text-[#6B5560] mt-2">ขอบคุณที่เลือก Lucky Salon นะคะ แล้วเจอกันค่ะ</p>
 
-          {bookingResult?.booking_code && !bookingResult?.all && (
+          {bookingResult?.booking_code && (
             <div className="mt-6">
-              <p className="text-sm text-[#5B4650]">รหัสคิวของคุณ</p>
-              <p className="mt-1 font-display text-3xl font-semibold tracking-wide text-[#C2185B] tabular-nums">{bookingResult.booking_code}</p>
+              <p className="text-sm text-[#5B4650]">{bookingResult?.all ? 'รหัสคิวบริการแรก (รหัสของแต่ละบริการอยู่ด้านล่าง)' : 'รหัสคิวของคุณ'}</p>
+              <p className="mt-1 whitespace-nowrap font-display text-2xl sm:text-3xl font-semibold text-[#C2185B] tabular-nums">{bookingResult.booking_code}</p>
               <button
                 type="button"
                 onClick={() => {

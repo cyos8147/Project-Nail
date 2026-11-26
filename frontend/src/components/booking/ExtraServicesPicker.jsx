@@ -57,19 +57,21 @@ export default function ExtraServicesPicker({ main, extras, setExtras, allServic
         </p>
       )}
 
-      {options.length > 0 && !open && (
+      {options.length > 0 && (
         <button
           type="button"
-          onClick={() => setOpen(true)}
-          aria-expanded="false"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-controls="extra-services-options"
           className="btn-candy-soft mt-4 gap-1.5 px-4 py-2.5 text-sm"
         >
-          <Icon name="chevronDown" className="h-4 w-4" /> ดูบริการที่ทำต่อได้ ({options.length})
+          <Icon name="chevronDown" className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} />
+          {open ? 'ซ่อนบริการที่ทำต่อ' : `ดูบริการที่ทำต่อได้ (${options.length})`}
         </button>
       )}
 
       {options.length > 0 && open && (
-        <div className="mt-4">
+        <div id="extra-services-options" className="mt-4">
           <p className="text-xs text-[#6B5560] mb-2">แตะเพื่อเพิ่มบริการที่ทำต่อ</p>
           <div className="flex flex-wrap gap-2">
             {options.map((s) => (

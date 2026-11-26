@@ -9,7 +9,7 @@ import useGloss from './useGloss.js'
 // การ์ดสไลด์ลายเล็บสีขาวเอียงทางขวา · ใต้ปุ่มเป็นการ์ดเวลาทำการ (รวมว่างเร็วสุด)
 // รูปเป็นรูปชั่วคราว (public/photos/hero-white.webp) เปลี่ยนเป็นผลงานจริงได้โดยใช้ชื่อไฟล์เดิม
 export default function Hero() {
-  const glossRef = useGloss()
+  const glossRef = useGloss(true, '(min-width: 768px)')
   return (
     <section id="home" className="relative scroll-mt-24 overflow-hidden">
       {/* รูปมือ: จอใหญ่อยู่ครึ่งขวาเต็มความสูง จางเข้าหาข้อความ / มือถืออยู่ด้านบน จางลงล่าง */}
