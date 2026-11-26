@@ -32,6 +32,7 @@ Before starting, pick the skills from the table below and state them in one shor
 | Scroll-driven animation | `gsap-scrolltrigger` + `gsap-react` |
 | 3D (nail, bottle, hand) | `threejs-react-three-fiber` + the relevant `threejs-*` |
 | Copying the style of a reference image or site | `design-dna`, then `impeccable` |
+| Keep a change minimal, or check a change or the repo for bloat, bugs and risk | `ponytail` (smallest complete change), `ponytail-review` (one change), `ponytail-audit` (whole repo, report only) |
 | Work is done and ready to merge | `requesting-code-review` → `finishing-a-development-branch` |
 | A review comes back | `receiving-code-review` |
 
