@@ -96,8 +96,8 @@ function Lightbox({ designs, index, onClose, onStep, onBook }) {
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[20px] bg-white/95 p-4 sm:px-6">
           <div className="min-w-0">
-            <p className="font-display text-lg sm:text-xl font-semibold text-gray-800 truncate">{d.name}</p>
-            <p className="text-sm text-gray-500">
+            <p className="font-display text-lg sm:text-xl font-semibold text-[#2E1F26] truncate">{d.name}</p>
+            <p className="text-sm text-[#6B5560]">
               {STYLE_LABEL[d.style_tag] || d.style_tag} · {formatMinutes(d.duration_minutes)} ·{' '}
               <span className="font-display font-semibold text-berry tabular-nums">{formatPrice(d.price)} บาท</span>
             </p>
@@ -168,16 +168,16 @@ export default function GalleryPage() {
   }
 
   return (
-    <div className="relative isolate min-h-screen text-gray-800 pb-20 md:pb-0 overflow-x-clip">
+    <div className="relative isolate min-h-screen text-[#2E1F26] pb-20 md:pb-0 overflow-x-clip">
       <DreamyBackground />
       <Header />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
         <div className="text-center">
-          <h1 className="lucky-fade-up font-display text-3xl/[1.4] sm:text-4xl/[1.4] font-semibold text-gray-800">
+          <h1 className="lucky-fade-up font-display text-3xl/[1.4] sm:text-4xl/[1.4] font-semibold text-[#2E1F26]">
             ผลงานลายเล็บของร้าน
           </h1>
-          <p className="lucky-fade-up text-gray-600 mt-2" style={{ animationDelay: '0.06s' }}>
+          <p className="lucky-fade-up text-[#5B4650] mt-2" style={{ animationDelay: '0.06s' }}>
             แตะรูปเพื่อดูใกล้ ๆ ชอบลายไหนจองลายนั้นได้เลยค่ะ
           </p>
         </div>
@@ -221,14 +221,14 @@ export default function GalleryPage() {
             >
               <div className="relative aspect-square overflow-hidden rounded-[12px]">
                 <DesignImage design={d} className="w-full h-full transition-opacity duration-150 group-hover:opacity-90" />
-                <span aria-hidden="true" className="absolute bottom-2 right-2 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-display font-semibold text-berry opacity-0 transition-opacity group-hover:opacity-100">
+                <span aria-hidden="true" className="absolute bottom-2 right-2 rounded-full bg-white/90 px-2.5 py-1 text-xs font-display font-semibold text-berry opacity-0 transition-opacity group-hover:opacity-100">
                   <Icon name="expand" className="inline h-3.5 w-3.5 -mt-0.5" /> ดูเต็มจอ
                 </span>
               </div>
               <div className="px-2 pt-2.5 pb-1">
-                <p className="font-display font-semibold text-gray-800 truncate">{d.name}</p>
+                <p className="font-display font-semibold text-[#2E1F26] truncate">{d.name}</p>
                 <p className="text-sm">
-                  <span className="text-gray-500">{STYLE_LABEL[d.style_tag] || d.style_tag}</span>
+                  <span className="text-[#6B5560]">{STYLE_LABEL[d.style_tag] || d.style_tag}</span>
                   <span className="float-right font-display font-semibold text-berry tabular-nums">{formatPrice(d.price)} บาท</span>
                 </p>
               </div>
@@ -238,7 +238,7 @@ export default function GalleryPage() {
 
         <SlowNote show={slow} />
         {designs && designs.length === 0 && (
-          <p className="mt-10 text-center text-gray-500">
+          <p className="mt-10 text-center text-[#6B5560]">
             {failed ? 'ตอนนี้โหลดรูปผลงานไม่ได้ ลองรีเฟรชอีกครั้งนะคะ' : 'ร้านยังไม่ได้ลงรูปผลงาน แวะมาดูใหม่เร็ว ๆ นี้นะคะ'}
           </p>
         )}

@@ -22,7 +22,7 @@ export function useSlow(loading, ms = 5000) {
 export function SlowNote({ show }) {
   if (!show) return null
   return (
-    <p role="status" className="mt-4 text-center text-sm text-rose-500">
+    <p role="status" className="mt-4 text-center text-sm text-[#C2185B]">
       กำลังโหลดข้อมูลร้าน… ครั้งแรกอาจใช้เวลาสักครู่
     </p>
   )

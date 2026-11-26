@@ -47,6 +47,7 @@ export default function HomePage() {
     <div className="relative isolate min-h-screen text-[#2E1F26] pb-20 md:pb-0 overflow-x-clip">
       <DreamyBackground variant="full" />
       <Header />
+      <main>
       <Hero />
       <Reveal>
         <section className="relative max-w-7xl mx-auto px-4 sm:px-6 grid gap-6 lg:grid-cols-2 items-start">
@@ -67,6 +68,7 @@ export default function HomePage() {
           <ShopInfo embedded />
         </div>
       </Reveal>
+      </main>
       <Footer />
       <MobileStickyBar gloss />
     </div>

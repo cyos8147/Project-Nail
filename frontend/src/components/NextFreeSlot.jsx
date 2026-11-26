@@ -74,7 +74,7 @@ export default function NextFreeSlot({ className = '', bare = false }) {
               <span className={`font-semibold text-[#C2185B] tabular-nums${bare ? ' lucky-slot-rise' : ''}`}>{it.when}</span> · {it.serviceName}
             </span>
             <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-[#FFEAF2] px-2 py-0.5 text-xs font-medium text-[#C2185B] group-hover:bg-[#FFDDE9]">
-              เลือกเวลา
+              จองเลย
               <Icon name="chevronRight" className="lucky-slot-arrow h-3 w-3" />
             </span>
           </Link>

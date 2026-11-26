@@ -35,7 +35,7 @@ const ACCENTS = ['#EC4C82', '#D4AF37', '#6B3FA0', '#8B5E3C', '#3B8FA6']
 function Field({ label, hint, options, value, onChange }) {
   return (
     <div>
-      <p className="text-sm font-semibold text-gray-700">{label}</p>
+      <p className="text-sm font-semibold text-[#3A2A31]">{label}</p>
       {hint && <p className="text-xs text-green-600 mt-0.5">{hint}</p>}
       <div className="flex flex-wrap gap-2 mt-2">
         {options.map((o) => (
@@ -45,7 +45,7 @@ function Field({ label, hint, options, value, onChange }) {
             aria-pressed={value === o.id}
             onClick={() => onChange(o.id)}
             className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors duration-150 ${
-              value === o.id ? 'bg-rose-500 border-rose-500 text-white' : 'bg-white text-gray-600 border-[#1f1b16]/10 hover:border-rose-300 hover:text-berry'
+              value === o.id ? 'bg-[#C2185B] border-[#C2185B] text-white' : 'bg-white text-[#5B4650] border-[#1f1b16]/10 hover:border-rose-300 hover:text-berry'
             }`}
           >
             {o.label}
@@ -107,8 +107,8 @@ export default function AdvancedRecommend({ skinTone = null }) {
   return (
     <section id="ai-advanced-recommend" className="max-w-5xl mx-auto px-6 py-20">
       <div className="text-center mb-4">
-        <h2 className="font-display text-3xl/[1.4] sm:text-4xl/[1.4] font-semibold text-gray-800">ให้ AI เลือกลายที่ใช่ให้คุณ</h2>
-        <p className="text-gray-500 mt-2">ตอบไม่กี่ข้อ แล้วดูลายที่เหมาะกับคุณที่สุดจากลายของร้าน</p>
+        <h2 className="font-display text-3xl/[1.4] sm:text-4xl/[1.4] font-semibold text-[#2E1F26]">ให้ AI เลือกลายที่ใช่ให้คุณ</h2>
+        <p className="text-[#6B5560] mt-2">ตอบไม่กี่ข้อ แล้วดูลายที่เหมาะกับคุณที่สุดจากลายของร้าน</p>
       </div>
 
       <div className="glass-solid rounded-[24px] p-6 sm:p-10 grid md:grid-cols-2 gap-8 mt-8">
@@ -124,9 +124,9 @@ export default function AdvancedRecommend({ skinTone = null }) {
           <Field label="จะไปใช้ตอนไหน" options={OCCASIONS} value={form.occasion} onChange={(v) => set('occasion', v)} />
 
           <details className="group rounded-2xl border border-blush-200 px-4 py-3">
-            <summary className="cursor-pointer text-sm font-semibold text-gray-600 list-none flex items-center justify-between">
+            <summary className="cursor-pointer text-sm font-semibold text-[#5B4650] list-none flex items-center justify-between">
               ปรับแต่งเพิ่มเติม (ทรงและความยาวเล็บ)
-              <span className="text-gray-400 text-xs group-open:rotate-180 transition-transform">▼</span>
+              <Icon name="chevronDown" className="h-4 w-4 text-[#6B5560] group-open:rotate-180 transition-transform" />
             </summary>
             <div className="space-y-5 mt-4">
               <Field label="ทรงเล็บ" options={NAIL_SHAPES} value={form.nail_shape} onChange={(v) => set('nail_shape', v)} />
@@ -147,14 +147,14 @@ export default function AdvancedRecommend({ skinTone = null }) {
 
         <div aria-live="polite">
           {status !== 'done' && (
-            <div className="h-full min-h-[240px] flex flex-col items-center justify-center text-sm text-gray-500 text-center px-6 gap-3 rounded-[20px] border-2 border-dashed border-[#1f1b16]/10 bg-rose-50/50">
+            <div className="h-full min-h-[240px] flex flex-col items-center justify-center text-sm text-[#6B5560] text-center px-6 gap-3 rounded-[20px] border-2 border-dashed border-[#1f1b16]/10 bg-rose-50/50">
               <span className="text-rose-400" aria-hidden="true"><Icon name="brush" className="h-8 w-8" /></span>
               ลายที่ AI เลือกให้จะแสดงที่นี่
             </div>
           )}
           {status === 'done' && result && (
             <div>
-              <p className="text-sm font-semibold text-gray-700 mb-4">ลายที่เหมาะกับคุณที่สุด 5 อันดับ</p>
+              <p className="text-sm font-semibold text-[#3A2A31] mb-4">ลายที่เหมาะกับคุณที่สุด 5 อันดับ</p>
               <div className="space-y-3">
                 {result.recommendations.map((r, i) => (
                   <div
@@ -169,13 +169,13 @@ export default function AdvancedRecommend({ skinTone = null }) {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      {i === 0 && <span className="inline-block bg-rose-500 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full mb-1">แนะนำที่สุด</span>}
-                      <p className="text-sm font-semibold text-gray-800 truncate">{r.design.name}</p>
-                      <p className="text-xs text-gray-400">{r.design.duration_minutes} นาที · {Math.round(r.design.price)} บาท</p>
+                      {i === 0 && <span className="inline-block bg-[#C2185B] text-white text-xs font-semibold px-2 py-0.5 rounded-full mb-1">แนะนำที่สุด</span>}
+                      <p className="text-sm font-semibold text-[#2E1F26] truncate">{r.design.name}</p>
+                      <p className="text-xs text-[#6B5560]">{r.design.duration_minutes} นาที · {Math.round(r.design.price)} บาท</p>
                       <p className="text-xs mt-0.5">
-                        <span className="text-gray-400">คะแนนที่ AI แนะนำ </span>
+                        <span className="text-[#6B5560]">คะแนนที่ AI แนะนำ </span>
                         <span className="inline-flex items-center gap-1 font-bold text-berry"><Star className="h-3.5 w-3.5" /> {scoreLabel(scores[i])}</span>
-                        <span className="text-gray-400">/10</span>
+                        <span className="text-[#6B5560]">/10</span>
                       </p>
                     </div>
                     <button
@@ -188,7 +188,7 @@ export default function AdvancedRecommend({ skinTone = null }) {
                   </div>
                 ))}
               </div>
-              <p className="text-[11px] text-gray-400 mt-3">คะแนนเทียบกับลายที่เหมาะที่สุดของคุณในรอบนี้ (ลายอันดับ 1 = 10.0)</p>
+              <p className="text-xs text-[#6B5560] mt-3">คะแนนเทียบกับลายที่เหมาะที่สุดของคุณในรอบนี้ (ลายอันดับ 1 = 10.0)</p>
             </div>
           )}
         </div>

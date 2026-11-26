@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import HomePage from './pages/HomePage.jsx'
 import BookingPage from './pages/BookingPage.jsx'
@@ -8,16 +8,17 @@ import GalleryPage from './pages/GalleryPage.jsx'
 import CustomerHistoryPage from './pages/CustomerHistoryPage.jsx'
 import PrivacyPage from './pages/PrivacyPage.jsx'
 import NotFoundPage from './pages/NotFoundPage.jsx'
-import AdminLoginPage from './pages/admin/AdminLoginPage.jsx'
-import AdminLayout from './pages/admin/AdminLayout.jsx'
-import DashboardPage from './pages/admin/DashboardPage.jsx'
-import AdminBookingsPage from './pages/admin/AdminBookingsPage.jsx'
-import AdminCustomersPage from './pages/admin/AdminCustomersPage.jsx'
-import AdminServicesPage from './pages/admin/AdminServicesPage.jsx'
-import AdminDesignsPage from './pages/admin/AdminDesignsPage.jsx'
-import AdminReviewsPage from './pages/admin/AdminReviewsPage.jsx'
-import AdminSettingsPage from './pages/admin/AdminSettingsPage.jsx'
-import AdminReportsPage from './pages/admin/AdminReportsPage.jsx'
+// หน้าแอดมินโหลดแยกไฟล์ (ลูกค้าไม่ต้องดาวน์โหลดโค้ดแอดมิน) การทำงานเหมือนเดิมทุกอย่าง
+const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage.jsx'))
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout.jsx'))
+const DashboardPage = lazy(() => import('./pages/admin/DashboardPage.jsx'))
+const AdminBookingsPage = lazy(() => import('./pages/admin/AdminBookingsPage.jsx'))
+const AdminCustomersPage = lazy(() => import('./pages/admin/AdminCustomersPage.jsx'))
+const AdminServicesPage = lazy(() => import('./pages/admin/AdminServicesPage.jsx'))
+const AdminDesignsPage = lazy(() => import('./pages/admin/AdminDesignsPage.jsx'))
+const AdminReviewsPage = lazy(() => import('./pages/admin/AdminReviewsPage.jsx'))
+const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage.jsx'))
+const AdminReportsPage = lazy(() => import('./pages/admin/AdminReportsPage.jsx'))
 import SplashIntro from './components/SplashIntro.jsx'
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
     <>
     <SplashIntro />
     <div key={pageKey} className={pageKey === 'admin' ? undefined : 'lucky-page'}>
+    <Suspense fallback={<div className="min-h-screen" aria-busy="true" />}>
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/booking" element={<BookingPage />} />
@@ -55,6 +57,7 @@ export default function App() {
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    </Suspense>
     </div>
     </>
   )

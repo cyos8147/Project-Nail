@@ -146,7 +146,7 @@ export default function ShopInfo({ embedded = false }) {
       <div className={hasContact ? `grid gap-5 ${embedded ? '' : 'md:grid-cols-2'}` : embedded ? '' : 'mx-auto max-w-md'}>
         <div className="relative rounded-[24px] glass-solid p-6">
           <h3 className="flex items-center gap-2 font-semibold text-[#4A2A37]">
-            <span className="text-rose-500">
+            <span className="text-[#C2185B]">
               <ClockIcon />
             </span>
             เวลาทำการ
@@ -183,7 +183,7 @@ export default function ShopInfo({ embedded = false }) {
         {hasContact && (
           <div className="rounded-[24px] glass-solid p-6">
             <h3 className="flex items-center gap-2 font-semibold text-[#4A2A37]">
-              <span className="text-rose-500">
+              <span className="text-[#C2185B]">
                 <PinIcon />
               </span>
               ติดต่อและที่ตั้ง
@@ -192,7 +192,7 @@ export default function ShopInfo({ embedded = false }) {
             {address && <p className="mt-4 whitespace-pre-line leading-relaxed text-[#7A4A5E]">{address}</p>}
             {phone && (
               <p className="mt-3 flex items-center gap-2 text-[#7A4A5E]">
-                <span className="text-rose-500">
+                <span className="text-[#C2185B]">
                   <PhoneIcon />
                 </span>
                 {phone}
@@ -200,7 +200,7 @@ export default function ShopInfo({ embedded = false }) {
             )}
             {lineId && (
               <p className="mt-2 flex items-center gap-2 text-[#7A4A5E]">
-                <span className="text-rose-500">
+                <span className="text-[#C2185B]">
                   <ChatIcon />
                 </span>
                 LINE: {lineId}

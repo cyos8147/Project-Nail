@@ -5,7 +5,6 @@ import { nailDesigns as catalog } from '../data/nailCatalog.js'
 import { percentToScore, scoreLabel } from '../utils/recommendScore.js'
 import { saveCarryDesign } from '../utils/carryDesign.js'
 import NailThumb from './NailThumb.jsx'
-import { Star } from './Stars.jsx'
 
 const TONE_LABEL = { warm: 'โทนอุ่น', cool: 'โทนเย็น', neutral: 'โทนกลาง' }
 const ACCENTS = ['#EC4C82', '#D4AF37', '#6B3FA0', '#8B5E3C', '#3B8FA6']
@@ -54,10 +53,10 @@ export default function NailRecommendation({ skinTone }) {
   return (
     <section id="ai-recommend" className="max-w-6xl mx-auto px-6 py-20">
       <div className="text-center mb-4">
-        <h2 className="font-display text-3xl/[1.4] sm:text-4xl/[1.4] font-semibold text-gray-800">
+        <h2 className="font-display text-3xl/[1.4] sm:text-4xl/[1.4] font-semibold text-[#2E1F26] text-balance">
           {personalized ? `ลายเล็บที่เหมาะกับผิว${TONE_LABEL[skinTone]}ของคุณ` : 'ลายเล็บยอดนิยมของร้าน'}
         </h2>
-        <p className="text-gray-500 mt-2">
+        <p className="text-[#5B4650] mt-2">
           {personalized
             ? 'AI จัดอันดับจากผลวิเคราะห์สีผิวของคุณ พร้อมราคาและเวลาที่ใช้ทำ'
             : 'ลายที่ลูกค้าเลือกมากที่สุด วิเคราะห์สีผิวด้านบนเพื่อให้ AI จัดอันดับลายที่เหมาะกับคุณโดยเฉพาะ'}
@@ -71,7 +70,7 @@ export default function NailRecommendation({ skinTone }) {
             className="group glass-solid rounded-[24px] overflow-hidden relative flex flex-col"
           >
             {personalized && i === 0 && (
-              <span className="absolute top-3 left-3 z-10 bg-gradient-to-r from-rose-500 to-fuchsia-500 text-white text-[11px] font-semibold px-3 py-1 rounded-full shadow-md">
+              <span className="absolute top-3 left-3 z-10 bg-[#C2185B] text-white text-xs font-medium px-3 py-1 rounded-full shadow-sm">
                 แนะนำที่สุด
               </span>
             )}
@@ -83,21 +82,16 @@ export default function NailRecommendation({ skinTone }) {
               )}
             </div>
             <div className="p-3 sm:p-4 flex flex-col gap-2 flex-1">
-              <p className="font-semibold text-gray-800 text-sm leading-snug">{d.name}</p>
-              <div>
-                <div className="flex items-baseline justify-between">
-                  <span className="text-[11px] text-gray-400">{personalized ? 'คะแนนที่ AI แนะนำ' : 'คะแนนความนิยม'}</span>
-                  <span className="text-sm font-bold text-berry">
-                    <Star className="h-3.5 w-3.5" /> {scoreLabel(d.score)}<span className="text-[11px] font-medium text-gray-400">/10</span>
-                  </span>
-                </div>
-                <div className="w-full h-1.5 bg-blush-100 rounded-full overflow-hidden mt-1">
-                  <div className="h-full bg-gradient-to-r from-rose-400 to-fuchsia-400 rounded-full" style={{ width: `${d.score * 10}%` }} />
-                </div>
-              </div>
-              <div className="flex items-center justify-between text-xs text-gray-400">
-                <span>{d.duration_minutes} นาที</span>
-                <span className="font-medium text-gray-600">{Math.round(d.price)} บาท</span>
+              <p className="font-semibold text-[#2E1F26] text-sm leading-snug">{d.name}</p>
+              {/* คะแนนนี้คือการจัดอันดับของ AI/ความนิยมจากข้อมูลร้าน ไม่ใช่รีวิวลูกค้า จึงไม่ใช้ดาว */}
+              {personalized && (
+                <p className="text-xs text-[#6B5560]">
+                  เข้ากับผิวคุณ <span className="font-semibold text-[#C2185B] tabular-nums">{scoreLabel(d.score)}/10</span>
+                </p>
+              )}
+              <div className="flex items-center justify-between text-xs text-[#6B5560]">
+                <span className="tabular-nums">{d.duration_minutes} นาที</span>
+                <span className="font-semibold text-[#C2185B] tabular-nums">{Math.round(d.price)} บาท</span>
               </div>
               {d.id && (
                 <button

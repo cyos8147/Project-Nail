@@ -26,6 +26,10 @@ A bright white nail desk in soft window light, with cream knit and pink polish. 
 - **`.btn-candy`:** the primary pill. Pink gradient, soft shadow, Prompt 500. The class names are kept from the old design so every page picked up the new look without logic edits.
 - **`.btn-candy-soft`:** the secondary pill. White with a pink border and pink text.
 - **Photo frames:** a 1px hairline at 20–22px radius.
+- **Tap size:** `.btn-candy`, `.btn-candy-soft` and `.glass-btn` are at least 44px tall. `.glass-btn` is also at least 44px wide.
+- **Focus ring:** 2px `#C2185B`. The earlier light pink ring was below 3:1 against white.
+- **Text colours on customer pages:** use the ink tokens (`#2E1F26`, `#3A2A31`, `#5B4650`, `#6B5560`). Placeholders are `#7A6670`. Never use Tailwind `gray-400` for text, because it is 2.5:1. Use `#C2185B` instead of Tailwind `rose-500`.
+- **Try-on (`NailTryOn.css`):** a clean-white override block at the end of the file sets the try-on's own tokens to this system and hides its floating decoration. Its colour logic is untouched.
 
 ## Type
 
@@ -71,6 +75,10 @@ None floating. Bows, ribbons, hearts, the polish bottle and the bear were remove
   - The earliest-free time rises in over 420ms. A green dot (`#2F9E6B`) marks it as live; the dot breathes 3 times and then stays still. It only renders when the API returns a real free slot.
 - **Reduced motion:** all of the above is disabled under `prefers-reduced-motion`.
 
+## Page shell
+
+Every customer page uses the shared `Header`, a `<main>` landmark and a page title (`usePageTitle`). Each page has exactly one `<h1>`. On `/booking` the h1 is "จองคิวออนไลน์", or "จองคิวสำเร็จแล้ว" on the success screen.
+
 ## Photos
 
-The photos in `public/photos/` are Unsplash placeholders, listed in `CREDITS.txt`. Replace each one with a real shop photo under the same file name. Nail designs and service images come from admin uploads.
+The photos in `public/photos/` are Unsplash placeholders, listed in `CREDITS.txt`. The hero has a 900px copy for phones (`hero-white-900.webp`), so replace both files together. The header logo loads `logo-mark-160.png` and the splash loads `logo-mark-320.png`. Both are downscaled from `logo-mark.png`. Replace each one with a real shop photo under the same file name. Nail designs and service images come from admin uploads.

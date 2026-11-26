@@ -75,19 +75,19 @@ export default function EditBookingPage() {
   }
 
   return (
-    <div className="relative isolate min-h-screen text-gray-800 overflow-x-clip">
+    <div className="relative isolate min-h-screen text-[#2E1F26] overflow-x-clip">
       <DreamyBackground />
       <Header />
       <section className="max-w-2xl mx-auto px-6 py-16">
         <div className="text-center mb-8">
-          <h1 className="font-display text-3xl font-semibold text-gray-800">แก้ไขวันเวลาการจอง</h1>
-          <p className="text-gray-500 mt-2">ใส่รหัสคิวกับเบอร์โทรที่ใช้ตอนจองนะคะ</p>
+          <h1 className="font-display text-3xl font-semibold text-[#2E1F26]">แก้ไขวันเวลาการจอง</h1>
+          <p className="text-[#6B5560] mt-2">ใส่รหัสคิวกับเบอร์โทรที่ใช้ตอนจองนะคะ</p>
         </div>
 
         {!booking && (
           <form onSubmit={handleSearch} className="glass-solid rounded-[24px] p-6 sm:p-8 space-y-4">
             <div>
-              <label htmlFor="edit-code" className="block text-sm font-medium text-gray-700 mb-1.5">รหัสคิว</label>
+              <label htmlFor="edit-code" className="block text-sm font-medium text-[#3A2A31] mb-1.5">รหัสคิว</label>
               <input
                 id="edit-code"
                 value={bookingCode}
@@ -98,7 +98,7 @@ export default function EditBookingPage() {
               />
             </div>
             <div>
-              <label htmlFor="edit-phone" className="block text-sm font-medium text-gray-700 mb-1.5">เบอร์โทรศัพท์</label>
+              <label htmlFor="edit-phone" className="block text-sm font-medium text-[#3A2A31] mb-1.5">เบอร์โทรศัพท์</label>
               <input
                 id="edit-phone"
                 value={phone}
@@ -122,12 +122,12 @@ export default function EditBookingPage() {
         {booking && !saved && isTooLateToChange(booking, shop?.cancel_cutoff_hours) && (
           <div className="glass-solid rounded-[24px] p-6 sm:p-8 text-center space-y-3">
             <div className="text-4xl">⏳</div>
-            <h2 className="font-display text-xl font-semibold text-gray-800">ใกล้เวลานัดแล้ว เลื่อนคิวผ่านเว็บไม่ได้</h2>
-            <p className="text-sm text-gray-500">
+            <h2 className="font-display text-xl font-semibold text-[#2E1F26]">ใกล้เวลานัดแล้ว เลื่อนคิวผ่านเว็บไม่ได้</h2>
+            <p className="text-sm text-[#6B5560]">
               คิว {booking.booking_code} นัดวันที่ {booking.booking_date} เวลา {booking.booking_time} น.
               ร้านกำหนดให้เลื่อนหรือยกเลิกผ่านเว็บได้ล่วงหน้าอย่างน้อย {shop.cancel_cutoff_hours} ชั่วโมง
             </p>
-            <p className="text-sm text-gray-700 font-medium">
+            <p className="text-sm text-[#3A2A31] font-medium">
               รบกวนติดต่อร้านโดยตรงนะคะ{shop.phone ? ` โทร ${shop.phone}` : ' ทาง LINE หรือโทรหาร้าน'}
             </p>
             <Link to="/history" className="inline-block text-sm font-semibold text-berry hover:underline">ดูประวัติของฉัน</Link>
@@ -138,10 +138,10 @@ export default function EditBookingPage() {
           <div className="glass-solid rounded-[24px] p-6 sm:p-8">
             <div className="flex items-center justify-between mb-6 pb-6 border-b border-blush-100">
               <div>
-                <p className="font-display text-xl font-semibold text-gray-800">{booking.booking_code}</p>
-                <p className="text-sm text-gray-500 mt-1">{booking.service_name}</p>
+                <p className="font-display text-xl font-semibold text-[#2E1F26]">{booking.booking_code}</p>
+                <p className="text-sm text-[#6B5560] mt-1">{booking.service_name}</p>
               </div>
-              <div className="text-right text-sm text-gray-500">
+              <div className="text-right text-sm text-[#6B5560]">
                 <p>เดิม: {booking.booking_date}</p>
                 <p>{booking.booking_time} น.</p>
               </div>
@@ -168,7 +168,7 @@ export default function EditBookingPage() {
               {saving ? 'กำลังบันทึก...' : 'ยืนยันวันเวลาใหม่'}
             </button>
             {saveError && <p className="text-sm text-red-500 text-center mt-3">{saveError}</p>}
-            <p className="text-xs text-gray-500 text-center mt-4">
+            <p className="text-xs text-[#6B5560] text-center mt-4">
               เมื่อยืนยันแล้ว สถานะคิวจะกลับเป็น "รอยืนยัน" อีกครั้ง แล้วร้านจะรีบยืนยันเวลาใหม่ให้นะคะ
             </p>
           </div>
@@ -179,8 +179,8 @@ export default function EditBookingPage() {
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-rose-50 text-berry">
               <Icon name="check" className="h-7 w-7" strokeWidth={2} />
             </div>
-            <h2 className="font-display text-xl font-semibold text-gray-800">แก้ไขวันเวลาสำเร็จ</h2>
-            <p className="text-gray-500 mt-2">
+            <h2 className="font-display text-xl font-semibold text-[#2E1F26]">แก้ไขวันเวลาสำเร็จ</h2>
+            <p className="text-[#6B5560] mt-2">
               {booking.booking_code} วันที่ {booking.booking_date} เวลา {booking.booking_time} น.
             </p>
             <Link

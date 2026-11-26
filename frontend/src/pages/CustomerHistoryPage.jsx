@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import Header from '../components/Header.jsx'
 import Footer from '../components/Footer.jsx'
 import DreamyBackground from '../components/DreamyBackground.jsx'
+import usePageTitle from '../components/usePageTitle.js'
 import {
   cancelBooking,
   createReview,
@@ -52,7 +53,7 @@ function ReviewForm({ booking, phone, onSubmitted }) {
 
   return (
     <div className="mt-3 bg-blush-50 border border-blush-200 rounded-xl p-4">
-      <p className="text-xs font-medium text-gray-700 mb-2">ให้คะแนนบริการนี้</p>
+      <p className="text-xs font-medium text-[#3A2A31] mb-2">ให้คะแนนบริการนี้</p>
       <div className="flex gap-1 mb-3">
         {[1, 2, 3, 4, 5].map((n) => (
           <button key={n} type="button" onClick={() => setRating(n)} aria-label={`${n} ดาว`} aria-pressed={n <= rating} className="rounded-full p-0.5 transition-transform hover:scale-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-rose-400">
@@ -82,6 +83,7 @@ function ReviewForm({ booking, phone, onSubmitted }) {
 }
 
 export default function CustomerHistoryPage() {
+  usePageTitle('ประวัติของฉัน | Lucky Salon')
   const [phone, setPhone] = useState(getSavedPhone())
   const [bookingCode, setBookingCode] = useState(getSavedBookingCode())
   const [data, setData] = useState(null)
@@ -127,34 +129,40 @@ export default function CustomerHistoryPage() {
   const reviewedBookingIds = new Set((data?.reviews || []).map((r) => r.booking_id))
 
   return (
-    <div className="relative isolate min-h-screen text-gray-800 overflow-x-clip">
+    <div className="relative isolate min-h-screen text-[#2E1F26] overflow-x-clip">
       <DreamyBackground />
       <Header />
-      <section className="max-w-3xl mx-auto px-6 py-16">
+      <main className="max-w-3xl mx-auto px-6 py-16">
         <div className="text-center mb-8">
-          <h1 className="font-display text-3xl font-semibold text-gray-800">ประวัติของฉัน</h1>
-          <p className="text-gray-500 mt-2">
+          <h1 className="font-display text-3xl font-semibold text-[#2E1F26]">ประวัติของฉัน</h1>
+          <p className="text-[#6B5560] mt-2">
             ใส่เบอร์โทรที่ใช้จอง จะเห็นคิวทั้งหมดของคุณค่ะ ถ้าใส่รหัสคิวด้วย จะเลื่อนนัด ยกเลิก หรือรีวิวได้เลย
           </p>
         </div>
 
-        <form onSubmit={handleSearch} className="glass-solid rounded-[24px] p-6 flex flex-col sm:flex-row gap-3">
-          <input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="เบอร์โทรศัพท์"
-            aria-label="เบอร์โทรศัพท์"
-            inputMode="tel"
-            className="flex-1 rounded-xl border border-blush-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-rose-300"
-            required
-          />
-          <input
-            value={bookingCode}
-            onChange={(e) => setBookingCode(e.target.value)}
-            placeholder="รหัสคิว (ไม่บังคับ) เช่น NG-20260807-0001"
-            aria-label="รหัสคิว (ไม่บังคับ)"
-            className="flex-1 rounded-xl border border-blush-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-rose-300"
-          />
+        <form onSubmit={handleSearch} className="glass-solid rounded-[24px] p-6 grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+          <label className="grid gap-1.5 text-sm font-medium text-[#3A2A31]">
+            เบอร์โทรที่ใช้จอง
+            <input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="เช่น 0812345678"
+              inputMode="tel"
+              autoComplete="tel"
+              className="rounded-xl border border-blush-200 px-4 py-3 text-sm font-normal placeholder:text-[#7A6670] outline-none focus:ring-2 focus:ring-rose-300"
+              required
+            />
+          </label>
+          <label className="grid gap-1.5 text-sm font-medium text-[#3A2A31]">
+            <span>รหัสคิว <span className="font-normal text-[#6B5560]">(ไม่บังคับ)</span></span>
+            <input
+              value={bookingCode}
+              onChange={(e) => setBookingCode(e.target.value)}
+              placeholder="เช่น NG-20260807-0001"
+              autoCapitalize="characters"
+              className="rounded-xl border border-blush-200 px-4 py-3 text-sm font-normal placeholder:text-[#7A6670] outline-none focus:ring-2 focus:ring-rose-300"
+            />
+          </label>
           <button
             type="submit"
             disabled={status === 'loading'}
@@ -162,48 +170,51 @@ export default function CustomerHistoryPage() {
           >
             {status === 'loading' ? 'กำลังค้นหา...' : 'ดูประวัติ'}
           </button>
+          <p className="text-xs text-[#6B5560] sm:col-span-3">
+            รหัสคิวอยู่ในหน้าจองสำเร็จ และในแชท LINE ของร้าน ถ้าจองจากเครื่องนี้ เว็บจำไว้ให้แล้วค่ะ
+          </p>
         </form>
         {error && <p className="text-sm text-red-500 text-center mt-3">{error}</p>}
 
         {data && !data.verified && (
           <p className="text-xs text-gold bg-gold/10 border border-gold/30 rounded-xl px-4 py-2.5 mt-3 text-center">
-            <Icon name="lock" className="inline h-4 w-4 -mt-0.5 mr-1" />นี่คือสรุปแบบย่อ — กรอก "รหัสคิว" ในช่องด้านบนด้วย เพื่อดูเวลา/ราคา/แก้ไข/ยกเลิก/ให้รีวิว/รูป AI
+            <Icon name="lock" className="inline h-4 w-4 -mt-0.5 mr-1" />นี่คือสรุปแบบย่อ ใส่รหัสคิวด้านบนด้วย จะเห็นเวลา ราคา รูปที่แนบ และเลื่อนนัด ยกเลิก หรือรีวิวได้ค่ะ
           </p>
         )}
 
         {data && (
           <div className="mt-8 space-y-8">
             <div>
-              <h2 className="font-display text-xl font-semibold text-gray-800 mb-4">ประวัติการจอง ({data.bookings.length})</h2>
+              <h2 className="font-display text-xl font-semibold text-[#2E1F26] mb-4">ประวัติการจอง ({data.bookings.length})</h2>
               <div className="space-y-3">
-                {data.bookings.length === 0 && <p className="text-sm text-gray-500">ยังไม่เจอคิวของเบอร์นี้นะคะ</p>}
+                {data.bookings.length === 0 && <p className="text-sm text-[#6B5560]">ยังไม่เจอคิวของเบอร์นี้นะคะ</p>}
                 {!data.verified && data.bookings.map((b, i) => (
                   <div key={i} className="glass-solid rounded-[24px] p-5">
                     <div className="flex items-center justify-between mb-1">
-                      <p className="font-medium text-gray-800">{b.service_name}</p>
-                      <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-blush-100 text-berry">
+                      <p className="font-medium text-[#2E1F26]">{b.service_name}</p>
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blush-100 text-berry">
                         {STATUS_LABEL[b.status] || b.status}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500">{b.booking_date}</p>
+                    <p className="text-xs text-[#6B5560]">{b.booking_date}</p>
                   </div>
                 ))}
                 {data.verified && data.bookings.map((b) => (
                   <div key={b.id} className="glass-solid rounded-[24px] p-5">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="font-medium text-gray-800">{b.service_name}</p>
-                      <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-blush-100 text-berry">
+                      <p className="font-medium text-[#2E1F26]">{b.service_name}</p>
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blush-100 text-berry">
                         {STATUS_LABEL[b.status] || b.status}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-[#6B5560]">
                       {b.booking_code} · {b.booking_date} {b.booking_time} น. · {b.price} บาท
                     </p>
                     {b.reference_image_url && (
                       <ZoomableImage src={b.reference_image_url} alt="รูปที่แนบ" caption={b.service_name} className="mt-2 block w-20 h-20 rounded-lg" />
                     )}
                     {b.admin_note && (
-                      <p className="text-xs text-gray-500 mt-2 pt-2 border-t border-blush-100">
+                      <p className="text-xs text-[#6B5560] mt-2 pt-2 border-t border-blush-100">
                         หมายเหตุจากร้าน: {b.admin_note}
                       </p>
                     )}
@@ -259,13 +270,13 @@ export default function CustomerHistoryPage() {
 
             {data.tryon_history.length > 0 && (
               <div>
-                <h2 className="font-display text-xl font-semibold text-gray-800 mb-4">ประวัติการทดลองลายเล็บ (AI)</h2>
+                <h2 className="font-display text-xl font-semibold text-[#2E1F26] mb-4">ประวัติการทดลองลายเล็บ (AI)</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {data.tryon_history.map((t) => (
                     <div key={t.id} className="glass-solid rounded-2xl overflow-hidden">
                       {t.result_image_url && <img loading="lazy" decoding="async" src={t.result_image_url} alt="ผลลัพธ์ AI" className="w-full aspect-square object-cover" />}
                       <div className="p-2">
-                        <p className="text-[11px] text-gray-500">{t.pattern} · {t.nail_shape}</p>
+                        <p className="text-xs text-[#6B5560]">{t.pattern} · {t.nail_shape}</p>
                       </div>
                     </div>
                   ))}
@@ -275,12 +286,12 @@ export default function CustomerHistoryPage() {
 
             {data.reviews.length > 0 && (
               <div>
-                <h2 className="font-display text-xl font-semibold text-gray-800 mb-4">รีวิวที่เคยให้</h2>
+                <h2 className="font-display text-xl font-semibold text-[#2E1F26] mb-4">รีวิวที่เคยให้</h2>
                 <div className="space-y-3">
                   {data.reviews.map((r) => (
                     <div key={r.id} className="glass-solid rounded-[24px] p-4">
                       <Stars count={r.rating} />
-                      {r.comment && <p className="text-sm text-gray-600 mt-1">{r.comment}</p>}
+                      {r.comment && <p className="text-sm text-[#5B4650] mt-1">{r.comment}</p>}
                     </div>
                   ))}
                 </div>
@@ -288,7 +299,7 @@ export default function CustomerHistoryPage() {
             )}
           </div>
         )}
-      </section>
+      </main>
       <Footer />
     </div>
   )

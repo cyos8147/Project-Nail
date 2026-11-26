@@ -16,6 +16,8 @@ export default function Hero() {
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-[300px] sm:h-[380px] lg:inset-y-0 lg:left-auto lg:right-0 lg:h-auto lg:w-[64%]">
         <img
           src="/photos/hero-white.webp"
+          srcSet="/photos/hero-white-900.webp 900w, /photos/hero-white.webp 1800w"
+          sizes="(min-width: 1024px) 64vw, 100vw"
           alt=""
           width="1800"
           height="1800"

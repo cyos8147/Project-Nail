@@ -65,7 +65,7 @@ export default function SplashIntro() {
         </span>
       ))}
 
-      <img src="/logo-mark.png" alt="" aria-hidden="true" className="lucky-splash__crown h-28 w-28 sm:h-36 sm:w-36 drop-shadow-[0_6px_18px_rgba(255,255,255,0.9)]" />
+      <img src="/logo-mark-320.png" alt="" aria-hidden="true" className="lucky-splash__crown h-28 w-28 sm:h-36 sm:w-36 drop-shadow-[0_6px_18px_rgba(255,255,255,0.9)]" />
       <p className="lucky-splash__word mt-1 font-script text-6xl sm:text-8xl text-berry leading-tight px-4 pb-2 drop-shadow-[0_4px_12px_rgba(255,255,255,0.8)]">
         Lucky Salon
       </p>

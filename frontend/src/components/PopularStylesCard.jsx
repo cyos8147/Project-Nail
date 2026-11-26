@@ -182,7 +182,7 @@ export default function PopularStylesCard() {
                   onClick={() => go(i)}
                   aria-label={`ดูลายที่ ${i + 1}: ${d.name}`}
                   aria-current={active}
-                  className="group/dot flex h-11 items-center justify-center px-1"
+                  className="group/dot flex h-11 min-w-[28px] items-center justify-center px-1"
                 >
                   <span className={`relative block h-2.5 rounded-full overflow-hidden border border-white transition-[width,background-color] duration-300 ${active ? 'w-9 bg-rose-100' : 'w-2.5 bg-white/80 group-hover/dot:bg-rose-100'}`}>
                     {active && (

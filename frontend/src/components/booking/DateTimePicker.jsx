@@ -100,8 +100,8 @@ export default function DateTimePicker({
 
   return (
     <div>
-      <h2 className="font-display text-2xl font-bold text-gray-800 text-center mb-1">เลือกวันและเวลา</h2>
-      <p className="text-gray-500 text-center text-sm mb-8">เลือกวันที่สะดวก แล้วเลือกเวลาที่ยังว่างอยู่ค่ะ</p>
+      <h2 className="font-display text-2xl font-bold text-[#2E1F26] text-center mb-1">เลือกวันและเวลา</h2>
+      <p className="text-[#6B5560] text-center text-sm mb-8">เลือกวันที่สะดวก แล้วเลือกเวลาที่ยังว่างอยู่ค่ะ</p>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Calendar */}
@@ -116,7 +116,7 @@ export default function DateTimePicker({
             >
               <Icon name="chevronLeft" />
             </button>
-            <p className="font-display font-semibold text-gray-800">
+            <p className="font-display font-semibold text-[#2E1F26]">
               {THAI_MONTHS[viewMonth]} {viewYear + 543}
             </p>
             <button
@@ -129,7 +129,7 @@ export default function DateTimePicker({
             </button>
           </div>
 
-          <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-400 mb-2">
+          <div className="grid grid-cols-7 gap-1 text-center text-xs text-[#6B5560] mb-2">
             {THAI_WEEKDAYS.map((d) => (
               <div key={d}>{d}</div>
             ))}
@@ -149,10 +149,10 @@ export default function DateTimePicker({
                   onClick={() => handleSelectDay(day)}
                   className={`aspect-square rounded-lg text-sm flex items-center justify-center transition-colors ${
                     isSelected
-                      ? 'bg-rose-500 text-white font-semibold'
+                      ? 'bg-[#C2185B] text-white font-semibold'
                       : disabled
                       ? 'text-gray-300 line-through'
-                      : 'text-gray-700 hover:bg-blush-100'
+                      : 'text-[#3A2A31] hover:bg-blush-100'
                   }`}
                 >
                   {day}
@@ -161,24 +161,24 @@ export default function DateTimePicker({
             })}
           </div>
 
-          <p className="text-[11px] text-gray-400 mt-4">* วันที่กดไม่ได้ คือวันที่ร้านหยุดหรือเลยมาแล้วค่ะ</p>
+          <p className="text-xs text-[#6B5560] mt-4">* วันที่กดไม่ได้ คือวันที่ร้านหยุดหรือเลยมาแล้วค่ะ</p>
         </div>
 
         {/* Time slots */}
         <div className="glass-solid rounded-2xl p-5">
-          <p className="font-display font-semibold text-gray-800 mb-4">
+          <p className="font-display font-semibold text-[#2E1F26] mb-4">
             {selectedDate ? 'ช่วงเวลาที่ว่าง' : 'กรุณาเลือกวันที่ก่อน'}
           </p>
 
           {!selectedDate && (
-            <div className="h-full min-h-[180px] flex items-center justify-center text-sm text-gray-400">
+            <div className="h-full min-h-[180px] flex items-center justify-center text-sm text-[#6B5560]">
               เลือกวันจากปฏิทินก่อนนะคะ
             </div>
           )}
 
           {selectedDate && loadingSlots && (
             <div className="h-full min-h-[180px] flex items-center justify-center">
-              <div className="w-8 h-8 border-4 border-blush-200 border-t-rose-500 rounded-full animate-spin" />
+              <div className="w-8 h-8 border-4 border-blush-200 border-t-[#C2185B] rounded-full animate-spin" />
             </div>
           )}
 
@@ -189,7 +189,7 @@ export default function DateTimePicker({
           {selectedDate && !loadingSlots && !slotsError && (
             <div className="grid grid-cols-3 gap-2">
               {slots.length === 0 && (
-                <p className="col-span-3 text-sm text-gray-400 text-center py-8">วันนี้คิวเต็มแล้ว ลองเลือกวันอื่นดูนะคะ</p>
+                <p className="col-span-3 text-sm text-[#6B5560] text-center py-8">วันนี้คิวเต็มแล้ว ลองเลือกวันอื่นดูนะคะ</p>
               )}
               {slots.map((s) => {
                 const isSelected = selectedTime === s.time
@@ -219,7 +219,7 @@ export default function DateTimePicker({
               <p className="text-xs font-semibold text-rose-700 mb-1.5">ตารางเวลาของคุณ</p>
               <ol className="space-y-1">
                 {chainPreview(selectedTime).map((c, i) => (
-                  <li key={c.service.id} className="flex justify-between gap-3 text-xs text-gray-700">
+                  <li key={c.service.id} className="flex justify-between gap-3 text-xs text-[#3A2A31]">
                     <span>{i + 1}. {c.service.name}</span>
                     <span className="font-semibold whitespace-nowrap">{c.start}–{c.end} น.</span>
                   </li>
@@ -228,7 +228,7 @@ export default function DateTimePicker({
             </div>
           )}
           {selectedDate && (
-            <p className="text-[11px] text-gray-400 mt-4">
+            <p className="text-xs text-[#6B5560] mt-4">
               * ช่วงเวลาที่มีเส้นขีดคือคิวที่ถูกจองแล้ว{chainParam ? ' (เวลาที่เลือกได้คือเวลาที่ทุกบริการในชุดว่างต่อกันพอดี)' : ''}
             </p>
           )}

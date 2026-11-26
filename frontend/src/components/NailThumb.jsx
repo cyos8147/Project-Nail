@@ -16,7 +16,7 @@ export default function NailThumb({ label, accent = '#EC4C82' }) {
         />
         <ellipse cx="15.5" cy="21" rx="3.4" ry="6.5" fill="white" opacity="0.3" />
       </svg>
-      <span className="text-[11px] font-medium px-3 text-center leading-tight" style={{ color: accent }}>
+      <span className="text-xs font-medium px-3 text-center leading-tight text-[#3A2A31]">
         {label}
       </span>
     </div>
